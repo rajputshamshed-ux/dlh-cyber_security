@@ -1,2 +1,3 @@
-# dlh-cyber_security
-dlh-cyber_security
+# Cybersecurity Basics
+## 0-release.sh
+Affiche l'identifiant de la distribution.

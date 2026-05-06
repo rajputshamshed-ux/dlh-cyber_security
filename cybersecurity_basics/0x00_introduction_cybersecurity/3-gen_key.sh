@@ -1,2 +1,2 @@
-#!/bin/bashgit 
-ssh-keygen -t rsa -b 4096 -f "$NOM_CLE" -N ""
+#!/bin/bash
+ssh-keygen -t rsa -b 4096 -f "$1" -N ""

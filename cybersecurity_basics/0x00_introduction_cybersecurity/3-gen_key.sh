@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Affiche un message sympa
+ls
 echo "🔐 Génération d'une clé SSH RSA 4096"
 
 # Nom de la clé (tu peux changer)

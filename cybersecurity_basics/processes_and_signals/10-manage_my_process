@@ -9,12 +9,12 @@ case "$1" in
         echo "manage_my_process started"
         ;;
     stop)
-        kill $(cat "$PID_FILE") 2>/dev/null
+        kill "$(cat "$PID_FILE")" 2>/dev/null
         rm -f "$PID_FILE"
         echo "manage_my_process stopped"
         ;;
     restart)
-        kill $(cat "$PID_FILE") 2>/dev/null
+        kill "$(cat "$PID_FILE")" 2>/dev/null
         rm -f "$PID_FILE"
         ./manage_my_process &
         echo $! > "$PID_FILE"

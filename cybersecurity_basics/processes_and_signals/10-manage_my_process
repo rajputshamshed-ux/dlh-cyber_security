@@ -9,15 +9,21 @@ case "$1" in
         echo "manage_my_process started"
         ;;
     stop)
-        # shellcheck disable=SC2046
-        kill $(cat "$PID_FILE") 2>/dev/null
-        rm -f "$PID_FILE"
+        PID=$(cat "$PID_FILE" 2>/dev/null)
+        if [ -n "$PID" ]; then
+            kill "$PID" 2>/dev/null
+            kill -9 "$PID" 2>/dev/null
+            rm -f "$PID_FILE"
+        fi
         echo "manage_my_process stopped"
         ;;
     restart)
-        # shellcheck disable=SC2046
-        kill $(cat "$PID_FILE") 2>/dev/null
-        rm -f "$PID_FILE"
+        PID=$(cat "$PID_FILE" 2>/dev/null)
+        if [ -n "$PID" ]; then
+            kill "$PID" 2>/dev/null
+            kill -9 "$PID" 2>/dev/null
+            rm -f "$PID_FILE"
+        fi
         ./manage_my_process &
         echo $! > "$PID_FILE"
         echo "manage_my_process restarted"

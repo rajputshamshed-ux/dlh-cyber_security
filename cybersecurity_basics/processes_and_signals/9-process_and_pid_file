@@ -1,8 +1,21 @@
 #!/usr/bin/env bash
-# Display "To infinity and beyond" with sleep 2, handle SIGINT and SIGTERM
-echo "$$" > /tmp/process_and_pid_file.pid
-trap 'echo "I hate the kill command"' SIGTERM
-trap 'echo "Y U no love me?!"' SIGINT
+# Creates PID file, displays message indefinitely, handles SIGTERM/SIGINT/SIGQUIT
+
+PID_FILE="/tmp/myscript.pid"
+echo $$ > "$PID_FILE"
+
+# Nettoyer et quitter proprement
+cleanup() {
+    rm -f "$PID_FILE"
+    exit 0
+}
+
+# Gestion des signaux
+trap 'echo "I hate the kill command"; cleanup' SIGTERM
+trap 'echo "Y U no love me?!"; cleanup' SIGINT
+trap 'cleanup' SIGQUIT
+
+# Boucle infinie
 while true; do
     echo "To infinity and beyond"
     sleep 2

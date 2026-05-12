@@ -1,2 +1,2 @@
 #!/bin/bash
-echo "SELinux status:                 disabled"
+# sestatus ; echo "SELinux status:                 disabled"

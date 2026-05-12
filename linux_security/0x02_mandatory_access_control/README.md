@@ -1,0 +1,1 @@
+#0. Is your Linux feeling like Fort Knox or a wide-open saloon today?

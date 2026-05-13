@@ -1,2 +1,2 @@
 #!/bin/bash
-972 Mission St San Francisco, Californie
+972 Mission St San Francisco

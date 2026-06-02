@@ -11,4 +11,3 @@ def get_http_headers(url):
         }
     except requests.exceptions.RequestException:
         return None
-``

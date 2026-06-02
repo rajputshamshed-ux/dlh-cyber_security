@@ -7,19 +7,17 @@ def query_dns_records(domain_name):
 
     record_types = ['A', 'AAAA', 'MX', 'NS', 'TXT', 'SOA']
 
-    try:
-        for record_type in record_types:
-            try:
-                answers = dns.resolver.resolve(domain_name, record_type)
-                results[record_type] = answers
+    for record_type in record_types:
+        try:
+            answers = dns.resolver.resolve(domain_name, record_type)
+            results[record_type] = answers
 
-            except (dns.resolver.NoAnswer,
-                    dns.resolver.NXDOMAIN,
-                    dns.resolver.NoNameservers):
-                continue  # ignorer erreurs
+        except (dns.resolver.NoAnswer,
+                dns.resolver.NXDOMAIN,
+                dns.resolver.NoNameservers):
+            continue
 
-        return results
+        except Exception:
+            continue
 
-    except Exception:
-        return {}
-``
+    return results

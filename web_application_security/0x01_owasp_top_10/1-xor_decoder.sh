@@ -1,10 +1,8 @@
 #!/bin/bash
 
-[ -z "$1" ] && { echo "Usage: $0 {xor}HASH"; exit 1; }
+if [ -z "$1" ]; then
+  echo "Usage: $0 {xor}HASH"
+  exit 1
+fi
 
-echo "$1" \
-| sed 's/^{xor}//' \
-| base64 -d \
-| perl -pe '$_ ^= "\x5A" x length($_)'
-
-echo
+echo "$1" | sed 's/{xor}//' | base64 -d | perl -pe '$_ ^= "\x5A" x length($_)'

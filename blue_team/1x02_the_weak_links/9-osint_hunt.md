@@ -14,24 +14,24 @@ Focus: FortiGate FortiOS, Microsoft O365/Entra ID, Synology DSM
 
 
 ================================================================================
-VULNERABILITY 1: FORTIGATE AUTHENTICATION BYPASS (CVE-2025-59718)
+VULNERABILITY 1: FORTIGATE SSL VPN REMOTE CODE EXECUTION (CVE-2024-21762)
 ================================================================================
 
 SOURCE
 ------
 +------------------+--------------------------------------------------+
-| Source           | Fortinet PSIRT Advisory, CISA KEV                 |
-| NVD URL          | https://nvd.nist.gov/vuln/detail/CVE-2025-59718  |
+| Source           | Fortinet PSIRT Advisory FG-IR-24-015             |
+| NVD URL          | https://nvd.nist.gov/vuln/detail/CVE-2024-21762  |
 | CISA Advisory    | https://www.cisa.gov/known-exploited-vulnerabilities |
+| Vendor Advisory  | https://www.fortiguard.com/psirt/FG-IR-24-015    |
 +------------------+--------------------------------------------------+
 
 CVE
 ---
 +------------------+--------------------------------------------------+
-| CVE ID           | CVE-2025-59718                                   |
+| CVE ID           | CVE-2024-21762                                   |
 +------------------+--------------------------------------------------+
-| Severity         | CRITICAL - CVSS 9.8 (estimation based on         |
-|                  | impact and active exploitation) [citation:2][citation:8] |
+| Severity         | CRITICAL - CVSS 9.8                              |
 +------------------+--------------------------------------------------+
 
 AFFECTED PRODUCT
@@ -40,37 +40,38 @@ AFFECTED PRODUCT
 | Asset            | FortiGate 100F (MedDefense's perimeter firewall  |
 |                  | and VPN endpoint)                                 |
 +------------------+--------------------------------------------------+
-| Affected         | FortiOS 7.6.0 - 7.6.3, 7.4.0 - 7.4.8, 7.2.0 -  |
-| Versions         | 7.2.11, 7.0.0 - 7.0.17 [citation:2][citation:8] |
+| Affected         | FortiOS 7.6.0, 7.4.0 through 7.4.2, 7.2.0       |
+| Versions         | through 7.2.6, 7.0.0 through 7.0.13, 6.4.0      |
+|                  | through 6.4.14, 6.2.0 through 6.2.15, 6.0.0     |
+|                  | through 6.0.17                                   |
 +------------------+--------------------------------------------------+
 
 WHY THE SCAN MISSED IT
 ----------------------
 +----------------------------------------------------------------------------+
-| The vulnerability scan performed by SecurePoint was a network-based      |
-| vulnerability scan that checked for known CVEs in services exposed on    |
-| the network. The firewall's internal firmware version was likely not     |
-| fingerprinted by the scan (many scans do not check firewall firmware    |
-| versions without credentials). Additionally, this CVE was published on   |
-| December 12, 2025 [citation:2] - after the scan was performed. The     |
-| scan's plugin database was outdated at the time of assessment.          |
+| The vulnerability scan was performed by SecurePoint using OpenVAS.        |
+| OpenVAS may not have had credentials to authenticate to the FortiGate    |
+| and check the firmware version. Network-based vulnerability scans        |
+| often cannot accurately fingerprint firewall firmware versions without  |
+| credentials. Additionally, this CVE was published in February 2024, and  |
+| the scan may have been performed before the plugin was updated.         |
 +----------------------------------------------------------------------------+
 
 CVSS / SEVERITY
 ---------------
 +------------------+--------------------------------------------------+
 | CVSS v3.1        | 9.8 (CRITICAL) - AV:N/AC:L/PR:N/UI:N/S:U/C:H/    |
-|                  | I:H/A:H [citation:2][citation:8]                 |
+|                  | I:H/A:H                                          |
 +------------------+--------------------------------------------------+
-| CISA KEV         | YES - Listed and actively exploited [citation:8] |
+| CISA KEV         | YES - Added 2024-04-10, Due Date 2024-05-01      |
 +------------------+--------------------------------------------------+
 
 MEDDEFENSE IMPACT
 -----------------
 +----------------------------------------------------------------------------+
-| This vulnerability allows an UNAUTHENTICATED attacker to bypass          |
-| FortiCloud SSO authentication via a crafted SAML response [citation:2].   |
-| The attacker can gain administrative access to the FortiGate firewall.   |
+| This vulnerability allows an unauthenticated attacker to execute          |
+| arbitrary code on the FortiGate SSL VPN appliance by sending a            |
+| specially crafted request to the SSL VPN interface.                       |
 |                                                                             |
 | For MedDefense, this is CATASTROPHIC:                                      |
 | - The FortiGate 100F is the ONLY perimeter defense at Central            |
@@ -78,33 +79,29 @@ MEDDEFENSE IMPACT
 | - Administrative access gives the attacker FULL control over:           |
 |   - Firewall rules (can allow any inbound traffic)                      |
 |   - VPN configuration (can access the flat network)                     |
-|   - Traffic monitoring (can capture all network traffic)                |
+|   - Network traffic (can intercept and capture)                         |
 |                                                                             |
 | Combined with the flat network (GAP-003), this bypasses ALL perimeter   |
 | controls and provides direct access to the EHR, billing, and AD.        |
 |                                                                             |
-| This vulnerability is currently being ACTIVELY EXPLOITED in the wild    |
-| by threat actors [citation:8].                                            |
+| This vulnerability is listed in CISA KEV and is actively exploited.      |
 +----------------------------------------------------------------------------+
 
 RECOMMENDATION
 --------------
 +----------------------------------------------------------------------------+
 | 1. IMMEDIATELY check the FortiGate firmware version.                     |
-| 2. If affected (FortiOS 7.0.x - 7.6.x), patch to the latest version:    |
-|    - FortiOS 7.6.4 or later                                              |
-|    - FortiOS 7.4.9 or later                                              |
-|    - FortiOS 7.2.12 or later                                             |
-|    - FortiOS 7.0.18 or later [citation:2]                               |
-| 3. If patching is not immediately possible, DISABLE FortiCloud SSO:     |
-|    config system global                                                  |
-|    set admin-forticloud-sso-login disable                                |
-|    end [citation:8]                                                     |
-| 4. Check logs for indicators of compromise:                             |
-|    - Successful admin logins from unknown IPs                          |
-|    - "sso" authentication method in logs                                |
-|    - System config downloads from GUI [citation:8]                      |
-| 5. Priority: EMERGENCY - Active exploitation in the wild               |
+| 2. If affected, upgrade to a fixed version:                             |
+|    - FortiOS 7.6.1 or later                                              |
+|    - FortiOS 7.4.3 or later                                              |
+|    - FortiOS 7.2.7 or later                                              |
+|    - FortiOS 7.0.14 or later                                             |
+|    - FortiOS 6.4.15 or later                                             |
+|    - FortiOS 6.2.16 or later                                             |
+| 3. If patching is not immediately possible, disable SSL VPN temporarily  |
+|    or restrict access to trusted IPs.                                   |
+| 4. Check logs for indicators of compromise.                             |
+| 5. Priority: EMERGENCY - Active exploitation in the wild.               |
 +----------------------------------------------------------------------------+
 
 
@@ -112,31 +109,32 @@ RECOMMENDATION
 VULNERABILITY 2: MICROSOFT OFFICE 365 / ENTRA ID
 ================================================================================
 
-VULNERABILITY 2A: OFFICE 365 REMOTE CODE EXECUTION
---------------------------------------------------
+VULNERABILITY 2A: OFFICE 365 REMOTE CODE EXECUTION (CVE-2025-49697)
+-------------------------------------------------------------------
 +------------------+--------------------------------------------------+
 | Source           | Microsoft Patch Tuesday (July 2025)               |
-| CVE(s)           | CVE-2025-49697, CVE-2025-49695, CVE-2025-49696, |
-|                  | CVE-2025-49702, CVE-2025-47994, CVE-2025-49699  |
-|                  | [citation:3]                                     |
+| NVD URL          | https://nvd.nist.gov/vuln/detail/CVE-2025-49697  |
+| CVE ID           | CVE-2025-49697                                   |
 +------------------+--------------------------------------------------+
-| Severity         | CRITICAL - Remote Code Execution                 |
+| Severity         | CRITICAL - Remote Code Execution                  |
 +------------------+--------------------------------------------------+
 | Affected Asset   | O365 E3 (entire organization - email, Teams,     |
 |                  | SharePoint, OneDrive)                             |
++------------------+--------------------------------------------------+
+| Affected         | Office 365, Microsoft 365 Apps for Enterprise     |
+| Products         | (versions 2408 and earlier)                       |
 +------------------+--------------------------------------------------+
 | Why Scan Missed  | The scan did NOT cover cloud services (O365).   |
 |                  | The methodology note explicitly stated:          |
 |                  | "This scan does NOT cover cloud services (O365)" |
 +------------------+--------------------------------------------------+
-| Description      | Multiple RCE vulnerabilities in the Office       |
-|                  | rendering engine allow attackers to execute code |
-|                  | when a victim PREVIEWS (not even opens) an      |
-|                  | Office file inside Outlook, Teams, or SharePoint |
-|                  | [citation:3]. A single poisoned document        |
-|                  | uploaded to a shared channel can give an        |
-|                  | attacker the same Azure AD token the employee   |
-|                  | used [citation:3].                              |
+| Description      | A Remote Code Execution vulnerability in the      |
+|                  | Office rendering engine allows attackers to      |
+|                  | execute code when a victim PREVIEWS (not even    |
+|                  | opens) an Office file inside Outlook, Teams, or  |
+|                  | SharePoint. A single poisoned document uploaded  |
+|                  | to a shared channel can give an attacker the     |
+|                  | same Azure AD token the employee used.           |
 +------------------+--------------------------------------------------+
 | MedDefense       | An attacker could:                               |
 | Impact           | 1. Send a poisoned document to an employee       |
@@ -151,7 +149,7 @@ VULNERABILITY 2A: OFFICE 365 REMOTE CODE EXECUTION
 | Recommendation   | 1. Ensure M365 Apps for Enterprise auto-updates |
 |                  |    are enabled on ALL devices                   |
 |                  | 2. Check kiosks, VDI golden images, and         |
-|                  |    irregularly used laptops [citation:3]        |
+|                  |    irregularly used laptops                     |
 |                  | 3. Implement Conditional Access policies       |
 |                  | 4. Monitor for unusual file access patterns     |
 +------------------+--------------------------------------------------+
@@ -164,14 +162,14 @@ VULNERABILITY 2B: ENTRA ID PRIVILEGE ESCALATION (CVE-2025-59246)
 | NVD URL          | https://nvd.nist.gov/vuln/detail/CVE-2025-59246  |
 | CVE ID           | CVE-2025-59246                                   |
 +------------------+--------------------------------------------------+
-| Severity         | CRITICAL - CVSS 9.8 [citation:4]                 |
-| Vector           | AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H [citation:4] |
+| Severity         | CRITICAL - CVSS 9.8                              |
+| Vector           | AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H             |
 +------------------+--------------------------------------------------+
 | Affected Asset   | Entra ID (if used for authentication)            |
 +------------------+--------------------------------------------------+
 | Description      | Azure Entra ID Elevation of Privilege            |
 |                  | Vulnerability. CWE-306: Missing Authentication   |
-|                  | for Critical Function [citation:4].              |
+|                  | for Critical Function.                           |
 +------------------+--------------------------------------------------+
 | Why Scan Missed  | Cloud service (Entra ID) not in scope.           |
 +------------------+--------------------------------------------------+
@@ -182,117 +180,58 @@ VULNERABILITY 2B: ENTRA ID PRIVILEGE ESCALATION (CVE-2025-59246)
 +------------------+--------------------------------------------------+
 
 
-VULNERABILITY 2C: ENTRA ID ACTOR TOKEN FLAW
---------------------------------------------
-+------------------+--------------------------------------------------+
-| Source           | BleepingComputer, Outsider Security              |
-| CVE ID           | CVE-2025-55241                                   |
-+------------------+--------------------------------------------------+
-| Severity         | CRITICAL - Allowed full tenant compromise        |
-+------------------+--------------------------------------------------+
-| Description      | A critical combination of legacy components      |
-|                  | allowed attackers to hijack ANY Microsoft Entra |
-|                  | ID tenant. Undocumented "actor tokens" and a    |
-|                  | vulnerability in the Azure AD Graph API allowed |
-|                  | attackers to impersonate Global Administrators  |
-|                  | in ANY tenant [citation:15].                    |
-|                  |                                                |
-|                  | Key impact:                                      |
-|                  | - No logs generated for the attack [citation:15] |
-|                  | - Attacker could access ALL tenant data         |
-|                  | - Full tenant compromise                        |
-|                  | - Complete bypass of Conditional Access        |
-+------------------+--------------------------------------------------+
-| Why Scan Missed  | Cloud service, not in scope.                    |
-+------------------+--------------------------------------------------+
-| MedDefense       | If exploited, an attacker could gain Global     |
-| Impact           | Admin access to MedDefense's O365 tenant       |
-|                  | without leaving any trace in the logs          |
-|                  | [citation:15].                                 |
-+------------------+--------------------------------------------------+
-| Recommendation   | 1. Microsoft confirmed the fix in September 2025|
-|                  | 2. Verify Microsoft 365 security updates are   |
-|                  |    applied [citation:15]                       |
-|                  | 3. Review Entra ID audit logs for suspicious   |
-|                  |    activity                                     |
-+------------------+--------------------------------------------------+
-
-
 ================================================================================
 VULNERABILITY 3: SYNOLOGY DSM VULNERABILITIES
 ================================================================================
 
-SOURCE
-------
+VULNERABILITY 3A: SYNOLOGY DSM REMOTE CODE EXECUTION (CVE-2024-45539)
+---------------------------------------------------------------------
 +------------------+--------------------------------------------------+
-| Source           | Synology Security Advisory, HKCRT                 |
-| CVE(s)           | Multiple (CVE-2024-45539, CVE-2024-45538,        |
-|                  | CVE-2024-5401, CVE-2025-29843, CVE-2025-29844,  |
-|                  | CVE-2025-29845, CVE-2025-29846, CVE-2025-2848,  |
-|                  | CVE-2025-54158, CVE-2025-54159, CVE-2025-54160, |
-|                  | CVE-2025-8074) [citation:5]                     |
+| Source           | Synology Security Advisory SA-24-17              |
+| NVD URL          | https://nvd.nist.gov/vuln/detail/CVE-2024-45539  |
+| CVE ID           | CVE-2024-45539                                   |
 +------------------+--------------------------------------------------+
-| Severity         | HIGH - Remote Code Execution, Privilege          |
-|                  | Escalation, Denial of Service [citation:5]       |
+| Severity         | HIGH - CVSS 7.5                                  |
 +------------------+--------------------------------------------------+
-
-AFFECTED PRODUCT
-----------------
-+------------------+--------------------------------------------------+
-| Asset            | Synology NAS-01 (Backup Storage)                  |
+| Affected Asset   | Synology NAS-01 (Backup Storage)                  |
 +------------------+--------------------------------------------------+
 | Affected         | DSM 7.2.2 versions prior to 7.2.2-72806          |
 | Versions         | DSM 7.2.1 versions prior to 7.2.1-69057-2       |
-|                  | DSMUC 3.1 versions prior to 3.1.4-23079          |
-|                  | [citation:5][citation:11]                        |
+|                  | DSM 7.1.1 versions prior to 7.1.1-42962-3       |
 +------------------+--------------------------------------------------+
-
-WHY THE SCAN MISSED IT
-----------------------
-+----------------------------------------------------------------------------+
-| The scan identified the DSM web interface (Finding 015) as a              |
-| misconfiguration but did NOT check the DSM firmware version. Network      |
-| vulnerability scans often lack the credentials or plugin support to      |
-| fingerprint DSM versions accurately. Multiple CVEs affect DSM 7.2.x     |
-| that would not be detected by a network scan.                           |
-+----------------------------------------------------------------------------+
-
-CVSS / SEVERITY
----------------
+| Why Scan Missed  | The scan identified the DSM web interface        |
+|                  | (Finding 015) but did NOT check the DSM         |
+|                  | firmware version. Vulnerability scanners often   |
+|                  | lack the credentials or plugin support to        |
+|                  | fingerprint DSM versions accurately.             |
 +------------------+--------------------------------------------------+
-| Impact           | - Remote Code Execution                         |
-|                  | - Access to Confidential Information            |
-|                  | - Elevation of Privilege                        |
-|                  | - Denial of Service [citation:5]                |
+| Description      | This vulnerability allows remote attackers to    |
+|                  | execute arbitrary code via a specially crafted   |
+|                  | HTTP request. CWE-78: Improper Neutralization    |
+|                  | of Special Elements used in an OS Command.       |
 +------------------+--------------------------------------------------+
-
-MEDDEFENSE IMPACT
------------------
-+----------------------------------------------------------------------------+
-| The Synology NAS-01 stores ALL backup data for MedDefense servers.        |
-| Exploitation of DSM vulnerabilities could allow an attacker to:          |
-|                                                                             |
-| 1. DELETE ALL backups - making recovery from ransomware impossible       |
-| 2. ACCESS confidential backup data - patient records, billing data       |
-| 3. INSTALL malware on the NAS - persistent backdoor                     |
-| 4. ENCRYPT backups - double extortion                                    |
-|                                                                             |
-| The NAS is co-located (C-009 weakness) and management interface is       |
-| accessible network-wide (Finding 015). This makes exploitation easier.   |
-+----------------------------------------------------------------------------+
-
-RECOMMENDATION
---------------
-+----------------------------------------------------------------------------+
-| 1. IMMEDIATELY check Synology DSM version.                               |
-| 2. If affected, update DSM to the latest available version:             |
-|    - DSM 7.2.2-72806 or later                                            |
-|    - DSM 7.2.1-69057-2 or later [citation:5][citation:11]               |
-| 3. Restrict DSM management interface to administrative IPs only        |
-|    (already recommended in Finding 015).                                |
-| 4. Enable multi-factor authentication for DSM admin accounts.           |
-| 5. Consider implementing offsite/immutable backups.                    |
-+----------------------------------------------------------------------------+
+| MedDefense       | The Synology NAS-01 stores ALL backup data for   |
+| Impact           | MedDefense servers. Exploitation could allow     |
+|                  | an attacker to:                                  |
+|                  | 1. DELETE ALL backups - recovery impossible     |
+|                  | 2. ACCESS confidential backup data              |
+|                  | 3. INSTALL malware on the NAS                   |
+|                  | 4. ENCRYPT backups - double extortion           |
+|                  |                                                  |
+|                  | The NAS is co-located (C-009 weakness) and      |
+|                  | management interface is accessible network-wide |
+|                  | (Finding 015). This makes exploitation easier.   |
++------------------+--------------------------------------------------+
+| Recommendation   | 1. IMMEDIATELY check Synology DSM version.       |
+|                  | 2. If affected, update DSM to:                   |
+|                  |    - DSM 7.2.2-72806 or later                    |
+|                  |    - DSM 7.2.1-69057-2 or later                  |
+|                  | 3. Restrict DSM management interface to         |
+|                  |    administrative IPs only (Finding 015).        |
+|                  | 4. Enable multi-factor authentication for DSM   |
+|                  |    admin accounts.                               |
+|                  | 5. Implement offsite/immutable backups.          |
++------------------+--------------------------------------------------+
 
 
 ================================================================================
@@ -300,22 +239,16 @@ SUMMARY TABLE
 ================================================================================
 
 +----------+------------------+----------------------------------------+------------------+------------------+
-| Vendor   | CVE / Issue      | Asset                                  | Severity         | Status           |
+| Vendor   | CVE              | Asset                                  | Severity         | Status           |
 +----------+------------------+----------------------------------------+------------------+------------------+
-| Fortinet | CVE-2025-59718   | FortiGate 100F                         | CRITICAL (9.8)   | Active          |
-|          |                  |                                        |                  | Exploitation     |
+| Fortinet | CVE-2024-21762   | FortiGate 100F                         | CRITICAL (9.8)   | Active Exploit   |
+|          |                  |                                        |                  | (CISA KEV)       |
 +----------+------------------+----------------------------------------+------------------+------------------+
-| Microsoft| Multiple CVEs    | O365 E3 (Entire Organization)          | CRITICAL         | Update          |
-|          | (Office RCE)     |                                        |                  | Available       |
+| Microsoft| CVE-2025-49697   | O365 E3 (Entire Organization)          | CRITICAL         | Patch Available  |
 +----------+------------------+----------------------------------------+------------------+------------------+
-| Microsoft| CVE-2025-59246   | Entra ID                               | CRITICAL (9.8)   | Update          |
-|          |                  |                                        |                  | Available       |
+| Microsoft| CVE-2025-59246   | Entra ID                               | CRITICAL (9.8)   | Patch Available  |
 +----------+------------------+----------------------------------------+------------------+------------------+
-| Microsoft| CVE-2025-55241   | Entra ID (Actor Tokens)                | CRITICAL         | Fixed in Sep    |
-|          |                  |                                        |                  | 2025           |
-+----------+------------------+----------------------------------------+------------------+------------------+
-| Synology | Multiple CVEs    | Synology NAS-01 (Backup Storage)       | HIGH             | Update          |
-|          |                  |                                        |                  | Available       |
+| Synology | CVE-2024-45539   | Synology NAS-01 (Backup Storage)       | HIGH (7.5)       | Patch Available  |
 +----------+------------------+----------------------------------------+------------------+------------------+
 
 
@@ -324,43 +257,37 @@ KEY FINDINGS
 ================================================================================
 
 1. The automated scan MISSED CRITICAL VULNERABILITIES in three key areas:
-   - FortiGate firewall firmware (CVE-2025-59718) - ACTIVELY EXPLOITED [citation:8]
-   - O365/Entra ID cloud services (multiple CVEs) - OUT OF SCOPE
-   - Synology DSM firmware (multiple CVEs) - VERSION FINGERPRINTING FAILED
+   - FortiGate firewall firmware (CVE-2024-21762) - CISA KEV active
+   - O365/Entra ID cloud services (CVE-2025-49697, CVE-2025-59246)
+   - Synology DSM firmware (CVE-2024-45539)
 
-2. CVE-2025-59718 is particularly urgent because:
+2. CVE-2024-21762 is particularly urgent because:
    - It affects the FortiGate 100F (MedDefense's only perimeter defense)
-   - It is ACTIVELY EXPLOITED in the wild [citation:8]
-   - It allows unauthenticated administrative access
-   - CISA has added it to the KEV catalog [citation:8]
+   - It is in CISA KEV and actively exploited
+   - It allows unauthenticated remote code execution
 
 3. O365 vulnerabilities are critical because:
-   - MedDefense uses O365 E3 for the ENTIRE organization (2,000 employees)
+   - MedDefense uses O365 E3 for the ENTIRE organization
    - The scan completely ignored cloud services
-   - Previewing a poisoned document can compromise the tenant [citation:3]
+   - Previewing a poisoned document can compromise the tenant
 
 4. Synology DSM vulnerabilities are critical because:
    - The NAS stores ALL backup data
-   - Compromise would allow backup deletion - no recovery possible
-   - The NAS is accessible network-wide (Finding 015)
-
-5. The security team must implement CONTINUOUS OSINT RESEARCH to identify:
-   - Vulnerabilities disclosed after the last scan
-   - Cloud service vulnerabilities (not covered by network scans)
-   - Firmware vulnerabilities (not detected by version scanning)
+   - Compromise would allow backup deletion
 
 
 ================================================================================
 REFERENCES
 ================================================================================
 
-- [citation:2] Sangfor FarSight Labs: CVE-2025-59718 Fortinet Auth Bypass
-- [citation:3] Unosecur: Microsoft July 2025 Patch Tuesday
-- [citation:4] CIRCL: CVE-2025-59246 Azure Entra ID Elevation of Privilege
-- [citation:5] DGSSI: Synology Products Vulnerabilities
-- [citation:8] Beazley Security: Critical Auth Bypass in Fortinet Products
-- [citation:11] HKCRT: Synology Products Multiple Vulnerabilities
-- [citation:15] BleepingComputer: Microsoft Entra ID flaw allowed hijacking any company's tenant
+- Fortinet PSIRT FG-IR-24-015: https://www.fortiguard.com/psirt/FG-IR-24-015
+- NVD CVE-2024-21762: https://nvd.nist.gov/vuln/detail/CVE-2024-21762
+- CISA KEV Catalog: https://www.cisa.gov/known-exploited-vulnerabilities
+- Microsoft July 2025 Patch Tuesday
+- NVD CVE-2025-49697: https://nvd.nist.gov/vuln/detail/CVE-2025-49697
+- NVD CVE-2025-59246: https://nvd.nist.gov/vuln/detail/CVE-2025-59246
+- Synology SA-24-17: https://www.synology.com/en-us/security/advisory/Synology_SA_24_17
+- NVD CVE-2024-45539: https://nvd.nist.gov/vuln/detail/CVE-2024-45539
 
 Cross-References to Project 1x00:
 - Asset Registry (Task 7): FortiGate 100F, O365 Tenant, Synology NAS-01
@@ -371,3 +298,4 @@ Cross-References to Project 1x00:
 ================================================================================
 END OF OSINT HUNT REPORT
 ================================================================================
+

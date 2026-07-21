@@ -1,3 +1,4 @@
+
 ================================================================================
                     CVSS DECONSTRUCTION - MEDDEFENSE HEALTH SYSTEMS
                     Task 2: The CVSS Deconstruction
@@ -14,10 +15,10 @@ NIST CVSS Calculator: https://nvd.nist.gov/vuln-metrics/cvss-v3-calculator
 
 
 ================================================================================
-EXERCISE 1: DECONSTRUCTION
+Exercise 1: Deconstruction
 ================================================================================
 
-CVSS VECTOR STRING:
+CVSS Vector String:
 CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
 
 +----------+------------------+------------------+------------------------------------------+
@@ -65,29 +66,29 @@ CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
 ALTERNATIVE VALUES AND SCORE IMPACT
 -----------------------------------
 +----------+------------------+------------------+------------------------------------------+
-| Component  | Possible Values        | Score Impact                          |
+| Component    | Possible Values       | Score Impact                            |
 +----------+------------------+------------------+------------------------------------------+
 | AV (Attack Vector) | N (Network)     | HIGHEST impact. Remote exploit over     |
 |          | A (Adjacent)     | network.                               |
-|          | L (Local)        |                                                      |
-|          | P (Physical)     |                                                      |
+|          | L (Local)        |                                          |
+|          | P (Physical)     |                                          |
 +----------+------------------+------------------+------------------------------------------+
 | AC (Attack        | L (Low)          | Lower AC = Higher score.                |
-| Complexity)       | H (High)         |                                                      |
+| Complexity)       | H (High)         |                                          |
 +----------+------------------+------------------+------------------------------------------+
 | PR (Privileges    | N (None)         | No privileges = Highest impact.          |
-| Required)         | L (Low)          |                                                      |
-|                   | H (High)          |                                                      |
+| Required)         | L (Low)          |                                          |
+|                   | H (High)         |                                          |
 +----------+------------------+------------------+------------------------------------------+
 | UI (User          | N (None)         | No user interaction = Higher score.      |
-| Interaction)      | R (Required)     |                                                      |
+| Interaction)      | R (Required)     |                                          |
 +----------+------------------+------------------+------------------------------------------+
-| S (Scope)         | U (Unchanged)     | U = Higher score than C.                |
-|                   | C (Changed)       |                                                      |
+| S (Scope)         | U (Unchanged)    | U = Higher score than C.                |
+|                   | C (Changed)      |                                          |
 +----------+------------------+------------------+------------------------------------------+
 | C/I/A (Impact)    | H (High)         | High impact = Maximum score.             |
-|                   | L (Low)          |                                                      |
-|                   | N (None)          |                                                      |
+|                   | L (Low)          |                                          |
+|                   | N (None)         |                                          |
 +----------+------------------+------------------+------------------------------------------+
 
 WHY THESE VALUES WERE SELECTED FOR THIS VULNERABILITY
@@ -113,8 +114,8 @@ WHY THESE VALUES WERE SELECTED FOR THIS VULNERABILITY
 |        read files, modify data, and crash the server.                   |
 +----------------------------------------------------------------------------+
 
-WHAT HAPPENS IF ATTACK VECTOR CHANGES FROM NETWORK TO LOCAL ?
--------------------------------------------------------------
+ATTACK VECTOR CHANGE: NETWORK TO LOCAL
+--------------------------------------
 +----------------------------------------------------------------------------+
 | If AV:N → AV:L, the vector string becomes:                                |
 |                                                                             |
@@ -137,7 +138,7 @@ WHAT HAPPENS IF ATTACK VECTOR CHANGES FROM NETWORK TO LOCAL ?
 
 
 ================================================================================
-EXERCISE 2: CONSTRUCTION
+Exercise 2: Construction
 ================================================================================
 
 VULNERABILITY CHARACTERISTICS
@@ -152,14 +153,14 @@ VULNERABILITY CHARACTERISTICS
 | specific conditions               |                                      |
 +-----------------------------------+--------------------------------------+
 | Attacker needs low-level          | Privileges Required = Low (L)        |
-| privileges                         |                                      |
+| privileges                        |                                      |
 +-----------------------------------+--------------------------------------+
 | No user interaction needed        | User Interaction = None (N)          |
 +-----------------------------------+--------------------------------------+
 | Only affects targeted system      | Scope = Unchanged (U)                |
 +-----------------------------------+--------------------------------------+
 | Confidentiality: completely       | Confidentiality Impact = High (H)    |
-| compromised                        |                                      |
+| compromised                       |                                      |
 +-----------------------------------+--------------------------------------+
 | Integrity: no impact               | Integrity Impact = None (N)          |
 +-----------------------------------+--------------------------------------+
@@ -204,7 +205,7 @@ NIST CALCULATOR VERIFICATION
 
 
 ================================================================================
-EXERCISE 3: COMPARISON
+Exercise 3: Comparison
 ================================================================================
 
 HIGH SCORE FINDING (ABOVE 9.0)
@@ -303,6 +304,18 @@ KEY FINDINGS
 REFERENCES
 ================================================================================
 
+- NIST CVSS v3.1 Calculator: https://nvd.nist.gov/vuln-metrics/cvss-v3-calculator
+- CVSS v3.1 Specification: https://www.first.org/cvss/v3.1/specification-document
+- FIRST CVSS v3.1 User Guide: https://www.first.org/cvss/v3.1/user-guide
+
+Cross-References to Project 1x00:
+- Asset Registry (Task 7): billing-srv-01, backup-srv-01, web-srv-01
+- Gap Analysis (Task 12): GAP-001, GAP-003, GAP-014
+
+
+================================================================================
+END OF CVSS DECONSTRUCTION REPORT
+================================================================================
 - NIST CVSS v3.1 Calculator: https://nvd.nist.gov/vuln-metrics/cvss-v3-calculator
 - CVSS v3.1 Specification: https://www.first.org/cvss/v3.1/specification-document
 - FIRST CVSS v3.1 User Guide: https://www.first.org/cvss/v3.1/user-guide

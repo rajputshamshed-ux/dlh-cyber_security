@@ -5,7 +5,7 @@
 
 Exercise: Task 2 - The CVSS Deconstruction
 Analyst: shamshed rajput
-Date: 20/07/2026
+Date: 21/07/2026
 Objective: Master the CVSS v3.1 scoring system by deconstructing, constructing
           and comparing scores using the NIST Calculator.
 
@@ -30,7 +30,7 @@ CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
 +----------+------------------+------------------+------------------------------------------+
 | AC       | Attack           | L (Low)          | Exploitation requires no specialized    |
 |          | Complexity       |                  | conditions and can be repeated reliably.|
-|          |                  |                  | No special timing or elaborate setup is  |
+|          |                  |                  | No special timing or elaborate setup is |
 |          |                  |                  | needed.                                  |
 +----------+------------------+------------------+------------------------------------------+
 | PR       | Privileges       | N (None)         | The attacker does not need any           |
@@ -120,11 +120,11 @@ WHAT HAPPENS IF ATTACK VECTOR CHANGES FROM NETWORK TO LOCAL ?
 |                                                                             |
 | CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H                             |
 |                                                                             |
-| NEW SCORE: 7.8 (HIGH)                                                      |
+| NEW SCORE: 8.4 (HIGH)                                                      |
 |                                                                             |
 | WHY THE SCORE CHANGES:                                                     |
 |                                                                             |
-| The score drops from 9.8 to 7.8 because the attack vector is less         |
+| The score drops from 9.8 to 8.4 because the attack vector is less         |
 | severe. The vulnerability is no longer remotely exploitable - the         |
 | attacker would need local access to the server. This significantly        |
 | reduces the scope of affected systems and the ease of exploitation.       |
@@ -221,18 +221,8 @@ HIGH SCORE FINDING (ABOVE 9.0)
 MEDIUM SCORE FINDING (BETWEEN 5.0 AND 7.0)
 ------------------------------------------
 +----------------------------------------------------------------------------+
-| Finding: 020 - OpenSSH CVE-2023-38408                                      |
-| Host: backup-srv-01 (OpenSSH 8.9p1)                                       |
-|                                                                             |
-| Vector String: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H?              |
-|                                                                             |
-| Note: This is actually the same vector structure, but the finding is       |
-| flagged as a FALSE POSITIVE by the scanner because specific conditions    |
-| (ssh-agent forwarding) are required.                                      |
-|                                                                             |
-| Alternatively, a better comparison would be:                              |
-|                                                                             |
 | Finding: 005 - SSL/TLS Weak Protocol (CVE-2014-3566 - POODLE)             |
+| Host: web-srv-01 (Patient Portal)                                          |
 |                                                                             |
 | Vector: CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N                     |
 |                                                                             |
@@ -241,7 +231,7 @@ MEDIUM SCORE FINDING (BETWEEN 5.0 AND 7.0)
 
 SIDE-BY-SIDE COMPARISON
 -----------------------
-+----------------------------------------------------------------------------+
++--------------------+-----------------------+------------------------+
 | Component          | Finding 001 (9.8)     | Finding 005 (7.4)      |
 +--------------------+-----------------------+------------------------+
 | AV (Attack Vector) | N (Network)           | N (Network)            |
@@ -295,7 +285,7 @@ KEY FINDINGS
    - UI:N (No user interaction)
    - C:H/I:H/A:H (Full impact on all three pillars)
 
-2. Changing AV from N to L drops the score from 9.8 to 7.8 (HIGH).
+2. Changing AV from N to L drops the score from 9.8 to 8.4 (HIGH).
    Remote exploitability is the most significant factor in the score.
 
 3. The constructed vector (AV:A/AC:H/PR:L/UI:N/S:U/C:H/I:N/A:N) yields

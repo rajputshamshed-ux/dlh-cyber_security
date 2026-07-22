@@ -22,19 +22,19 @@ PART 1: RACI MATRIX
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
 | Security budget approval  | A                | C                | R                | C                | I                |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
-| Vulnerability remediation | A                | R                | R                | C                | C                |
+| Vulnerability remediation | I                | A                | R                | C                | C                |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
-| Incident response execution| A                | R                | R                | C                | C                |
+| Incident response execution| I                | A                | R                | C                | C                |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
-| Security policy approval  | A                | C                | R                | I                | C                |
+| Security policy approval  | A                | R                | C                | I                | C                |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
 | Risk acceptance decisions | A                | C                | C                | C                | I                |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
-| Security awareness training| A                | R                | R                | C                | R                |
+| Security awareness training| I                | A                | R                | C                | R                |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
-| Vendor risk assessment    | A                | R                | C                | C                | R                |
+| Vendor risk assessment    | I                | A                | C                | C                | R                |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
-| Audit coordination        | A                | R                | R                | C                | R                |
+| Audit coordination        | I                | A                | R                | C                | R                |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
 | Data ownership decisions  | I                | C                | C                | A                | I                |
 | (within departments)      |                  |                  |                  |                  |                  |
@@ -42,24 +42,28 @@ PART 1: RACI MATRIX
 
 LEGEND:
 R = Responsible (executes the task)
-A = Accountable (answers for success/failure - "the buck stops here")
+A = Accountable (answers for success/failure)
 C = Consulted (provides input before decisions)
 I = Informed (notified after decisions)
 
 GOVERNANCE PRINCIPLES:
 +----------------------------------------------------------------------------+
-| 1. CEO is Accountable for ALL security activities (ultimate authority)     |
-| 2. Deputy CISO (James) is Responsible for security program execution       |
-| 3. IT Director (Sarah) is Responsible for technical implementation        |
-| 4. Dept Heads are Accountable for data ownership within their departments  |
-| 5. Security Analyst supports execution (Responsible on some tasks)        |
+| 1. CEO is Accountable only for executive decisions: Budget, Policy, Risk   |
+| 2. Deputy CISO (James) is Accountable for security operations:             |
+|    Remediation, Incident Response, Policy drafting, Training, Vendor Risk  |
+| 3. IT Director (Sarah) is Responsible for technical execution:             |
+|    Remediation, Incident Response, Audit coordination, Budget execution    |
+| 4. Dept Heads are Accountable only for Data Ownership (business impact)    |
+| 5. Security Analyst executes day-to-day tasks (Training, Vendor Risk,      |
+|    Audit coordination)                                                    |
 +----------------------------------------------------------------------------+
 
 KEY INSIGHTS:
-- CEO retains Accountable on ALL activities, resolving the vacant CISO issue
-- James and Sarah share Responsible (execution) with clear division
-- Dept Heads are Accountable only for data ownership (where business impact is highest)
-- Security Analyst is Responsible for training, vendor risk, and audit coordination
+- CEO: A only on executive decisions (Budget, Policy, Risk) - NOT on operations
+- James: A on security operations, R on Policy approval (he drafts, CEO approves)
+- Sarah: R on technical execution across multiple activities
+- Dept Heads: A on Data Ownership only (their domain expertise matters)
+- Analyst: R on Training, Vendor Risk, Audit coordination (execution role)
 
 
 ================================================================================
@@ -120,8 +124,7 @@ CONSEQUENCES OF THE VACANT CISO POSITION:
 ------------------------------------------
 1. STRATEGIC VACUUM: No single executive is accountable for the security
    program. James Chen is acting but has no formal authority because the
-   CISO role remains vacant. This is why the RACI matrix shows CEO as
-   Accountable for ALL activities - to bridge the gap.
+   CISO role remains vacant.
 
 2. BOARD COMMUNICATION: No direct line from security to the Board. Decisions
    are delayed through the CEO.
@@ -130,7 +133,7 @@ CONSEQUENCES OF THE VACANT CISO POSITION:
    security authority to resolve it.
 
 4. ATTRACTION/RETENTION: Top talent expects a clear career path. A vacant
-   CISO position makes recruitment difficult and risks losing James Chen.
+   CISO position makes recruitment difficult.
 
 5. REGULATORY CONCERNS: HIPAA requires a designated security official. The
    vacant position creates compliance exposure.
@@ -142,10 +145,12 @@ RECOMMENDATION: HIRE A FULL-TIME CISO
 | the vacant position. The organization is transitioning from security      |
 | handled "on the side by IT" to a formal framework-aligned program. This  |
 | requires an executive leader with authority over policies, direct Board   |
-| access, and the ability to resolve IT vs. Security conflicts. James Chen |
-| is a strong Deputy but lacks the authority to make budget and policy     |
-| decisions. Until a CISO is hired, the CEO retains ultimate Accountable   |
-| on all security activities (as shown in the RACI matrix).               |
+| access, and the ability to resolve IT vs. Security conflicts.            |
+|                                                                             |
+| CURRENT RACI REFLECTS THE VACANCY:                                         |
+| James Chen (Deputy CISO) is Accountable for security operations but       |
+| cannot make budget or policy decisions (CEO retains A on those). This    |
+| is the practical limitation of having a vacant CISO position.            |
 |                                                                             |
 | A vCISO ($60,000-$80,000) would provide strategic guidance but would     |
 | not have authority over IT operations, be present for day-to-day         |
@@ -158,9 +163,8 @@ RECOMMENDATION: HIRE A FULL-TIME CISO
 |                                                                             |
 | PHASED APPROACH:                                                            |
 | Phase 1 (6 months): Appoint James Chen as interim CISO with formal        |
-|         authority while the CISO position remains vacant                 |
-| Phase 2 (6-12 months): Begin recruiting a full-time CISO to fill the      |
-|         vacant role                                                       |
+|         authority to resolve the vacant gap                             |
+| Phase 2 (6-12 months): Begin recruiting a full-time CISO                  |
 | Phase 3 (12+ months): Hire full-time CISO, transition James to Deputy    |
 +----------------------------------------------------------------------------+
 

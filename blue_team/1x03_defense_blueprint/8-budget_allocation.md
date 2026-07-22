@@ -53,29 +53,66 @@ CONTROLS DEFERRED
 +---------------------------+------------------+
 | Medical IoT Isolation     | $18,000          |
 | Westside Firewall         | $5,000           |
-| 24/7 Managed SOC          | $80,000          |
 +---------------------------+------------------+
 
-REASON FOR DEFERRAL: These controls are deferred because the budget is
-limited and the funded controls provide higher risk reduction. IoT
-Isolation and Westside Firewall will be reconsidered next fiscal year.
+REASON FOR DEFERRAL:
+These controls are deferred because the budget is limited. They have
+positive net value but lower priority than the funded controls. IoT
+Isolation and Westside Firewall will be reconsidered next fiscal year
+when additional budget is available.
 
-CONTROLS REJECTED
------------------
-None. All controls have positive net value. Deferrals are due to budget
-constraint, not lack of justification. No controls are rejected entirely
-because all 8 controls are financially justified.
+CONTROLS REJECTED (FOR THIS FISCAL YEAR)
+----------------------------------------
++---------------------------+------------------+------------------------------------------+
+| Control                   | Annual Cost      | Reason for Rejection                     |
++---------------------------+------------------+------------------------------------------+
+| 24/7 Managed SOC          | $80,000          | REJECTED because it would consume 67%    |
+|                           |                  | of the $120,000 budget, preventing six   |
+|                           |                  | foundational controls. The Daytime-Only  |
+|                           |                  | SOC ($35,000) provides 60% of the        |
+|                           |                  | benefit at 44% of the cost. The ROI of   |
+|                           |                  | the 24/7 SOC (14:1) is lower than the    |
+|                           |                  | combined ROI of the funded controls      |
+|                           |                  | (68:1). This is a defensible rejection   |
+|                           |                  | based on cost-benefit analysis and       |
+|                           |                  | budget constraints.                      |
++---------------------------+------------------+------------------------------------------+
+
+DEFENSIBLE REASONS FOR REJECTION:
++----------------------------------------------------------------------------+
+| The 24/7 Managed SOC is REJECTED for the current fiscal year because:      |
+|                                                                             |
+| 1. BUDGET CONSTRAINT: At $80,000, it would consume 67% of the entire       |
+|    budget, preventing the implementation of six other foundational        |
+|    controls.                                                               |
+|                                                                             |
+| 2. LOWER ROI: The 24/7 SOC has an ROI of 14:1, while the funded           |
+|    controls have a combined ROI of 68:1. The budget is better spent       |
+|    elsewhere.                                                              |
+|                                                                             |
+| 3. VIABLE ALTERNATIVE: The Daytime-Only SOC ($35,000) provides 60%        |
+|    of the benefit at 44% of the cost, making it a more cost-effective     |
+|    option for this fiscal year.                                           |
+|                                                                             |
+| 4. OPPORTUNITY COST: Funding the 24/7 SOC would require cutting           |
+|    Medical IoT Isolation ($18,000) and Westside Firewall ($5,000),       |
+|    reducing overall risk reduction.                                       |
++----------------------------------------------------------------------------+
+
+REJECTED DECISION: The 24/7 Managed SOC is rejected for this fiscal year.
+It may be reconsidered in the next fiscal year if additional budget
+becomes available or if the cost decreases.
 
 
 ================================================================================
-OPPORTUNITY COST OF DEFERRED CONTROLS
+OPPORTUNITY COST OF DEFERRED AND REJECTED CONTROLS
 ================================================================================
 
-By deferring the three controls, MedDefense accepts the following annual
+By deferring or rejecting controls, MedDefense accepts the following annual
 risk exposure that remains unaddressed:
 
 +---------------------------+------------------+
-| Deferred Control          | ALE Foregone     |
+| Control                   | ALE Foregone     |
 +---------------------------+------------------+
 | Medical IoT Isolation     | $77,585          |
 | Westside Firewall         | $58,723          |
@@ -85,8 +122,8 @@ risk exposure that remains unaddressed:
 +---------------------------+------------------+
 
 This is the annual risk exposure that remains because these controls were
-not funded. The funded portfolio still provides $7,133,210 in risk
-reduction - the maximum achievable within the $120,000 budget.
+not funded or were rejected. The funded portfolio still provides $7,133,210
+in risk reduction - the maximum achievable within the $120,000 budget.
 
 
 ================================================================================
@@ -126,7 +163,7 @@ COMPARE THE TWO ALLOCATIONS
 | ALE Reduction             | $7,133,210       | $6,559,216       |
 | Additional risk reduction | -                | +$574,004        |
 | Additional cost           | -                | +$12,000         |
-+----------------------------------------------------------------------------+
++---------------------------+------------------+------------------+
 
 When you compare these two options, the SELECTED portfolio provides
 $574,004 MORE risk reduction for only $12,000 additional cost.
@@ -168,8 +205,8 @@ BUDGET SUMMARY
 BUDGET-COMPLIANT: YES ($104,400 < $120,000)
 
 CONTROLS FUNDED: 6
-CONTROLS DEFERRED: 3
-CONTROLS REJECTED: 0
+CONTROLS DEFERRED: 2
+CONTROLS REJECTED: 1 (24/7 Managed SOC)
 
 
 ================================================================================

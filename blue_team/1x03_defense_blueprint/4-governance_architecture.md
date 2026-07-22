@@ -20,21 +20,24 @@ PART 1: RACI MATRIX
 | Activity                  | CEO              | Deputy CISO      | IT Director      | Dept Heads       | Security         |
 |                           | (Dr. Morales)    | (James Chen)     | (Sarah Park)     |                  | Analyst (You)    |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
-| Security budget approval  | A                | R                | C                | C                | I                |
+| Security budget approval  | A                | C                | R                | C                | I                |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
-| Vulnerability remediation | I                | A                | R                | I                | R                |
+| Vulnerability remediation | I                | A                | R                | I                | C                |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
-| Incident response execution| I                | A                | R                | C                | R                |
+| Incident response execution| I                | A                | R                | C                | C                |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
-| Security policy approval  | A                | R                | C                | I                | R                |
+| Security policy approval  | A                | C                | R                | I                | C                |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
-| Risk acceptance decisions | A                | R                | C                | C                | I                |
+| Risk acceptance decisions | A                | C                | C                | C                | I                |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
-| Security awareness training| I                | A                | R                | C                | R                |
+| Security awareness training| I                | A                | R                | C                | C                |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
-| Vendor risk assessment    | I                | A                | R                | C                | R                |
+| Vendor risk assessment    | I                | A                | R                | C                | C                |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
-| Audit coordination        | I                | A                | R                | C                | R                |
+| Audit coordination        | I                | A                | R                | C                | C                |
++---------------------------+------------------+------------------+------------------+------------------+------------------+
+| Data ownership decisions  | I                | C                | C                | A                | I                |
+| (within departments)      |                  |                  |                  |                  |                  |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
 
 LEGEND:
@@ -44,10 +47,11 @@ C = Consulted (provides input before decisions)
 I = Informed (notified after decisions)
 
 KEY INSIGHTS:
-- James Chen (Deputy CISO) is Accountable for MOST security activities
-- Sarah Park (IT Director) is Responsible for remediation and incident execution
-- The Security Analyst executes day-to-day activities
-- The CEO is Accountable for budget approval and risk acceptance
+- CEO: Accountable for budget, policy approval, and risk acceptance (ultimate authority)
+- James Chen: Accountable for security program outcomes, consulted on budget and policy
+- Sarah Park: Responsible for execution (IT operations, remediation, incident response)
+- Dept Heads: Accountable for data ownership decisions within their departments
+- Security Analyst: Supports all activities (Consulted), not solely responsible for execution
 
 
 ================================================================================
@@ -56,24 +60,27 @@ PART 2: ROLE DEFINITIONS
 
 Data Owner: Department Heads (Clinical Directors, Finance Director, HR Director)
 
-MEANING: The Data Owner has ultimate responsibility for a specific data set.
-They determine who can access the data, what it can be used for, and how it
-should be classified. Department Heads hold this role because they know what
-data their department generates and how it is used.
+MEANING: The Data Owner has ultimate accountability for a specific data set
+within their department. They determine who can access the data, what it can
+be used for, and how it should be classified. Department Heads hold this role
+because they are accountable for the data their department generates and uses,
+and they understand the clinical or operational impact of data decisions.
 
-Data Controller: Dr. Patricia Morales (CEO) + James Chen (Deputy CISO)
+Data Controller: Dr. Patricia Morales (CEO)
 
 MEANING: The Data Controller determines the purposes and means of processing
 personal data. They decide WHY patient data is collected and HOW it is
-processed. The CEO holds ultimate legal accountability, while James Chen
-provides the security expertise.
+processed. The CEO holds this role because it is a legal accountability that
+cannot be delegated below the executive level. James Chen provides security
+expertise as a Consultant to the Data Controller.
 
 Data Processor: MedTech Solutions (EHR vendor), ClearView Security, and
 other third-party vendors processing MedDefense data
 
 MEANING: The Data Processor processes data on behalf of the Data Controller.
 They execute processing according to the Controller's instructions. MedTech
-processes patient data through the EHR system under contract.
+processes patient data through the EHR system under contract. They are not
+accountable for data decisions, only for secure execution.
 
 Data Custodian/Steward: IT Department (Sarah Park, System Administrators,
 Database Administrator)
@@ -81,7 +88,18 @@ Database Administrator)
 MEANING: The Data Custodian/Steward is responsible for the technical
 implementation of data protection controls. They maintain the systems that
 store and process data, apply patches, manage backups, and enforce access
-controls. IT manages the servers and databases where data lives.
+controls. IT manages the servers and databases where data lives. They
+implement what the Data Owner and Data Controller decide.
+
+GOVERNANCE DISTINCTION:
++---------------------------+--------------------------------------------------+
+| Role                      | Responsibility                                    |
++---------------------------+--------------------------------------------------+
+| Data Owner                | Decides WHO can access data (Department Heads)   |
+| Data Controller           | Decides WHY data is collected (CEO)              |
+| Data Processor            | Executes processing under contract (Vendors)    |
+| Data Custodian/Steward    | Implements HOW data is protected (IT)           |
++---------------------------+--------------------------------------------------+
 
 
 ================================================================================
@@ -94,7 +112,7 @@ CONSEQUENCES OF THE VACANT CISO POSITION:
 ------------------------------------------
 1. STRATEGIC VACUUM: No single executive is accountable for the security
    program. James Chen is acting but has no formal authority because the
-   CISO role remains vacant.
+   CISO role remains vacant. He cannot make budget or policy decisions.
 
 2. BOARD COMMUNICATION: No direct line from security to the Board. Decisions
    are delayed through the CEO.
@@ -103,7 +121,7 @@ CONSEQUENCES OF THE VACANT CISO POSITION:
    security authority to resolve it.
 
 4. ATTRACTION/RETENTION: Top talent expects a clear career path. A vacant
-   CISO position makes recruitment difficult.
+   CISO position makes recruitment difficult and risks losing James Chen.
 
 5. REGULATORY CONCERNS: HIPAA requires a designated security official. The
    vacant position creates compliance exposure.
@@ -115,9 +133,13 @@ RECOMMENDATION: HIRE A FULL-TIME CISO
 | the vacant position. The organization is transitioning from security      |
 | handled "on the side by IT" to a formal framework-aligned program. This  |
 | requires an executive leader with authority over policies, direct Board   |
-| access, and the ability to resolve IT vs. Security conflicts. A vCISO     |
-| ($60,000-$80,000) would not be present for day-to-day decisions or build  |
-| institutional knowledge.                                                  |
+| access, and the ability to resolve IT vs. Security conflicts. James Chen |
+| is a strong Deputy but lacks the authority to make budget and policy     |
+| decisions, as reflected in the RACI matrix (C, not R/A on those items).  |
+|                                                                             |
+| A vCISO ($60,000-$80,000) would provide strategic guidance but would     |
+| not have authority over IT operations, be present for day-to-day         |
+| decisions, or build institutional knowledge.                             |
 |                                                                             |
 | BUDGET CONSTRAINT: The $120,000 security budget cannot fund a full-time   |
 | CISO and the $104,400 remediation priorities. The CISO should be funded   |

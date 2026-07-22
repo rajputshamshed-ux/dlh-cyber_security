@@ -24,15 +24,13 @@ PART 1: RACI MATRIX
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
 | Vulnerability remediation | I                | A                | R                | I                | R                |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
-| Incident response         | I                | A                | R                | C                | R                |
-| execution                 |                  |                  |                  |                  |                  |
+| Incident response execution| I                | A                | R                | C                | R                |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
 | Security policy approval  | A                | R                | C                | I                | R                |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
 | Risk acceptance decisions | A                | R                | C                | C                | I                |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
-| Security awareness        | I                | A                | R                | C                | R                |
-| training                  |                  |                  |                  |                  |                  |
+| Security awareness training| I                | A                | R                | C                | R                |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
 | Vendor risk assessment    | I                | A                | R                | C                | R                |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
@@ -45,12 +43,6 @@ A = Accountable (answers for success/failure)
 C = Consulted (provides input before decisions)
 I = Informed (notified after decisions)
 
-KEY INSIGHTS:
-- James Chen (Deputy CISO) is Accountable for MOST security activities
-- Sarah Park (IT Director) is Responsible for remediation and incident execution
-- The Security Analyst executes day-to-day activities (R for remediation, training, vendor risk)
-- The CEO is Accountable for budget approval and risk acceptance
-
 
 ================================================================================
 PART 2: ROLE DEFINITIONS
@@ -60,39 +52,30 @@ DATA OWNER: Department Heads (Clinical Directors, Finance Director, HR Director)
 
 MEANING: The Data Owner has ultimate responsibility for a specific data set.
 They determine who can access the data, what it can be used for, and how it
-should be classified.
-
-WHY: Department Heads know what data their department generates, why it is
-needed, and how it is used in clinical or administrative operations.
+should be classified. Department Heads hold this role because they know what
+data their department generates and how it is used.
 
 DATA CONTROLLER: Dr. Patricia Morales (CEO) + James Chen (Deputy CISO)
 
 MEANING: The Data Controller determines the purposes and means of processing
 personal data. They decide WHY patient data is collected and HOW it is
-processed. This is a legal and compliance role.
-
-WHY: The CEO holds ultimate legal accountability for data protection. James
-Chen provides the security expertise to implement controls.
+processed. The CEO holds ultimate legal accountability, while James Chen
+provides the security expertise.
 
 DATA PROCESSOR: MedTech Solutions (EHR vendor), ClearView Security, and
 other third-party vendors processing MedDefense data
 
 MEANING: The Data Processor processes data on behalf of the Data Controller.
-They do not decide what to do with the data - they execute the processing
-according to the Controller's instructions.
-
-WHY: MedTech processes patient data through the EHR system. These vendors
-must be contractually obligated to protect MedDefense data.
+They execute processing according to the Controller's instructions. MedTech
+processes patient data through the EHR system under contract.
 
 DATA CUSTODIAN / STEWARD: IT Department (Sarah Park, System Administrators,
 Database Administrator)
 
 MEANING: The Data Custodian is responsible for the technical implementation
 of data protection controls. They maintain the systems that store and process
-data, apply security patches, manage backups, and enforce access controls.
-
-WHY: IT manages the servers, databases, and systems where data lives. They
-are responsible for the technical security of the data.
+data, apply patches, manage backups, and enforce access controls. IT manages
+the servers and databases where data lives.
 
 
 ================================================================================
@@ -101,50 +84,39 @@ PART 3: THE CISO QUESTION
 
 CONSEQUENCES OF THE CURRENT GAP (No CISO):
 ------------------------------------------
-1. STRATEGIC VACUUM: Without a CISO, there is no single executive accountable
-   for the security program's success. James Chen is acting but has no formal
-   authority.
+1. STRATEGIC VACUUM: No single executive is accountable for the security
+   program. James Chen is acting but has no formal authority.
 
-2. BOARD COMMUNICATION: No direct line from the security program to the Board.
-   James Chen must go through the CEO, which delays decisions.
+2. BOARD COMMUNICATION: No direct line from security to the Board. Decisions
+   are delayed through the CEO.
 
-3. DECISION DEADLOCK: When IT (Sarah Park) and Security (James Chen) disagree,
-   there is no higher security authority to resolve it.
+3. DECISION DEADLOCK: When IT and Security disagree, there is no higher
+   security authority to resolve it.
 
-4. ATTRACTION/RETENTION: Top security talent expects a clear career path.
-   Acting roles are unattractive for experienced professionals.
+4. ATTRACTION/RETENTION: Top talent expects a clear career path.
 
 5. REGULATORY CONCERNS: HIPAA requires a designated security official.
 
 RECOMMENDATION: HIRE A FULL-TIME CISO
 -------------------------------------
 +----------------------------------------------------------------------------+
-| RECOMMENDATION: HIRE A FULL-TIME CISO ($160,000-$200,000/year)             |
+| MedDefense should hire a full-time CISO ($160,000-$200,000/year). The      |
+| organization is transitioning from security handled "on the side by IT"   |
+| to a formal framework-aligned program. This requires an executive leader  |
+| with authority over policies, direct Board access, and the ability to     |
+| resolve IT vs. Security conflicts. A vCISO ($60,000-$80,000) would not    |
+| be present for day-to-day decisions or build institutional knowledge.     |
 |                                                                             |
-| MedDefense is transitioning from a security program that is "handled on    |
-| the side by IT" to a formal, framework-aligned security function. This    |
-| transition requires an executive-level security leader with:              |
-| - Authority over security policies                                        |
-| - Direct access to the Board                                              |
-| - Ability to resolve IT vs. Security conflicts                            |
-| - A career path for the security team                                    |
+| BUDGET CONSTRAINT: The $120,000 security budget cannot fund a full-time   |
+| CISO and the $104,400 remediation priorities. The CISO should be funded   |
+| separately as a capital investment. MedDefense should request a separate  |
+| $160,000-$200,000 for CISO compensation in the next fiscal year.          |
 |                                                                             |
-| A vCISO would cost $60,000-$80,000/year and would provide strategic       |
-| guidance, but would NOT be present for day-to-day decisions, have         |
-| authority over IT operations, or build institutional knowledge.           |
-|                                                                             |
-| BUDGET CONSTRAINT: The $120,000 security budget CANNOT fund a            |
-| full-time CISO AND the $104,400 remediation priorities. The CISO          |
-| position should be funded separately from the operational security        |
-| budget. MedDefense should request a separate $160,000-$200,000 for        |
-| CISO compensation in the next fiscal year.                                |
-|                                                                             |
-| PHASED APPROACH:                                                           |
-| Phase 1 (6 months): Appoint James Chen as interim CISO with Board        |
-|         approval and formal authority                                    |
+| PHASED APPROACH:                                                            |
+| Phase 1 (6 months): Appoint James Chen as interim CISO with formal        |
+|         authority                                                         |
 | Phase 2 (6-12 months): Begin recruiting a full-time CISO                |
-| Phase 3 (12+ months): Hire full-time CISO, transition James Chen to      |
-|         Deputy                                                           |
+| Phase 3 (12+ months): Hire full-time CISO, transition James to Deputy    |
 +----------------------------------------------------------------------------+
 
 
@@ -161,3 +133,4 @@ REFERENCES
 ================================================================================
 END OF GOVERNANCE ARCHITECTURE REPORT
 ================================================================================
+

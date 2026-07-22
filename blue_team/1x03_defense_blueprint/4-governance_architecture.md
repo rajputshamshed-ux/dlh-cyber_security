@@ -22,19 +22,19 @@ PART 1: RACI MATRIX
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
 | Security budget approval  | A                | C                | R                | C                | I                |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
-| Vulnerability remediation | I                | A                | R                | I                | C                |
+| Vulnerability remediation | A                | R                | R                | C                | C                |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
-| Incident response execution| I                | A                | R                | C                | C                |
+| Incident response execution| A                | R                | R                | C                | C                |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
 | Security policy approval  | A                | C                | R                | I                | C                |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
 | Risk acceptance decisions | A                | C                | C                | C                | I                |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
-| Security awareness training| I                | A                | R                | C                | C                |
+| Security awareness training| A                | R                | R                | C                | R                |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
-| Vendor risk assessment    | I                | A                | R                | C                | C                |
+| Vendor risk assessment    | A                | R                | C                | C                | R                |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
-| Audit coordination        | I                | A                | R                | C                | C                |
+| Audit coordination        | A                | R                | R                | C                | R                |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
 | Data ownership decisions  | I                | C                | C                | A                | I                |
 | (within departments)      |                  |                  |                  |                  |                  |
@@ -42,16 +42,24 @@ PART 1: RACI MATRIX
 
 LEGEND:
 R = Responsible (executes the task)
-A = Accountable (answers for success/failure)
+A = Accountable (answers for success/failure - "the buck stops here")
 C = Consulted (provides input before decisions)
 I = Informed (notified after decisions)
 
+GOVERNANCE PRINCIPLES:
++----------------------------------------------------------------------------+
+| 1. CEO is Accountable for ALL security activities (ultimate authority)     |
+| 2. Deputy CISO (James) is Responsible for security program execution       |
+| 3. IT Director (Sarah) is Responsible for technical implementation        |
+| 4. Dept Heads are Accountable for data ownership within their departments  |
+| 5. Security Analyst supports execution (Responsible on some tasks)        |
++----------------------------------------------------------------------------+
+
 KEY INSIGHTS:
-- CEO: Accountable for budget, policy approval, and risk acceptance (ultimate authority)
-- James Chen: Accountable for security program outcomes, consulted on budget and policy
-- Sarah Park: Responsible for execution (IT operations, remediation, incident response)
-- Dept Heads: Accountable for data ownership decisions within their departments
-- Security Analyst: Supports all activities (Consulted), not solely responsible for execution
+- CEO retains Accountable on ALL activities, resolving the vacant CISO issue
+- James and Sarah share Responsible (execution) with clear division
+- Dept Heads are Accountable only for data ownership (where business impact is highest)
+- Security Analyst is Responsible for training, vendor risk, and audit coordination
 
 
 ================================================================================
@@ -65,6 +73,7 @@ within their department. They determine who can access the data, what it can
 be used for, and how it should be classified. Department Heads hold this role
 because they are accountable for the data their department generates and uses,
 and they understand the clinical or operational impact of data decisions.
+This is the only area where Dept Heads are Accountable (A).
 
 Data Controller: Dr. Patricia Morales (CEO)
 
@@ -88,8 +97,7 @@ Database Administrator)
 MEANING: The Data Custodian/Steward is responsible for the technical
 implementation of data protection controls. They maintain the systems that
 store and process data, apply patches, manage backups, and enforce access
-controls. IT manages the servers and databases where data lives. They
-implement what the Data Owner and Data Controller decide.
+controls. IT manages the servers and databases where data lives.
 
 GOVERNANCE DISTINCTION:
 +---------------------------+--------------------------------------------------+
@@ -112,7 +120,8 @@ CONSEQUENCES OF THE VACANT CISO POSITION:
 ------------------------------------------
 1. STRATEGIC VACUUM: No single executive is accountable for the security
    program. James Chen is acting but has no formal authority because the
-   CISO role remains vacant. He cannot make budget or policy decisions.
+   CISO role remains vacant. This is why the RACI matrix shows CEO as
+   Accountable for ALL activities - to bridge the gap.
 
 2. BOARD COMMUNICATION: No direct line from security to the Board. Decisions
    are delayed through the CEO.
@@ -135,7 +144,8 @@ RECOMMENDATION: HIRE A FULL-TIME CISO
 | requires an executive leader with authority over policies, direct Board   |
 | access, and the ability to resolve IT vs. Security conflicts. James Chen |
 | is a strong Deputy but lacks the authority to make budget and policy     |
-| decisions, as reflected in the RACI matrix (C, not R/A on those items).  |
+| decisions. Until a CISO is hired, the CEO retains ultimate Accountable   |
+| on all security activities (as shown in the RACI matrix).               |
 |                                                                             |
 | A vCISO ($60,000-$80,000) would provide strategic guidance but would     |
 | not have authority over IT operations, be present for day-to-day         |

@@ -22,73 +22,74 @@ Host: billing-srv-01 (10.10.2.15)
 Asset Role: Billing/Claims Processing Server (SRV-004)
 CVSS Base Score: 9.8 (CRITICAL)
 
+Scenario A: Current (flat network)
+----------------------------------
+Who can reach this vulnerability:
 +----------------------------------------------------------------------------+
-| SCENARIO A: CURRENT (FLAT NETWORK)                                         |
-|                                                                             |
-| Who can reach this vulnerability:                                          |
 | ANY system on the 10.10.0.0/16 network. This includes:                    |
 | - All clinical workstations (~320)                                       |
 | - All servers (EHR, PACS, AD, backup)                                   |
-| - All medical devices (monitors, pumps, MRI)                             |
-| - All network infrastructure (firewall, switches)                        |
+| - All medical devices (monitors, pumps, MRI)                            |
+| - All network infrastructure (firewall, switches)                       |
 | - Guest WiFi (if isolation is not working)                              |
 | - Shadow IT devices (Raspberry Pi, unknown Linux)                       |
-|                                                                             |
-| What the attacker can reach AFTER exploitation:                           |
++----------------------------------------------------------------------------+
+
+What the attacker can reach AFTER exploitation:
++----------------------------------------------------------------------------+
 | The ENTIRE network. After gaining root on billing-srv-01 (combined with  |
-| Finding 002), the attacker can:                                           |
-| - Access ehr-db-01 via port 5432 (Finding 003)                          |
-| - Access AD and deploy ransomware via Group Policy (Kill Chain #1)       |
-| - Access medical devices (monitors, pumps)                               |
-| - Delete backups on NAS-01 (Finding 015)                                |
-| - Exfiltrate billing data via MySQL (Finding 006)                      |
-|                                                                             |
-| Impact Radius: ENTIRE ORGANIZATION                                       |
-|                                                                             |
-| Effective Risk: CRITICAL                                                  |
+| Finding 002), the attacker can:                                          |
+| - Access ehr-db-01 via port 5432 (Finding 003)                         |
+| - Access AD and deploy ransomware via Group Policy (Kill Chain #1)      |
+| - Access medical devices (monitors, pumps)                             |
+| - Delete backups on NAS-01 (Finding 015)                               |
+| - Exfiltrate billing data via MySQL (Finding 006)                     |
+|                                                                          |
+| Impact Radius: ENTIRE ORGANIZATION                                      |
+| Effective Risk: CRITICAL                                                 |
 +----------------------------------------------------------------------------+
 
+Scenario B: Hypothetical (segmented network)
+--------------------------------------------
+Who can reach this vulnerability:
 +----------------------------------------------------------------------------+
-| SCENARIO B: HYPOTHETICAL (SEGMENTED NETWORK)                              |
-|                                                                             |
-| Who can reach this vulnerability:                                          |
-| ONLY systems in the same VLAN as billing-srv-01. Ideally:                |
-| - Billing application servers                                            |
-| - Database servers (if in same segment)                                  |
-| - Authorized administrative workstations                                 |
-|                                                                             |
-| What the attacker can reach AFTER exploitation:                           |
-| ONLY systems in the billing VLAN. The attacker would need to:            |
-| - Bypass a firewall between VLANs                                         |
-| - Exploit a separate vulnerability to pivot                              |
-| - Or use compromised credentials (harder without AD access)             |
-|                                                                             |
-| Systems OUT OF REACH:                                                     |
-| - EHR database (ehr-db-01) would be on a different VLAN                 |
-| - AD would be on a different VLAN                                        |
-| - Medical devices would be on isolated IoT VLAN                         |
-| - Backups would be on isolated storage VLAN                             |
-|                                                                             |
-| Impact Radius: BILLING SEGMENT ONLY                                      |
-|                                                                             |
-| Effective Risk: HIGH (contained)                                         |
+| ONLY systems in the same VLAN as billing-srv-01. Ideally:               |
+| - Billing application servers                                           |
+| - Database servers (if in same segment)                                |
+| - Authorized administrative workstations                               |
 +----------------------------------------------------------------------------+
 
+What the attacker can reach AFTER exploitation:
 +----------------------------------------------------------------------------+
-| RISK AMPLIFICATION FACTOR                                                  |
-|                                                                             |
-| THE FLAT NETWORK MULTIPLIES THIS RISK BY A FACTOR OF 5-10X                |
-|                                                                             |
-| This vulnerability goes from a contained billing system compromise to    |
-| a NETWORK-WIDE BREACH. Without segmentation, a single RCE on             |
-| billing-srv-01 becomes:                                                   |
-| - EHR compromise                                                         |
-| - AD compromise                                                          |
-| - IoT compromise                                                         |
-| - Backup deletion                                                        |
-|                                                                             |
-| The flat network turns a "billing system" vulnerability into a           |
-| "network-wide" vulnerability.                                             |
+| ONLY systems in the billing VLAN. The attacker would need to:          |
+| - Bypass a firewall between VLANs                                      |
+| - Exploit a separate vulnerability to pivot                           |
+| - Or use compromised credentials (harder without AD access)           |
+|                                                                          |
+| Systems OUT OF REACH:                                                  |
+| - EHR database (ehr-db-01) would be on a different VLAN              |
+| - AD would be on a different VLAN                                     |
+| - Medical devices would be on isolated IoT VLAN                      |
+| - Backups would be on isolated storage VLAN                          |
+|                                                                          |
+| Impact Radius: BILLING SEGMENT ONLY                                   |
+| Effective Risk: HIGH (contained)                                      |
++----------------------------------------------------------------------------+
+
+Risk Amplification Factor:
++----------------------------------------------------------------------------+
+| THE FLAT NETWORK MULTIPLIES THIS RISK BY A FACTOR OF 5-10X              |
+|                                                                          |
+| This vulnerability goes from a contained billing system compromise to  |
+| a NETWORK-WIDE BREACH. Without segmentation, a single RCE on           |
+| billing-srv-01 becomes:                                                |
+| - EHR compromise                                                      |
+| - AD compromise                                                       |
+| - IoT compromise                                                      |
+| - Backup deletion                                                     |
+|                                                                          |
+| The flat network turns a "billing system" vulnerability into a        |
+| "network-wide" vulnerability.                                          |
 +----------------------------------------------------------------------------+
 
 
@@ -101,70 +102,71 @@ Host: ehr-db-01 (10.10.2.11)
 Asset Role: EHR Database (SRV-002) - PHI for 50,000+ patients
 CVSS Base Score: N/A (but effectively CRITICAL)
 
+Scenario A: Current (flat network)
+----------------------------------
+Who can reach this vulnerability:
 +----------------------------------------------------------------------------+
-| SCENARIO A: CURRENT (FLAT NETWORK)                                         |
-|                                                                             |
-| Who can reach this vulnerability:                                          |
 | ANY system on the 10.10.0.0/16 network. This includes:                    |
 | - All clinical workstations (~320)                                       |
 | - ALL servers (any compromised system)                                  |
 | - Medical devices (monitors, pumps, MRI)                                |
 | - Guest WiFi (if not isolated)                                          |
 | - Shadow IT devices (Raspberry Pi, unknown Linux)                       |
-|                                                                             |
-| What the attacker can reach AFTER exploitation:                           |
++----------------------------------------------------------------------------+
+
+What the attacker can reach AFTER exploitation:
++----------------------------------------------------------------------------+
 | The EHR database contains PHI for 50,000+ patients. Direct access means: |
-| - Exfiltrate ALL patient records (names, DOBs, SSNs, diagnoses)          |
-| - Modify patient data (Integrity violation)                             |
-| - Encrypt the database (ransomware)                                     |
-| - Use credentials from the database to access other systems             |
-|                                                                             |
-| This is a DIRECT path to the most sensitive data at MedDefense.          |
-|                                                                             |
-| Impact Radius: ENTIRE ORGANIZATION + PATIENT DATA                        |
-|                                                                             |
-| Effective Risk: CRITICAL                                                  |
+| - Exfiltrate ALL patient records (names, DOBs, SSNs, diagnoses)         |
+| - Modify patient data (Integrity violation)                            |
+| - Encrypt the database (ransomware)                                    |
+| - Use credentials from the database to access other systems            |
+|                                                                          |
+| This is a DIRECT path to the most sensitive data at MedDefense.       |
+|                                                                          |
+| Impact Radius: ENTIRE ORGANIZATION + PATIENT DATA                     |
+| Effective Risk: CRITICAL                                                |
 +----------------------------------------------------------------------------+
 
+Scenario B: Hypothetical (segmented network)
+--------------------------------------------
+Who can reach this vulnerability:
 +----------------------------------------------------------------------------+
-| SCENARIO B: HYPOTHETICAL (SEGMENTED NETWORK)                              |
-|                                                                             |
-| Who can reach this vulnerability:                                          |
-| ONLY systems in the same VLAN as ehr-db-01. Ideally:                     |
-| - EHR application server (ehr-srv-01)                                   |
-| - Authorized administrative workstations (limited IPs)                  |
-| - Backup servers (if in same segment)                                   |
-|                                                                             |
-| What the attacker can reach AFTER exploitation:                           |
-| ONLY the EHR segment. The attacker would need to:                        |
-| - Compromise ehr-srv-01 FIRST (which is separate)                       |
-| - Then connect to the database                                         |
-| - Cannot access from clinical workstations directly                     |
-|                                                                             |
-| Systems OUT OF REACH:                                                     |
-| - Clinical workstations (on different VLAN)                             |
-| - Billing server (on different VLAN)                                    |
-| - AD (on different VLAN)                                               |
-|                                                                             |
-| Impact Radius: EHR SEGMENT ONLY                                         |
-|                                                                             |
-| Effective Risk: HIGH (but requires prior access)                         |
+| ONLY systems in the same VLAN as ehr-db-01. Ideally:                   |
+| - EHR application server (ehr-srv-01)                                 |
+| - Authorized administrative workstations (limited IPs)                |
+| - Backup servers (if in same segment)                                 |
 +----------------------------------------------------------------------------+
 
+What the attacker can reach AFTER exploitation:
 +----------------------------------------------------------------------------+
-| RISK AMPLIFICATION FACTOR                                                  |
-|                                                                             |
-| THE FLAT NETWORK MULTIPLIES THIS RISK BY A FACTOR OF 10-20X               |
-|                                                                             |
-| This misconfiguration is the SINGLE MOST AMPLIFIED finding in the scan.  |
-| In a flat network, ANY compromised system can access the EHR database.   |
-| In a segmented network, only systems in the EHR segment can reach it.    |
-|                                                                             |
-| The difference is between:                                                |
-| - ANY breach = EHR breach (flat network)                                 |
-| - EHR segment breach = EHR breach (segmented)                           |
-|                                                                             |
-| The flat network makes this misconfiguration a NETWORK-WIDE problem.     |
+| ONLY the EHR segment. The attacker would need to:                     |
+| - Compromise ehr-srv-01 FIRST (which is separate)                    |
+| - Then connect to the database                                       |
+| - Cannot access from clinical workstations directly                  |
+|                                                                          |
+| Systems OUT OF REACH:                                                 |
+| - Clinical workstations (on different VLAN)                         |
+| - Billing server (on different VLAN)                                |
+| - AD (on different VLAN)                                            |
+|                                                                          |
+| Impact Radius: EHR SEGMENT ONLY                                      |
+| Effective Risk: HIGH (but requires prior access)                    |
++----------------------------------------------------------------------------+
+
+Risk Amplification Factor:
++----------------------------------------------------------------------------+
+| THE FLAT NETWORK MULTIPLIES THIS RISK BY A FACTOR OF 10-20X             |
+|                                                                          |
+| This misconfiguration is the SINGLE MOST AMPLIFIED finding in the scan.|
+| In a flat network, ANY compromised system can access the EHR database. |
+| In a segmented network, only systems in the EHR segment can reach it. |
+|                                                                          |
+| The difference is between:                                            |
+| - ANY breach = EHR breach (flat network)                              |
+| - EHR segment breach = EHR breach (segmented)                        |
+|                                                                          |
+| The flat network makes this misconfiguration a NETWORK-WIDE problem.  |
 +----------------------------------------------------------------------------+
 
 
@@ -177,66 +179,67 @@ Host: BD Alaris Pumps (10.10.3.40-46)
 Asset Role: Medical IoT - Infusion Pumps (IOT-002) - Life-Safety Devices
 CVSS Base Score: N/A (but effectively CRITICAL)
 
+Scenario A: Current (flat network)
+----------------------------------
+Who can reach this vulnerability:
 +----------------------------------------------------------------------------+
-| SCENARIO A: CURRENT (FLAT NETWORK)                                         |
-|                                                                             |
-| Who can reach this vulnerability:                                          |
 | ANY system on the 10.10.0.0/16 network. This includes:                    |
 | - All clinical workstations (~320)                                       |
 | - ANY compromised system                                                 |
-|                                                                             |
-| What the attacker can reach AFTER exploitation:                           |
-| The attacker can log in to the pump management console and:               |
-| - Modify medication dosages                                               |
-| - Disable alarms                                                          |
-| - View patient names and medication information                          |
++----------------------------------------------------------------------------+
+
+What the attacker can reach AFTER exploitation:
++----------------------------------------------------------------------------+
+| The attacker can log in to the pump management console and:              |
+| - Modify medication dosages                                              |
+| - Disable alarms                                                         |
+| - View patient names and medication information                         |
 | - Use the pumps as a pivot point to other systems                       |
-|                                                                             |
-| This is a DIRECT PATIENT SAFETY RISK.                                    |
-|                                                                             |
-| Impact Radius: PATIENT SAFETY + NETWORK                                   |
-|                                                                             |
-| Effective Risk: CRITICAL                                                  |
+|                                                                          |
+| This is a DIRECT PATIENT SAFETY RISK.                                   |
+|                                                                          |
+| Impact Radius: PATIENT SAFETY + NETWORK                                 |
+| Effective Risk: CRITICAL                                                |
 +----------------------------------------------------------------------------+
 
+Scenario B: Hypothetical (segmented network)
+--------------------------------------------
+Who can reach this vulnerability:
 +----------------------------------------------------------------------------+
-| SCENARIO B: HYPOTHETICAL (SEGMENTED NETWORK)                              |
-|                                                                             |
-| Who can reach this vulnerability:                                          |
-| ONLY systems in the same IoT VLAN. Ideally:                               |
-| - Clinical workstations that need to monitor patients                    |
-| - Authorized biomedical engineering workstations                         |
-| - No access from general workstations                                   |
-|                                                                             |
-| What the attacker can reach AFTER exploitation:                           |
-| ONLY the IoT VLAN. The attacker would need to:                            |
-| - First compromise a system in the IoT VLAN                              |
-| - Cannot access from a compromised clinical workstation                 |
-|                                                                             |
-| Systems OUT OF REACH:                                                     |
-| - General clinical workstations (on different VLAN)                     |
-| - Servers (on different VLAN)                                            |
-| - AD (on different VLAN)                                                 |
-|                                                                             |
-| Impact Radius: IOT SEGMENT ONLY                                          |
-|                                                                             |
-| Effective Risk: MEDIUM (only if IoT segment is compromised)              |
+| ONLY systems in the same IoT VLAN. Ideally:                             |
+| - Clinical workstations that need to monitor patients                  |
+| - Authorized biomedical engineering workstations                       |
+| - No access from general workstations                                 |
 +----------------------------------------------------------------------------+
 
+What the attacker can reach AFTER exploitation:
 +----------------------------------------------------------------------------+
-| RISK AMPLIFICATION FACTOR                                                  |
-|                                                                             |
-| THE FLAT NETWORK MULTIPLIES THIS RISK BY A FACTOR OF 5-8X                 |
-|                                                                             |
-| In a flat network, ANY compromised workstation can reach the pumps.      |
-| In a segmented network, only compromised IoT devices can reach them.    |
-|                                                                             |
-| The difference:                                                            |
-| - Flat: 320 workstations + servers + any system = access to pumps       |
-| - Segmented: only compromised IoT VLAN systems = access to pumps        |
-|                                                                             |
-| This is the difference between a patient safety incident and a           |
-| contained IoT device compromise.                                          |
+| ONLY the IoT VLAN. The attacker would need to:                        |
+| - First compromise a system in the IoT VLAN                          |
+| - Cannot access from a compromised clinical workstation              |
+|                                                                          |
+| Systems OUT OF REACH:                                                 |
+| - General clinical workstations (on different VLAN)                 |
+| - Servers (on different VLAN)                                       |
+| - AD (on different VLAN)                                            |
+|                                                                          |
+| Impact Radius: IOT SEGMENT ONLY                                      |
+| Effective Risk: MEDIUM (only if IoT segment is compromised)         |
++----------------------------------------------------------------------------+
+
+Risk Amplification Factor:
++----------------------------------------------------------------------------+
+| THE FLAT NETWORK MULTIPLIES THIS RISK BY A FACTOR OF 5-8X               |
+|                                                                          |
+| In a flat network, ANY compromised workstation can reach the pumps.    |
+| In a segmented network, only compromised IoT devices can reach them.  |
+|                                                                          |
+| The difference:                                                         |
+| - Flat: 320 workstations + servers + any system = access to pumps     |
+| - Segmented: only compromised IoT VLAN systems = access to pumps     |
+|                                                                          |
+| This is the difference between a patient safety incident and a        |
+| contained IoT device compromise.                                       |
 +----------------------------------------------------------------------------+
 
 

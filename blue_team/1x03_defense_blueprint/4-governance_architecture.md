@@ -75,13 +75,31 @@ MEANING: The Data Processor processes data on behalf of the Data Controller.
 They execute processing according to the Controller's instructions. MedTech
 processes patient data through the EHR system under contract.
 
-Data Custodian: IT Department (Sarah Park, System Administrators,
+Data Custodian/Steward: IT Department (Sarah Park, System Administrators,
 Database Administrator)
 
-MEANING: The Data Custodian is responsible for the technical implementation
-of data protection controls. They maintain the systems that store and process
-data, apply patches, manage backups, and enforce access controls. IT manages
-the servers and databases where data lives.
+MEANING: The Data Custodian/Steward is responsible for the technical
+implementation of data protection controls. They maintain the systems that
+store and process data, apply patches, manage backups, and enforce access
+controls. IT manages the servers and databases where data lives.
+
+ROLE SUMMARY:
++---------------------------+---------------------------+
+| Role                      | Assigned To               |
++---------------------------+---------------------------+
+| Data Owner                | Department Heads          |
++---------------------------+---------------------------+
+| Data Controller           | CEO + Deputy CISO         |
++---------------------------+---------------------------+
+| Data Processor            | MedTech, Vendors          |
++---------------------------+---------------------------+
+| Data Custodian/Steward    | IT Department             |
++---------------------------+---------------------------+
+
+GOVERNANCE DISTINCTION:
+- Data Owner and Data Controller define WHAT happens to data
+- Data Custodian/Steward implements HOW data is protected
+- Data Processor executes data processing under contract
 
 
 ================================================================================

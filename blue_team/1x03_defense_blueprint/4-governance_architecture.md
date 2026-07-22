@@ -41,7 +41,7 @@ PART 1: RACI MATRIX
 
 LEGEND:
 R = Responsible (executes the task)
-A = Accountable (answers for success/failure - "the buck stops here")
+A = Accountable (answers for success/failure)
 C = Consulted (provides input before decisions)
 I = Informed (notified after decisions)
 
@@ -49,7 +49,7 @@ KEY INSIGHTS:
 - James Chen (Deputy CISO) is Accountable for MOST security activities
 - Sarah Park (IT Director) is Responsible for remediation and incident execution
 - The Security Analyst executes day-to-day activities (R for remediation, training, vendor risk)
-- The CEO is Accountable for budget approval and risk acceptance (ultimate authority)
+- The CEO is Accountable for budget approval and risk acceptance
 
 
 ================================================================================
@@ -69,17 +69,17 @@ DATA CONTROLLER: Dr. Patricia Morales (CEO) + James Chen (Deputy CISO)
 
 MEANING: The Data Controller determines the purposes and means of processing
 personal data. They decide WHY patient data is collected and HOW it is
-processed. This is a legal and compliance role under regulatory frameworks.
+processed. This is a legal and compliance role.
 
 WHY: The CEO holds ultimate legal accountability for data protection. James
 Chen provides the security expertise to implement controls.
 
-DATA PROCESSOR: MedTech Solutions (EHR vendor), ClearView Security, other
-third-party vendors processing MedDefense data
+DATA PROCESSOR: MedTech Solutions (EHR vendor), ClearView Security, and
+other third-party vendors processing MedDefense data
 
 MEANING: The Data Processor processes data on behalf of the Data Controller.
 They do not decide what to do with the data - they execute the processing
-according to the Controller's instructions (contracts, SLAs).
+according to the Controller's instructions.
 
 WHY: MedTech processes patient data through the EHR system. These vendors
 must be contractually obligated to protect MedDefense data.
@@ -103,8 +103,7 @@ CONSEQUENCES OF THE CURRENT GAP (No CISO):
 ------------------------------------------
 1. STRATEGIC VACUUM: Without a CISO, there is no single executive accountable
    for the security program's success. James Chen is acting but has no formal
-   authority (from 1x00: "James has authority over security policy but no
-   authority over IT operations - this creates friction").
+   authority.
 
 2. BOARD COMMUNICATION: No direct line from the security program to the Board.
    James Chen must go through the CEO, which delays decisions.
@@ -130,53 +129,23 @@ RECOMMENDATION: HIRE A FULL-TIME CISO
 | - Ability to resolve IT vs. Security conflicts                            |
 | - A career path for the security team                                    |
 |                                                                             |
-| A vCISO (virtual CISO) would cost $60,000-$80,000/year and would         |
-| provide strategic guidance, but would NOT:                               |
-| - Be present for day-to-day decisions                                    |
-| - Have authority over IT operations                                      |
-| - Build institutional knowledge over time                                |
+| A vCISO would cost $60,000-$80,000/year and would provide strategic       |
+| guidance, but would NOT be present for day-to-day decisions, have         |
+| authority over IT operations, or build institutional knowledge.           |
 |                                                                             |
 | BUDGET CONSTRAINT: The $120,000 security budget CANNOT fund a            |
-| full-time CISO ($160K-$200K) AND the $104,400 remediation priorities.    |
-| However, the CISO position is a CAPITAL INVESTMENT in the security       |
-| program's success - it should be funded separately from the operational  |
-| security budget. MedDefense should request a separate $160,000-$200,000  |
-| for CISO compensation in the next fiscal year.                           |
+| full-time CISO AND the $104,400 remediation priorities. The CISO          |
+| position should be funded separately from the operational security        |
+| budget. MedDefense should request a separate $160,000-$200,000 for        |
+| CISO compensation in the next fiscal year.                                |
 |                                                                             |
-| RECOMMENDED PHASED APPROACH:                                              |
+| PHASED APPROACH:                                                           |
 | Phase 1 (6 months): Appoint James Chen as interim CISO with Board        |
 |         approval and formal authority                                    |
 | Phase 2 (6-12 months): Begin recruiting a full-time CISO                |
 | Phase 3 (12+ months): Hire full-time CISO, transition James Chen to      |
 |         Deputy                                                           |
 +----------------------------------------------------------------------------+
-
-
-================================================================================
-SUMMARY TABLE
-================================================================================
-
-+----------+------------------+----------------------------------------+
-| Element  | Responsible      | Notes                                  |
-+----------+------------------+----------------------------------------+
-| RACI     | CEO (A), James   | Clear accountability for each activity |
-|          | (R/A), Sarah (R) |                                        |
-+----------+------------------+----------------------------------------+
-| Data     | Dept Heads       | Own data classification and access     |
-| Owner    |                  |                                        |
-+----------+------------------+----------------------------------------+
-| Data     | CEO + James      | Legal accountability for data          |
-| Controller|                  | processing                             |
-+----------+------------------+----------------------------------------+
-| Data     | MedTech,         | Process data under contract            |
-| Processor| Vendors          |                                        |
-+----------+------------------+----------------------------------------+
-| Data     | IT Department    | Technical implementation of controls   |
-| Custodian|                  |                                        |
-+----------+------------------+----------------------------------------+
-| CISO     | Full-time        | Required for strategic leadership,     |
-|          | (Recommended)    | separate budget request needed        |
-+----------+------------------+----------------------------------------+
 
 
 ================================================================================
@@ -187,7 +156,6 @@ REFERENCES
 - NIST CSF Mapping (1x03 T1)
 - CIS Controls Audit (1x03 T2)
 - HIPAA Security Officer requirements
-- GDPR Data Controller/Processor definitions
 
 
 ================================================================================

@@ -219,3 +219,126 @@ REFERENCES
 ================================================================================
 END OF BUDGET ALLOCATION REPORT
 ================================================================================
+================================================================================
+                    BUDGET ALLOCATION - MEDDEFENSE HEALTH SYSTEMS
+                    Task 8: The Budget Game
+================================================================================
+
+Exercise: Task 8 - The Budget Game
+Analyst: shamshed rajput
+Date: 22/07/2026
+Objective: Make binding resource allocation decisions under realistic budget
+          constraints, demonstrating that every dollar has a reason behind it.
+
+Sources: 1x03 Cost-Benefit Analysis (T7), 1x03 ALE Workshop (T6)
+Budget: 120000
+
+
+================================================================================
+FINAL DECISION: FUNDED PORTFOLIO (7 controls, $92,400)
+================================================================================
+
+CONTROLS FUNDED
+---------------
++---------------------------+------------------+------------------+
+| Control                   | Annual Cost      | Net Value        |
++---------------------------+------------------+------------------+
+| Network Segmentation      | $12,000          | $1,839,696       |
+| MFA Deployment            | $8,000           | $1,767,756       |
+| SIEM (Wazuh)              | $5,000           | $1,474,796       |
+| EDR Upgrade               | $30,000          | $711,636         |
+| Offsite Backup            | $14,400          | $629,024         |
+| Medical IoT Isolation     | $18,000          | $77,585          |
+| Westside Firewall         | $5,000           | $58,723          |
++---------------------------+------------------+------------------+
+| Total spend               | $92,400          | $6,559,216       |
++---------------------------+------------------+------------------+
+
+Total spend: $92,400
+Budget remaining: 120000 - 92400 = 27600
+
+RATIONALE:
+This portfolio is selected because it provides the best balance of risk
+reduction and cost. It funds the 7 highest-value controls and stays well
+under the $120,000 budget. The 24/7 SOC ($80,000) is deferred because it
+would consume most of the budget.
+
+CONTROLS DEFERRED
+-----------------
++---------------------------+------------------+
+| Control                   | Annual Cost      |
++---------------------------+------------------+
+| 24/7 Managed SOC          | $80,000          |
++---------------------------+------------------+
+
+REASON FOR DEFERRAL: The 24/7 SOC costs $80,000 - more than the remaining
+budget ($27,600). A daytime-only SOC ($35,000) could be considered next year.
+
+CONTROLS REJECTED
+-----------------
+None. All controls have positive net value. Deferrals are due to budget
+constraint, not lack of justification.
+
+
+================================================================================
+OPPORTUNITY COST OF DEFERRAL
+================================================================================
+
+By deferring 24/7 Managed SOC, MedDefense accepts an estimated $1,183,837
+in annual risk exposure that would have been reduced through continuous
+24/7 monitoring.
+
+
+================================================================================
+ALTERNATIVE CONSIDERED (NOT SELECTED)
+================================================================================
+
++---------------------------+------------------+
+| Control                   | Annual Cost      |
++---------------------------+------------------+
+| Network Segmentation      | $12,000          |
+| MFA Deployment            | $8,000           |
+| SIEM (Wazuh)              | $5,000           |
+| EDR Upgrade               | $30,000          |
+| Offsite Backup            | $14,400          |
+| Daytime-Only SOC          | $35,000          |
++---------------------------+------------------+
+| Total spend               | $104,400         |
++---------------------------+------------------+
+
+COMPARISON
+----------
++----------------------------------------------------------------------------+
+| Metric          | SELECTED (7 controls)   | Alternative (6 controls) |
++-----------------+-------------------------+--------------------------+
+| Total spend     | $92,400                 | $104,400                 |
+| ALE Reduction   | $6,559,216              | $7,133,210               |
++-----------------+-------------------------+--------------------------+
+
+The Alternative provides $574,004 more risk reduction but costs $12,000
+more. The Selected portfolio is preferred because it funds IoT Isolation
+and Westside Firewall while staying further under budget.
+
+
+================================================================================
+SUMMARY
+================================================================================
+
+SELECTED PORTFOLIO: 7 controls, $92,400
+Budget remaining: $27,600
+Total ALE Reduction: $6,559,216
+
+This portfolio is BUDGET-COMPLIANT ($92,400 < $120,000).
+
+
+================================================================================
+REFERENCES
+================================================================================
+
+- Cost-Benefit Analysis (1x03 T7)
+- ALE Workshop (1x03 T6)
+
+
+================================================================================
+END OF BUDGET ALLOCATION REPORT
+================================================================================

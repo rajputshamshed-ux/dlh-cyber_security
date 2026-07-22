@@ -39,10 +39,10 @@ CONTROLS FUNDED
 | #7       | Westside         | $5,000           | $58,723          |
 |          | Firewall         |                  |                  |
 +----------+------------------+------------------+------------------+
-|          | TOTAL            | $92,400          | $6,559,216       |
+|          | TOTAL SPEND      | $92,400          | $6,559,216       |
 +----------+------------------+------------------+------------------+
 
-BUDGET USED: $92,400
+TOTAL SPEND: $92,400
 BUDGET REMAINING: $120,000 - $92,400 = $27,600
 
 RATIONALE FOR FUNDED CONTROLS:
@@ -143,7 +143,7 @@ ALTERNATIVE ALLOCATION (Daytime-Only SOC)
 | 5. Offsite Backup:                          $14,400                      |
 | 6. Daytime-Only SOC (8am-6pm):              $35,000                      |
 |                                                                             |
-| TOTAL:                                      $104,400                     |
+| TOTAL COST:                                 $104,400                     |
 |                                                                             |
 | ALE REDUCTION COMPARISON:                                                 |
 |                                                                             |
@@ -214,7 +214,7 @@ FINAL RECOMMENDATION
 | 5. Offsite Backup:                              $14,400                  |
 | 6. Daytime-Only SOC:                            $35,000                  |
 |                                                                             |
-| TOTAL:                                         $104,400                  |
+| TOTAL SPEND:                                   $104,400                  |
 |                                                                             |
 | CONTROLS DEFERRED:                                                         |
 | 1. Medical IoT Isolation:                      $18,000                   |
@@ -227,7 +227,7 @@ FINAL RECOMMENDATION
 | None - all controls have positive net value. Deferral is due to budget    |
 | constraint, not lack of justification.                                   |
 |                                                                             |
-| BUDGET USED:                                 $104,400                     |
+| TOTAL SPEND:                                 $104,400                     |
 | BUDGET REMAINING:                             $15,600                     |
 |                                                                             |
 | RATIONALE:                                                                 |

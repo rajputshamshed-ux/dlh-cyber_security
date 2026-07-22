@@ -54,28 +54,28 @@ KEY INSIGHTS:
 PART 2: ROLE DEFINITIONS
 ================================================================================
 
-DATA OWNER: Department Heads (Clinical Directors, Finance Director, HR Director)
+Data Owner: Department Heads (Clinical Directors, Finance Director, HR Director)
 
 MEANING: The Data Owner has ultimate responsibility for a specific data set.
 They determine who can access the data, what it can be used for, and how it
 should be classified. Department Heads hold this role because they know what
 data their department generates and how it is used.
 
-DATA CONTROLLER: Dr. Patricia Morales (CEO) + James Chen (Deputy CISO)
+Data Controller: Dr. Patricia Morales (CEO) + James Chen (Deputy CISO)
 
 MEANING: The Data Controller determines the purposes and means of processing
 personal data. They decide WHY patient data is collected and HOW it is
 processed. The CEO holds ultimate legal accountability, while James Chen
 provides the security expertise.
 
-DATA PROCESSOR: MedTech Solutions (EHR vendor), ClearView Security, and
+Data Processor: MedTech Solutions (EHR vendor), ClearView Security, and
 other third-party vendors processing MedDefense data
 
 MEANING: The Data Processor processes data on behalf of the Data Controller.
 They execute processing according to the Controller's instructions. MedTech
 processes patient data through the EHR system under contract.
 
-DATA CUSTODIAN / STEWARD: IT Department (Sarah Park, System Administrators,
+Data Custodian: IT Department (Sarah Park, System Administrators,
 Database Administrator)
 
 MEANING: The Data Custodian is responsible for the technical implementation

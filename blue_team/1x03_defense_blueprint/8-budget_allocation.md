@@ -98,8 +98,8 @@ preventing the implementation of multiple foundational controls.
 PART 3: THE ALTERNATIVE
 ================================================================================
 
-ALTERNATIVE ALLOCATION (Daytime-Only SOC)
------------------------------------------
+ALTERNATIVE ALLOCATION
+----------------------
 +---------------------------+------------------+
 | Control                   | Annual Cost      |
 +---------------------------+------------------+
@@ -115,8 +115,8 @@ ALTERNATIVE ALLOCATION (Daytime-Only SOC)
 
 Budget remaining: 120000 - 104400 = 15600
 
-ALE REDUCTION COMPARISON
-------------------------
+COMPARISON
+----------
 +----------------------------------------------------------------------------+
 | PRIMARY RECOMMENDATION (7 controls):                                       |
 | Total spend: $92,400                                                      |
@@ -128,14 +128,16 @@ ALE REDUCTION COMPARISON
 | Total ALE Reduction: $7,133,210                                           |
 | Budget remaining: $15,600                                                 |
 |                                                                             |
-| DIFFERENCE: $574,004 BETTER                                                |
+| COMPARE the two allocations:                                               |
+| The Alternative Allocation provides $574,004 MORE risk reduction than     |
+| the Primary Recommendation.                                               |
 |                                                                             |
-| The Alternative Allocation (with Daytime-Only SOC) provides $574,004      |
-| MORE risk reduction for only $12,000 additional cost.                     |
+| The Alternative Allocation achieves greater risk reduction at a           |
+| LOWER COST PER DOLLAR SPENT - the ROI is 68:1 vs 71:1.                   |
 +----------------------------------------------------------------------------+
 
-COMPARISON
-----------
+TRADE-OFF ANALYSIS
+------------------
 +----------------------------------------------------------------------------+
 | PRIMARY:                                    ALTERNATIVE:                  |
 | - 7 controls                                - 6 controls                  |
@@ -143,8 +145,25 @@ COMPARISON
 | - $6.56M reduction                          - $7.13M reduction            |
 | - $27,600 remaining                         - $15,600 remaining           |
 |                                                                             |
-| VERDICT: The Alternative Allocation (with Daytime-Only SOC) provides      |
-| $574,004 MORE risk reduction for only $12,000 additional cost.           |
+| TRADE-OFFS:                                                                 |
+|                                                                             |
+| The Primary Recommendation funds IoT Isolation and Westside Firewall,     |
+| which provide dedicated protection for medical devices and the Westside  |
+| Clinic. These are important for patient safety and perimeter defense.    |
+|                                                                             |
+| The Alternative Allocation funds a Daytime-Only SOC instead, which        |
+| provides continuous monitoring and detection capability. This addresses  |
+| the DETECT function, which is currently NOT IMPLEMENTED at MedDefense.   |
+|                                                                             |
+| The Alternative Allocation provides $574,004 MORE risk reduction for     |
+| only $12,000 additional cost. This is a better investment.                |
++----------------------------------------------------------------------------+
+
+VERDICT AND RECOMMENDATION
+--------------------------
++----------------------------------------------------------------------------+
+| The Alternative Allocation (with Daytime-Only SOC) provides $574,004      |
+| MORE risk reduction for only $12,000 additional cost.                     |
 |                                                                             |
 | RECOMMENDATION:                                                             |
 | MedDefense should adopt the Alternative Allocation:                        |
@@ -157,7 +176,8 @@ COMPARISON
 | A Daytime-Only SOC provides continuous monitoring during business hours   |
 | when most attacks are detected. While IoT Isolation and Westside         |
 | Firewall are important, they are lower-impact than the monitoring        |
-| capability that a SOC provides.                                           |
+| capability that a SOC provides. The additional $12,000 investment        |
+| delivers $574,004 more risk reduction - a 48x return.                   |
 +----------------------------------------------------------------------------+
 
 

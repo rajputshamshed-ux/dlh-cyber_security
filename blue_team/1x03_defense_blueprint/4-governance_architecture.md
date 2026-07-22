@@ -17,8 +17,8 @@ PART 1: RACI MATRIX
 ================================================================================
 
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
-| Activity                  | CEO              | Deputy CISO      | IT Director      | Department       | Security         |
-|                           | (Dr. Morales)    | (James Chen)     | (Sarah Park)     | Heads            | Analyst (You)    |
+| Activity                  | CEO              | Deputy CISO      | IT Director      | Dept Heads       | Security         |
+|                           | (Dr. Morales)    | (James Chen)     | (Sarah Park)     |                  | Analyst (You)    |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
 | Security budget approval  | A                | R                | C                | C                | I                |
 +---------------------------+------------------+------------------+------------------+------------------+------------------+
@@ -42,6 +42,12 @@ R = Responsible (executes the task)
 A = Accountable (answers for success/failure)
 C = Consulted (provides input before decisions)
 I = Informed (notified after decisions)
+
+KEY INSIGHTS:
+- James Chen (Deputy CISO) is Accountable for MOST security activities
+- Sarah Park (IT Director) is Responsible for remediation and incident execution
+- The Security Analyst executes day-to-day activities
+- The CEO is Accountable for budget approval and risk acceptance
 
 
 ================================================================================
@@ -133,4 +139,3 @@ REFERENCES
 ================================================================================
 END OF GOVERNANCE ARCHITECTURE REPORT
 ================================================================================
-

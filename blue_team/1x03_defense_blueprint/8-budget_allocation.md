@@ -20,7 +20,7 @@ PART 1: THE SELECTION
 CONTROLS FUNDED
 ---------------
 +----------+------------------+------------------+------------------+
-| Priority| Control          | Annual Cost      | Net Value        |
+| Priority | Control          | Annual Cost      | Net Value        |
 +----------+------------------+------------------+------------------+
 | #1       | Network          | $12,000          | $1,839,696       |
 |          | Segmentation     |                  |                  |
@@ -42,12 +42,18 @@ CONTROLS FUNDED
 |          | TOTAL            | $92,400          | $6,559,216       |
 +----------+------------------+------------------+------------------+
 
+BUDGET USED: $92,400
 BUDGET REMAINING: $120,000 - $92,400 = $27,600
+
+RATIONALE FOR FUNDED CONTROLS:
+The top 7 controls are funded because they have the highest net value and
+address the most critical risks (Data Breach, VPN Compromise, Ransomware,
+IoT Safety). These controls represent the best return on investment.
 
 CONTROLS DEFERRED
 -----------------
 +----------+------------------+------------------+------------------+
-| Priority| Control          | Annual Cost      | Net Value        |
+| Priority | Control          | Annual Cost      | Net Value        |
 +----------+------------------+------------------+------------------+
 | #8       | 24/7 Managed SOC | $80,000          | $1,103,837       |
 +----------+------------------+------------------+------------------+
@@ -63,6 +69,12 @@ CONTROLS REJECTED
 None. All 8 controls are justified (net value > 0). The only reason a
 control is not implemented is budget constraint, not lack of justification.
 
+REJECTED DECISION: No controls are rejected entirely. All have positive net
+value. The choice is between funding 7 controls now and deferring 1 control,
+or funding fewer controls to include the more expensive SOC.
+
+BUDGET REMAINING: $27,600 (unallocated for contingency or future use)
+
 
 ================================================================================
 PART 2: THE OPPORTUNITY COST
@@ -76,27 +88,25 @@ OPPORTUNITY COST ANALYSIS
 | Net Value: $1,103,837                                                     |
 | ALE Reduction Foregone: $1,183,837                                        |
 +----------------------------------------------------------------------------+
-| OPPORTUNITY COST STATEMENT:                                                |
-|                                                                             |
-| By deferring 24/7 Managed SOC, MedDefense accepts an estimated             |
-| $1,183,837 in annual risk exposure that would have been reduced through   |
-| continuous 24/7 monitoring and response capabilities.                    |
-|                                                                             |
-| This is a SIGNIFICANT opportunity cost. The SOC would have provided:      |
-| - Continuous monitoring of the SIEM (which MedDefense is deploying)      |
-| - Alert triage and initial response                                       |
-| - 24/7 coverage (currently no security monitoring exists)                |
-|                                                                             |
-| However, the $80,000 cost would consume 67% of the entire budget,        |
-| preventing the implementation of multiple foundational controls.         |
-+----------------------------------------------------------------------------+
+
+By deferring 24/7 Managed SOC, MedDefense accepts an estimated $1,183,837
+in annual risk exposure that would have been reduced through continuous
+24/7 monitoring and response capabilities.
+
+This is a SIGNIFICANT opportunity cost. The SOC would have provided:
+- Continuous monitoring of the SIEM (which MedDefense is deploying)
+- Alert triage and initial response
+- 24/7 coverage (currently no security monitoring exists)
+
+However, the $80,000 cost would consume 67% of the entire budget,
+preventing the implementation of multiple foundational controls.
 
 ALTERNATIVE OPPORTUNITY COST: DAYTIME-ONLY SOC ($35,000)
 +----------------------------------------------------------------------------+
 | If MedDefense instead funded a daytime-only SOC ($35,000) and deferred   |
 | the Westside Firewall ($5,000) and IoT Isolation ($18,000):              |
 |                                                                             |
-| Controls removed: Westside Firewall + IoT Isolation                       |
+| Controls deferred: Westside Firewall + IoT Isolation                      |
 | Opportunity Cost: $58,723 + $77,585 = $136,308                           |
 | SOC Reduction: $1,183,837 × 60% (daytime only) = $710,302               |
 | Net Benefit of Daytime SOC: $710,302 - $35,000 = $675,302               |
@@ -110,11 +120,9 @@ ALTERNATIVE OPPORTUNITY COST: DAYTIME-ONLY SOC ($35,000)
 PART 3: THE ALTERNATIVE
 ================================================================================
 
-ALTERNATIVE ALLOCATION: DAYTIME-ONLY SOC
-----------------------------------------
+PRIMARY RECOMMENDATION (7 controls)
+-----------------------------------
 +----------------------------------------------------------------------------+
-| PRIMARY RECOMMENDATION (7 controls)                                       |
-|                                                                             |
 | Controls: Segmentation, MFA, SIEM, EDR, Offsite Backup, IoT Isolation,   |
 |           Westside Firewall                                                |
 | Total Cost: $92,400                                                       |
@@ -122,9 +130,9 @@ ALTERNATIVE ALLOCATION: DAYTIME-ONLY SOC
 | Budget Remaining: $27,600                                                |
 +----------------------------------------------------------------------------+
 
+ALTERNATIVE ALLOCATION (Daytime-Only SOC)
+-----------------------------------------
 +----------------------------------------------------------------------------+
-| ALTERNATIVE ALLOCATION (Daytime-Only SOC)                                 |
-|                                                                             |
 | Replace IoT Isolation + Westside Firewall with Daytime-Only SOC ($35K):  |
 |                                                                             |
 | Controls:                                                                  |
@@ -154,11 +162,9 @@ ALTERNATIVE ALLOCATION: DAYTIME-ONLY SOC
 | DIFFERENCE: $574,004 BETTER                                                |
 +----------------------------------------------------------------------------+
 
-ANALYSIS: ALTERNATIVE IS BETTER
--------------------------------
+COMPARISON
+----------
 +----------------------------------------------------------------------------+
-| COMPARISON:                                                                |
-|                                                                             |
 | PRIMARY:                                    ALTERNATIVE:                  |
 | - 7 controls                                - 6 controls                  |
 | - $92,400 cost                              - $104,400 cost               |
@@ -217,7 +223,12 @@ FINAL RECOMMENDATION
 |                                                                             |
 | TOTAL DEFERRED:                                 $103,000                  |
 |                                                                             |
-| BUDGET REMAINING:                              $15,600                   |
+| CONTROLS REJECTED:                                                         |
+| None - all controls have positive net value. Deferral is due to budget    |
+| constraint, not lack of justification.                                   |
+|                                                                             |
+| BUDGET USED:                                 $104,400                     |
+| BUDGET REMAINING:                             $15,600                     |
 |                                                                             |
 | RATIONALE:                                                                 |
 | The Daytime-Only SOC provides $574,004 MORE risk reduction than           |

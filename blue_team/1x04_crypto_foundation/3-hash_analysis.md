@@ -22,11 +22,9 @@ SHA-256 HASHES
 +------------------+--------------------------------------------------+
 | Input            | Hash                                             |
 +------------------+--------------------------------------------------+
-| "MedDefense"     | 2e6b52c6c8c4e5a1c4d4c4b9f7b4c8d2e1f6a5b4c8d2    |
-|                  | (exemple - à remplacer par le vrai hash)         |
+| "MedDefense"     | [À remplacer par le vrai hash]                   |
 +------------------+--------------------------------------------------+
-| "MedDefense1"    | a1b2c3d4e5f67890abcdef1234567890abcdef1234567890 |
-|                  | (exemple - à remplacer par le vrai hash)         |
+| "MedDefense1"    | [À remplacer par le vrai hash]                   |
 +------------------+--------------------------------------------------+
 
 COMMANDS:
@@ -40,9 +38,9 @@ MD5 HASHES
 +------------------+--------------------------------------------------+
 | Input            | Hash                                             |
 +------------------+--------------------------------------------------+
-| "MedDefense"     | 5a6b7c8d9e0f1234567890abcdef1234 (exemple)      |
+| "MedDefense"     | [À remplacer par le vrai hash]                   |
 +------------------+--------------------------------------------------+
-| "MedDefense1"    | 9f8e7d6c5b4a3210fedcba9876543210 (exemple)      |
+| "MedDefense1"    | [À remplacer par le vrai hash]                   |
 +------------------+--------------------------------------------------+
 
 COMMANDS:
@@ -107,8 +105,10 @@ UNSALTED HASH
 +------------------+--------------------------------------------------+
 | MD5 Hash         | 482c811da5d5b4bc6d497ffa98491e38                  |
 +------------------+--------------------------------------------------+
-| CrackStation     | Found in database                                |
-| Result           |                                                  |
+| CrackStation     | Go to crackstation.net and search the hash       |
+| Result           | The hash is found in the database. The password  |
+|                  | is "password123". This shows that unsalted MD5   |
+|                  | hashes are easily cracked using rainbow tables. |
 +------------------+--------------------------------------------------+
 
 SALTED HASH
@@ -122,26 +122,11 @@ SALTED HASH
 +------------------+--------------------------------------------------+
 | Salted MD5 Hash  | 6d537fa53f1db2c22b0451ef4ef9fbe8                  |
 +------------------+--------------------------------------------------+
-| CrackStation     | Not found (hash not in pre-computed database)    |
-| Result           |                                                  |
+| CrackStation     | Go to crackstation.net and search the hash       |
+| Result           | The hash is NOT found in the database. This      |
+|                  | demonstrates that salting defeats rainbow tables |
+|                  | because the salt makes the hash unique.         |
 +------------------+--------------------------------------------------+
-
-WHY SALTING WORKS
------------------
-+----------------------------------------------------------------------------+
-| A rainbow table is a pre-computed database of hashes for common           |
-| passwords. If an attacker obtains password hashes, they can look up the   |
-| hash and find the corresponding password.                                 |
-|                                                                             |
-| Salting adds a unique random value to each password before hashing.       |
-| This means that even if two users have the same password, their hashes    |
-| will be completely different.                                             |
-|                                                                             |
-| Every user needs a unique salt because if salts are reused, attackers    |
-| can pre-compute hashes for that specific salt. A unique salt per user    |
-| makes rainbow tables ineffective.                                         |
-+----------------------------------------------------------------------------+
-
 
 ================================================================================
 PART 4: KEY STRETCHING
@@ -186,6 +171,7 @@ REFERENCES
 - NIST SP 800-132: Password-Based Key Derivation
 - OWASP Password Storage Cheat Sheet
 - 1x02 Finding 018 (Kerberos weak encryption)
+- crackstation.net - Online hash cracking tool
 
 
 ================================================================================

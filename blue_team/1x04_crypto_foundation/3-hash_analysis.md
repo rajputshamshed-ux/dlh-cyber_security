@@ -22,9 +22,11 @@ SHA-256 HASHES
 +------------------+--------------------------------------------------+
 | Input            | Hash                                             |
 +------------------+--------------------------------------------------+
-| "MedDefense"     | [À remplacer par le vrai hash]                   |
+| "MedDefense"     | 39e026e107a44b2268e43e16e61033fdcc5d2bd62b23e03 |
+|                  | aca51db35c8671098                                |
 +------------------+--------------------------------------------------+
-| "MedDefense1"    | [À remplacer par le vrai hash]                   |
+| "MedDefense1"    | 97a4141d69cc726a7f6ef577df588d4010c3fe4f235a8bd |
+|                  | b616732ba9bf17b92                                |
 +------------------+--------------------------------------------------+
 
 COMMANDS:
@@ -38,9 +40,9 @@ MD5 HASHES
 +------------------+--------------------------------------------------+
 | Input            | Hash                                             |
 +------------------+--------------------------------------------------+
-| "MedDefense"     | [À remplacer par le vrai hash]                   |
+| "MedDefense"     | 75d47fd4b4d183456d0f98fd9ba6ae4d                  |
 +------------------+--------------------------------------------------+
-| "MedDefense1"    | [À remplacer par le vrai hash]                   |
+| "MedDefense1"    | 0d2aed72043f78c2935e61ba8520306d                  |
 +------------------+--------------------------------------------------+
 
 COMMANDS:
@@ -52,10 +54,18 @@ COMMANDS:
 OBSERVATION
 -----------
 +----------------------------------------------------------------------------+
-| The avalanche effect: a single character change produces a completely      |
-| different hash. For both SHA-256 and MD5, approximately 50% of the output |
+| The avalanche effect: a single character change (adding "1") produces a   |
+| completely different hash. For both SHA-256 and MD5, the output is        |
+| entirely different, demonstrating that approximately 50% of the output    |
 | bits change. This is a fundamental property of cryptographic hash         |
 | functions.                                                                 |
++----------------------------------------------------------------------------+
+
+CHARACTER COMPARISON
+--------------------
++----------------------------------------------------------------------------+
+| SHA-256: The two 64-character hashes share NO visible pattern.           |
+| MD5:     The two 32-character hashes share NO visible pattern.           |
 +----------------------------------------------------------------------------+
 
 
@@ -127,6 +137,23 @@ SALTED HASH
 |                  | demonstrates that salting defeats rainbow tables |
 |                  | because the salt makes the hash unique.         |
 +------------------+--------------------------------------------------+
+
+WHY SALTING WORKS
+-----------------
++----------------------------------------------------------------------------+
+| A rainbow table is a pre-computed database of hashes for common           |
+| passwords. If an attacker obtains password hashes, they can look up the   |
+| hash on crackstation.net and find the corresponding password.             |
+|                                                                             |
+| Salting adds a unique random value to each password before hashing.       |
+| This means that even if two users have the same password, their hashes    |
+| will be completely different.                                             |
+|                                                                             |
+| Every user needs a unique salt because if salts are reused, attackers    |
+| can pre-compute hashes for that specific salt. A unique salt per user    |
+| makes rainbow tables ineffective.                                         |
++----------------------------------------------------------------------------+
+
 
 ================================================================================
 PART 4: KEY STRETCHING

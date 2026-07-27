@@ -165,28 +165,78 @@ ALGORITHM COMPARISON
 | Algorithm| Description      | Key Feature                              |
 +----------+------------------+------------------------------------------+
 | bcrypt   | Blowfish-based   | Built-in salt + configurable cost factor |
-|          | hash             | (2^cost iterations)                      |
+|          | hash             | (2^cost iterations). Salted and slow.   |
+|          |                  | Not memory-hard.                         |
 +----------+------------------+------------------------------------------+
 | PBKDF2   | Password-Based   | Configurable iteration count             |
-|          | Key Derivation   | (e.g., 100,000 iterations)               |
-|          | Function 2       |                                          |
+|          | Key Derivation   | (e.g., 100,000 iterations). Salted and  |
+|          | Function 2       | slow. Not memory-hard.                   |
 +----------+------------------+------------------------------------------+
 | Argon2   | Winner of        | Configurable memory, time, and           |
-|          | Password Hashing | parallelism parameters                   |
-|          | Competition      |                                          |
+|          | Password Hashing | parallelism parameters. Salted, slow,   |
+|          | Competition      | AND memory-hard (resistant to GPU/ASIC  |
+|          |                  | attacks). This is the strongest choice. |
 +----------+------------------+------------------------------------------+
 
 RECOMMENDATION FOR MEDDEFENSE
 -----------------------------
 +----------------------------------------------------------------------------+
-| For application password storage, MedDefense should use bcrypt or        |
-| Argon2 with a cost factor of at least 12 (4096 iterations).              |
+| For application password storage, MedDefense should use Argon2id with      |
+| appropriate parameters (memory: 64MB, iterations: 3, parallelism: 1).     |
+| Argon2 is the winner of the Password Hashing Competition and is the       |
+| strongest option because it is:                                           |
+| - Salted (defeats rainbow tables)                                        |
+| - Slow (defeats brute-force)                                             |
+| - Memory-hard (defeats GPU/ASIC acceleration)                           |
 |                                                                             |
-| Active Directory by default uses NTLM (MD4) which is WEAK. It should be  |
-| configured to use AES-256 for Kerberos authentication instead of RC4.   |
+| If Argon2 is not available, bcrypt with cost factor 12 is an acceptable  |
+| alternative. PBKDF2 is weaker because it is not memory-hard.            |
++----------------------------------------------------------------------------+
+
+ACTIVE DIRECTORY KERBEROS CONFIGURATION
+---------------------------------------
++----------------------------------------------------------------------------+
+| Active Directory by default supports multiple Kerberos encryption types:  |
+| - AES-256-CTS-HMAC-SHA1-96 (strong)                                     |
+| - AES-128-CTS-HMAC-SHA1-96 (strong)                                     |
+| - RC4-HMAC (WEAK - uses MD5 internally)                                 |
+| - DES-CBC-MD5 (BROKEN - deprecated)                                     |
 |                                                                             |
-| If AD cannot be upgraded immediately, use a password filter to enforce   |
-| strong passwords and enable AES-256 encryption for Kerberos tickets.    |
+| The problem identified in 1x02 Finding 018 is that RC4 and DES are       |
+| STILL ENABLED. This allows attackers to request RC4-encrypted service    |
+| tickets (Kerberoasting) and crack them offline because RC4 uses MD5.    |
+|                                                                             |
+| AD does NOT "default to NTLM/MD4" for Kerberos. The issue is that        |
+| administrators have NOT disabled the weak RC4 and DES encryption types. |
++----------------------------------------------------------------------------+
+
+ADEQUACY ASSESSMENT
+-------------------
++----------------------------------------------------------------------------+
+| The current Active Directory configuration is INADEQUATE because:         |
+|                                                                             |
+| 1. RC4 is still enabled (Finding 018)                                   |
+| 2. Kerberoasting attacks can crack RC4 tickets offline                  |
+| 3. DES is still enabled (trivially breakable)                          |
+|                                                                             |
+| RECOMMENDED FIX:                                                         |
+| 1. Disable RC4-HMAC encryption for Kerberos                             |
+| 2. Disable DES-CBC-MD5 encryption                                       |
+| 3. Enforce AES-256 for all Kerberos tickets                             |
+| 4. Change KRBTGT password (to invalidate old tickets)                  |
+| 5. Monitor for Kerberoasting attempts                                   |
++----------------------------------------------------------------------------+
+
+IMPLEMENTATION COMMANDS (AD)
+----------------------------
++----------------------------------------------------------------------------+
+| # Disable RC4 for Kerberos (Group Policy)                                |
+| Computer Configuration → Policies → Administrative Templates →          |
+| System → Kerberos → "Encryption types allowed for Kerberos"             |
+| Select: AES256-CTS-HMAC-SHA1-96 and AES128-CTS-HMAC-SHA1-96 only       |
+|                                                                             |
+| # Change KRBTGT password (after disabling RC4)                          |
+| New-KrbtgtKey -KeyVersion 2 -CryptoAlgorithmName AES256                 |
 +----------------------------------------------------------------------------+
 
 

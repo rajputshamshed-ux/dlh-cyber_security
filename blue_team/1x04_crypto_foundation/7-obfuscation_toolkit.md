@@ -18,47 +18,30 @@ Sources: meddefense-crypto-audit-notes.txt, 1x00 Data Map, 1x02 Findings
 PART 1: TECHNIQUE COMPARISON
 ================================================================================
 
-+------------------+------------------+------------------+------------------------------------------+
-| Technique        | What it does     | Reversible?      | Healthcare Use Case                      |
-+------------------+------------------+------------------+------------------------------------------+
-| ENCRYPTION       | Transforms data  | YES - with the   | Encrypting EHR database at rest          |
-|                  | using a key.     | correct key.     | (Patient records on ehr-db-01).          |
-|                  | The original     | Reversibility is | Protects PHI from unauthorized access.   |
-|                  | data becomes     | the PRIMARY      | The key must be protected.               |
-|                  | unreadable.      | feature.         |                                          |
-+------------------+------------------+------------------+------------------------------------------+
-| HASHING          | Creates a fixed- | NO - one-way.    | Storing passwords in Active Directory.   |
-|                  | length string    | Original cannot  | When a user logs in, the entered         |
-|                  | from data.       | be recovered.    | password is hashed and compared.         |
-|                  | Same input =     | This is the      | The actual password is never stored.     |
-|                  | same hash.       | PRIMARY          | SHA-256 is recommended.                  |
-|                  | Avalanche effect | property.        |                                          |
-|                  | ensures changes. |                  |                                          |
-+------------------+------------------+------------------+------------------------------------------+
-| TOKENIZATION     | Replaces data    | YES - via a      | Processing credit card payments.         |
-|                  | with a non-      | secure vault/    | The billing system stores tokens,        |
-|                  | sensitive token. | mapping table.   | not actual card numbers.                 |
-|                  | Tokens have no   | The vault maps   | Reduces PCI compliance scope.            |
-|                  | relation to      | token to data.   | The vault is a single point of failure.  |
-|                  | original.        |                  |                                          |
-+------------------+------------------+------------------+------------------------------------------+
-| DATA MASKING     | Hides parts of   | PARTIAL - only   | Displaying patient data in EHR.          |
-|                  | data while       | the masked parts | Nurses see full name and diagnosis;      |
-|                  | preserving       | are hidden.      | receptionists see only limited info.     |
-|                  | format.          | The full data    | Protects PHI from unauthorized eyes.     |
-|                  | (e.g., XXX-XX-   | exists elsewhere | Role-based access drives masking.        |
-|                  | 1234)            | but is not shown.|                                          |
-+------------------+------------------+------------------+------------------------------------------+
-| STEGANOGRAPHY    | Hides data       | YES - with the   | NOT RECOMMENDED FOR PROTECTION.          |
-|                  | inside other     | right extraction | BUT: A threat vector where an insider    |
-|                  | harmless data.   | method.          | hides patient data inside DICOM images.  |
-|                  | (e.g., hidden    | Detection is     | Detection is very difficult.             |
-|                  | text in an       | the challenge.   | Requires network monitoring to detect.   |
-|                  | image).          | The hidden data  |                                          |
-|                  |                  | can be recovered |                                          |
-|                  |                  | if you know it   |                                          |
-|                  |                  | is there.        |                                          |
-+------------------+------------------+------------------+------------------------------------------+
++------------------+--------------------------------------------------+------------------+------------------------------------------+
+| Technique        | What it does                                     | Reversible?      | Healthcare Use Case                      |
++------------------+--------------------------------------------------+------------------+------------------------------------------+
+| ENCRYPTION       | Makes data unreadable using a key.               | YES - with the   | Encrypting EHR database at rest          |
+|                  | The original data can be recovered with          | correct key.     | (Patient records on ehr-db-01).          |
+|                  | the correct key.                                 |                  | Protects PHI from unauthorized access.   |
++------------------+--------------------------------------------------+------------------+------------------------------------------+
+| HASHING          | Transforms data into a fixed-length fingerprint. | NO - one-way.    | Storing passwords in Active Directory.   |
+|                  | Same input always produces the same hash.        | Original cannot  | Verifying file integrity for system      |
+|                  | The original cannot be recovered.                | be recovered.    | configuration files.                     |
++------------------+--------------------------------------------------+------------------+------------------------------------------+
+| TOKENIZATION     | Replaces sensitive data with a non-sensitive     | YES - via a      | Processing credit card payments without  |
+|                  | token. The token has no relation to the          | secure vault/    | storing full card numbers. Reduces PCI   |
+|                  | original data.                                   | mapping table.   | compliance scope.                        |
++------------------+--------------------------------------------------+------------------+------------------------------------------+
+| DATA MASKING     | Hides parts of data while preserving format      | PARTIAL - only   | Displaying patient data in EHR based on  |
+|                  | (e.g., XXX-XX-1234). The full data exists       | the masked parts | role: physicians see full data,          |
+|                  | elsewhere but is not shown to the user.          | are hidden.      | receptionists see limited information.   |
++------------------+--------------------------------------------------+------------------+------------------------------------------+
+| STEGANOGRAPHY    | Hides the EXISTENCE of data inside another       | YES - if you     | NOT RECOMMENDED FOR DATA PROTECTION.     |
+|                  | harmless carrier (image, audio, video).          | know the         | BUT it is a threat vector: an insider    |
+|                  | The human eye cannot detect the hidden data.     | extraction       | can hide PHI inside DICOM images and     |
+|                  |                                                   | method.          | exfiltrate it without detection.         |
++------------------+--------------------------------------------------+------------------+------------------------------------------+
 
 
 ================================================================================

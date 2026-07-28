@@ -23,31 +23,40 @@ PART 1: TECHNIQUE COMPARISON
 +------------------+------------------+------------------+------------------------------------------+
 | ENCRYPTION       | Transforms data  | YES - with the   | Encrypting EHR database at rest          |
 |                  | using a key.     | correct key.     | (Patient records on ehr-db-01).          |
-|                  | The original     |                  | Protects PHI from unauthorized access.   |
-|                  | data becomes     |                  |                                          |
-|                  | unreadable.      |                  |                                          |
+|                  | The original     | Reversibility is | Protects PHI from unauthorized access.   |
+|                  | data becomes     | the PRIMARY      | The key must be protected.               |
+|                  | unreadable.      | feature.         |                                          |
+|                  | Key length       |                  |                                          |
+|                  | determines       |                  |                                          |
+|                  | strength.        |                  |                                          |
 +------------------+------------------+------------------+------------------------------------------+
 | HASHING          | Creates a fixed- | NO - one-way.    | Storing passwords in Active Directory.   |
 |                  | length string    | Original cannot  | When a user logs in, the entered         |
 |                  | from data.       | be recovered.    | password is hashed and compared.         |
-|                  | Same input =     |                  | The actual password is never stored.     |
-|                  | same hash.       |                  |                                          |
+|                  | Same input =     | This is the      | The actual password is never stored.     |
+|                  | same hash.       | PRIMARY          | SHA-256 is recommended.                  |
+|                  | Avalanche effect | property.        |                                          |
+|                  | ensures changes. |                  |                                          |
 +------------------+------------------+------------------+------------------------------------------+
 | TOKENIZATION     | Replaces data    | YES - via a      | Processing credit card payments.         |
 |                  | with a non-      | secure vault/    | The billing system stores tokens,        |
 |                  | sensitive token. | mapping table.   | not actual card numbers.                 |
-|                  |                  |                  | Reduces PCI compliance scope.            |
+|                  | Tokens have no   | The vault maps   | Reduces PCI compliance scope.            |
+|                  | relation to      | token to data.   | The vault is a single point of failure.  |
+|                  | original.        |                  |                                          |
 +------------------+------------------+------------------+------------------------------------------+
 | DATA MASKING     | Hides parts of   | PARTIAL - only   | Displaying patient data in EHR.          |
 |                  | data while       | the masked parts | Nurses see full name and diagnosis;      |
 |                  | preserving       | are hidden.      | receptionists see only limited info.     |
-|                  | format.          |                  | Protects PHI from unauthorized eyes.     |
+|                  | format.          | The full data    | Protects PHI from unauthorized eyes.     |
+|                  | (e.g., XXX-XX-   | exists elsewhere | Role-based access drives masking.        |
+|                  | 1234)            | but is not shown.|                                          |
 +------------------+------------------+------------------+------------------------------------------+
 | STEGANOGRAPHY    | Hides data       | YES - with the   | NOT RECOMMENDED FOR PROTECTION.          |
 |                  | inside other     | right extraction | BUT: A threat vector where an insider    |
 |                  | harmless data.   | method.          | hides patient data inside DICOM images.  |
-|                  | (e.g., hidden    |                  | Detection is very difficult.             |
-|                  | text in an       |                  |                                          |
+|                  | (e.g., hidden    | Detection is     | Detection is very difficult.             |
+|                  | text in an       | the challenge.   | Requires network monitoring to detect.   |
 |                  | image).          |                  |                                          |
 +------------------+------------------+------------------+------------------------------------------+
 
@@ -147,13 +156,13 @@ PART 3: DATA MASKING EXAMPLES
 
 +------------------+---------------------+---------------------+---------------------+
 | Data Field       | Full Value          | Nurse (Clinical)    | Billing Clerk       | Reception           |
-+------------------+---------------------+---------------------+---------------------+---------------------+
++------------------+---------------------+---------------------+---------------------+
 | SSN              | 987-65-4321         | XXX-XX-4321         | XXX-XX-4321         | XXX-XX-4321         |
-+------------------+---------------------+---------------------+---------------------+---------------------+
++------------------+---------------------+---------------------+---------------------+
 | Patient Name     | Maria Gonzalez      | Maria Gonzalez      | M. Gonzalez         | Patient 50421       |
-+------------------+---------------------+---------------------+---------------------+---------------------+
-| Diagnosis        | Type 2 Diabetes    | Type 2 Diabetes     | [HIDDEN]            | [HIDDEN]            |
-+------------------+---------------------+---------------------+---------------------+---------------------+
++------------------+---------------------+---------------------+---------------------+
+| Diagnosis        | Type 2 Diabetes    | Type 2 Diabetes    | [HIDDEN]            | [HIDDEN]            |
++------------------+---------------------+---------------------+---------------------+
 
 JUSTIFICATION
 -------------

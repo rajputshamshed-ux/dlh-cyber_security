@@ -26,9 +26,6 @@ PART 1: TECHNIQUE COMPARISON
 |                  | The original     | Reversibility is | Protects PHI from unauthorized access.   |
 |                  | data becomes     | the PRIMARY      | The key must be protected.               |
 |                  | unreadable.      | feature.         |                                          |
-|                  | Key length       |                  |                                          |
-|                  | determines       |                  |                                          |
-|                  | strength.        |                  |                                          |
 +------------------+------------------+------------------+------------------------------------------+
 | HASHING          | Creates a fixed- | NO - one-way.    | Storing passwords in Active Directory.   |
 |                  | length string    | Original cannot  | When a user logs in, the entered         |
@@ -57,7 +54,10 @@ PART 1: TECHNIQUE COMPARISON
 |                  | harmless data.   | method.          | hides patient data inside DICOM images.  |
 |                  | (e.g., hidden    | Detection is     | Detection is very difficult.             |
 |                  | text in an       | the challenge.   | Requires network monitoring to detect.   |
-|                  | image).          |                  |                                          |
+|                  | image).          | The hidden data  |                                          |
+|                  |                  | can be recovered |                                          |
+|                  |                  | if you know it   |                                          |
+|                  |                  | is there.        |                                          |
 +------------------+------------------+------------------+------------------------------------------+
 
 

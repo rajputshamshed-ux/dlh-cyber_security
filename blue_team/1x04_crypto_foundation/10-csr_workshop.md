@@ -166,13 +166,19 @@ PART 4: THE FULL LIFECYCLE
 | - CSR: portal.csr generated with all required fields                     |
 | - CSR inspected and verified                                             |
 |                                                                             |
-| Step 2: SUBMISSION TO CA                                                   |
-| - CA CHOICE: Let's Encrypt via ACME protocol                             |
-| - REASON: Free, automated, widely trusted, 90-day renewal               |
-| - If commercial CA required: DigiCert or Sectigo for OV certificate     |
-| - Submit: Upload portal.csr to CA portal OR use certbot for ACME        |
+| STEP 2: SUBMISSION TO CA                                                   |
 |                                                                             |
-| Step 3: VALIDATION PROCESS                                                 |
+| CA CHOICE: Let's Encrypt via ACME protocol                              |
+| - REASON: Free, automated, widely trusted, 90-day renewal               |
+| - ALTERNATIVE: DigiCert or Sectigo for OV certificate                    |
+|                                                                             |
+| SUBMISSION PROCESS:                                                       |
+| 1. For Let's Encrypt: Use certbot tool                                   |
+|    sudo certbot certonly --csr portal.csr --manual                       |
+| 2. For commercial CA: Upload portal.csr to CA portal (e.g., DigiCert)   |
+| 3. Provide contact email for validation notifications                   |
+|                                                                             |
+| Step 3: VALIDATION PROCESS (CA VERIFIES)                                 |
 | - Let's Encrypt: HTTP-01 challenge (place file on web server)           |
 | - OR DNS-01 challenge (add TXT record to DNS)                          |
 | - CA verifies: Domain ownership is proven                              |

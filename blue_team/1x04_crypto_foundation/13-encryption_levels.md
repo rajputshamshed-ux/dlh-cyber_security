@@ -1,56 +1,4 @@
 ================================================================================
-                    ENCRYPTION LEVELS - MEDDEFENSE HEALTH SYSTEMS
-                    Task 13: The Encryption Levels
-================================================================================
-
-Exercise: Task 13 - The Encryption Levels
-Analyst: shamshed rajput
-Date: 29/07/2026
-Objective: Compare the six encryption levels defined and recommend the
-          appropriate level for every MedDefense data store.
-
-Sources: NIST SP 800-111, Sec+ 1.4, meddefense-crypto-audit-notes.txt,
-         1x00 Asset Registry, 1x02 Findings
-
-
-================================================================================
-PART 1: ENCRYPTION LEVELS COMPARISON TABLE
-================================================================================
-
-+------------------+------------------+------------------+------------------+------------------------------------------+
-| Level            | Scope            | Performance      | Key Management   | Use Case                                 |
-|                  |                  | Impact           | Complexity       |                                          |
-+------------------+------------------+------------------+------------------+------------------------------------------+
-| FULL-DISK        | Entire physical  | LOW - minimal    | LOW - single     | Protecting data on lost/stolen devices.  |
-| ENCRYPTION       | or virtual disk  | overhead for     | key for entire   | Best for laptops, desktops, and servers  |
-| (FDE)            | (entire OS +     | read/write       | disk             | where the device is at risk of theft.   |
-|                  | all data)        | operations       |                  |                                          |
-+------------------+------------------+------------------+------------------+------------------------------------------+
-| PARTITION        | One logical      | LOW - minimal    | LOW - key per    | Isolating different OS partitions or     |
-| ENCRYPTION       | partition on a   | overhead for     | partition        | separating OS from data. Useful when     |
-|                  | disk             | read/write       |                  | encrypting only the data partition while |
-|                  |                  | operations       |                  | leaving the boot partition unencrypted.  |
-|                  |                  |                  |                  | Less common than full-disk or volume.   |
-+------------------+------------------+------------------+------------------+------------------------------------------+
-| VOLUME           | Logical volume   | LOW to MEDIUM    | MEDIUM - key     | Storage servers, NAS devices, backup     |
-| ENCRYPTION       | (may span        | - depends on     | per volume       | repositories. Good for encrypting only   |
-| (LUKS)           | multiple disks)  | volume size      |                  | data partitions.                         |
-+------------------+------------------+------------------+------------------+------------------------------------------+
-| FILE-LEVEL       | Individual files | HIGHER - each    | HIGH - keys per  | Selective protection of sensitive        |
-| ENCRYPTION       |                  | file encrypted   | file or group    | files, user home directories, specific   |
-|                  |                  | separately       | of files         | documents.                               |
-+------------------+------------------+------------------+------------------+------------------------------------------+
-| DATABASE         | Entire database  | HIGH - affects   | MEDIUM -         | Protecting entire database at rest      |
-| ENCRYPTION       | or tablespace    | query            | database-level   | (TDE - Transparent Data Encryption).    |
-| (TDE)            |                  | performance      | key              | Best for relational databases.           |
-+------------------+------------------+------------------+------------------+------------------------------------------+
-| RECORD-LEVEL     | Individual       | HIGHEST - per-   | HIGHEST - keys   | Protecting specific fields like SSN,     |
-| ENCRYPTION       | fields or        | record           | per field/record | credit card numbers, or diagnosis codes. |
-| (Field/Column)   | records          | overhead         | or column        | Best for granular data protection.       |
-+------------------+------------------+------------------+------------------+------------------------------------------+
-
-
-================================================================================
 PART 2: MEDDEFENSE ENCRYPTION LEVEL MAP
 ================================================================================
 
@@ -65,11 +13,6 @@ DATA STORE 1: PATIENT RECORDS IN POSTGRESQL (ehr-db-01)
 |                  | physical theft. TDE protects the database files  |
 |                  | from unauthorized access at the OS level. The   |
 |                  | combination provides defense in depth.            |
-+------------------+--------------------------------------------------+
-| Performance      | LUKS adds ~15-20% CPU overhead for I/O           |
-| Impact           | operations. TDE adds additional overhead for     |
-|                  | query processing. Acceptable for a hospital      |
-|                  | EHR with moderate transaction volume.            |
 +------------------+--------------------------------------------------+
 
 
@@ -156,17 +99,31 @@ DATA STORE 7: BD ALARIS PUMP FIRMWARE/CONFIGURATION
 +------------------+--------------------------------------------------+
 
 
-================================================================================
-REFERENCES
-================================================================================
+DATA STORE 8: OS/DATA SEPARATION ON LEGACY SERVERS (print-srv-01)
+------------------------------------------------------------------
++------------------+--------------------------------------------------+
+| Recommended      | PARTITION ENCRYPTION                             |
+| Level            |                                                  |
++------------------+--------------------------------------------------+
+| Justification    | The print server runs Windows Server 2012 R2      |
+|                  | (EOL). Partition encryption allows separating    |
+|                  | the OS partition (unencrypted for boot) from    |
+|                  | the data partition (encrypted). This reduces    |
+|                  | encryption overhead on the OS while protecting  |
+|                  | configuration files and logs.                   |
++------------------+--------------------------------------------------+
 
-- NIST SP 800-111: Guide to Storage Encryption
-- Sec+ 1.4: Encryption levels
-- meddefense-crypto-audit-notes.txt
-- 1x00 Asset Registry
-- 1x02 Findings
 
-
-================================================================================
-END OF ENCRYPTION LEVELS REPORT
-================================================================================
+DATA STORE 9: EHR SENSITIVE FIELDS (DIAGNOSIS, SSN)
+-----------------------------------------------------
++------------------+--------------------------------------------------+
+| Recommended      | RECORD-LEVEL ENCRYPTION                          |
+| Level            |                                                  |
++------------------+--------------------------------------------------+
+| Justification    | Patient records contain highly sensitive fields  |
+|                  | like diagnosis codes and SSNs. Record-level      |
+|                  | encryption protects specific columns in the     |
+|                  | PostgreSQL database. Even with database access,  |
+|                  | attackers cannot read encrypted fields without   |
+|                  | the column-level key. This is defense in depth. |
++------------------+--------------------------------------------------+

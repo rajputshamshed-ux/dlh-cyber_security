@@ -237,14 +237,14 @@ PART 4: MEDDEFENSE BACKUP ENCRYPTION DESIGN
 | - Split key management (two persons required to unlock) |
 | - HSM (Hardware Security Module) if budget allows |
 | |
-| 4. WHAT HAPPENS IF THE KEY IS LOST: |
-| |
-| - Data is PERMANENTLY UNRECOVERABLE |
-| - There are no backdoors in LUKS encryption |
-| - All backups must be considered lost |
-| - Disaster recovery procedure: restore from offsite backups (if any) |
-| - MITIGATION: Store key in multiple secure locations |
-| - MITIGATION: Regular key backup to secure, separate system |
+| 4. WHAT HAPPENS IF THE KEY IS LOST:                                     |
+|                                                                             |
+| If the key is lost, the data is PERMANENTLY UNRECOVERABLE.              |
+| There are no backdoors in LUKS encryption.                              |
+| All backups must be considered lost.                                    |
+| Disaster recovery procedure: restore from offsite backups (if any).    |
+| MITIGATION: Store key in multiple secure locations.                    |
+| MITIGATION: Regular key backup to secure, separate system.             |
 | |
 | 5. OFFSITE BACKUP REPLICATION (from 1x03 strategy): |
 | |

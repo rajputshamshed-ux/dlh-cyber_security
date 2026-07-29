@@ -26,9 +26,11 @@ PART 1: ENCRYPTION LEVELS COMPARISON TABLE
 | (FDE)            | (entire OS +     | read/write       | disk             | where the device is at risk of theft.   |
 |                  | all data)        | operations       |                  |                                          |
 +------------------+------------------+------------------+------------------+------------------------------------------+
-| PARTITION        | One logical      | LOW - similar    | LOW - key per    | Isolating different OS partitions or     |
-| ENCRYPTION       | partition on a   | to FDE           | partition        | separating OS from data. Less common     |
-|                  | disk             |                  |                  | than full-disk or volume encryption.    |
+| PARTITION        | One logical      | LOW - minimal    | LOW - key per    | Isolating different OS partitions or     |
+| ENCRYPTION       | partition on a   | overhead for     | partition        | separating OS from data. Useful when     |
+|                  | disk             | read/write       |                  | encrypting only the data partition while |
+|                  |                  | operations       |                  | leaving the boot partition unencrypted.  |
+|                  |                  |                  |                  | Less common than full-disk or volume.   |
 +------------------+------------------+------------------+------------------+------------------------------------------+
 | VOLUME           | Logical volume   | LOW to MEDIUM    | MEDIUM - key     | Storage servers, NAS devices, backup     |
 | ENCRYPTION       | (may span        | - depends on     | per volume       | repositories. Good for encrypting only   |

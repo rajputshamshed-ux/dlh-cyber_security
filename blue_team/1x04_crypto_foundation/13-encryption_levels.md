@@ -56,6 +56,7 @@ PART 1: ENCRYPTION LEVELS COMPARISON TABLE
 |                  |                  |                  |                  | only the most sensitive data fields.    |
 +------------------+------------------+------------------+------------------+------------------------------------------+
 
+
 ================================================================================
 PART 2: MEDDEFENSE ENCRYPTION LEVEL MAP
 ================================================================================
@@ -151,13 +152,16 @@ DATA STORE 6: EMPLOYEE LAPTOPS
 DATA STORE 7: BD ALARIS PUMP FIRMWARE/CONFIGURATION
 ----------------------------------------------------
 +------------------+--------------------------------------------------+
-| Recommended      | FIRMWARE SECURITY (VENDOR-MANAGED) + NETWORK     |
-| Level            | ISOLATION                                       |
+| Recommended      | FILE-LEVEL ENCRYPTION                            |
+| Level            |                                                  |
 +------------------+--------------------------------------------------+
-| Justification    | IoT devices have limited processing power and    |
-|                  | cannot run full encryption. Firmware encryption  |
-|                  | is managed by BD. Network isolation (VLAN 30)   |
-|                  | is the primary MedDefense control.              |
+| Justification    | BD Alaris pumps store configuration files and    |
+|                  | firmware images. File-level encryption protects   |
+|                  | these individual files on the pump. This is the  |
+|                  | most appropriate level because IoT devices have  |
+|                  | limited processing power and cannot run full-    |
+|                  | disk encryption. File-level encryption provides  |
+|                  | targeted protection for critical configurations. |
 +------------------+--------------------------------------------------+
 
 
@@ -190,6 +194,34 @@ DATA STORE 9: EHR SENSITIVE FIELDS (DIAGNOSIS, SSN)
 |                  | the column-level key. This is defense in depth  |
 |                  | and the most granular level.                    |
 +------------------+--------------------------------------------------+
+
+
+================================================================================
+SUMMARY OF RECOMMENDED LEVELS
+================================================================================
+
++---------------------------+------------------------------------------+------------------+
+| Data Store                | Recommended Encryption Level             | Justification    |
++---------------------------+------------------------------------------+------------------+
+| PostgreSQL (ehr-db-01)    | DATABASE ENCRYPTION (TDE)                | Protects PHI     |
++---------------------------+------------------------------------------+------------------+
+| NAS-01 Backups            | VOLUME ENCRYPTION (LUKS)                 | Protects backups |
++---------------------------+------------------------------------------+------------------+
+| MySQL (billing-srv-01)    | DATABASE ENCRYPTION (TDE)                | Protects billing |
++---------------------------+------------------------------------------+------------------+
+| PACS (pacs-srv-01)        | FILE-LEVEL ENCRYPTION                    | Protects DICOM   |
++---------------------------+------------------------------------------+------------------+
+| O365 Email                | RECORD-LEVEL ENCRYPTION (S/MIME/OME)     | Protects PHI     |
++---------------------------+------------------------------------------+------------------+
+| Employee Laptops          | FULL-DISK ENCRYPTION                     | Protects devices |
++---------------------------+------------------------------------------+------------------+
+| BD Alaris Pumps           | FILE-LEVEL ENCRYPTION                    | Protects configs |
++---------------------------+------------------------------------------+------------------+
+| print-srv-01              | PARTITION ENCRYPTION                     | Legacy OS        |
++---------------------------+------------------------------------------+------------------+
+| EHR Sensitive Fields      | RECORD-LEVEL ENCRYPTION                  | Defense in depth|
++---------------------------+------------------------------------------+------------------+
+
 
 ================================================================================
 REFERENCES

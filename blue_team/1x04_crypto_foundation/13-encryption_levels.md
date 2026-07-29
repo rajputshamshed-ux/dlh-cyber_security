@@ -45,14 +45,16 @@ PART 1: ENCRYPTION LEVELS COMPARISON TABLE
 | DATABASE         | Entire database  | HIGH - affects   | MEDIUM -         | Protecting entire database at rest      |
 | ENCRYPTION       | or tablespace    | query            | database-level   | (TDE - Transparent Data Encryption).    |
 | (TDE)            |                  | performance      | key              | Best for relational databases. Encrypts  |
-|                  |                  |                  |                  | data at the database level, not the disk.|
+|                  |                  | significantly    |                  | data at the database level, not the disk.|
+|                  |                  | (indexes,        |                  | Query performance may be impacted by    |
+|                  |                  | joins, sorting)  |                  | encryption/decryption overhead during    |
+|                  |                  |                  |                  | reads and writes.                       |
 +------------------+------------------+------------------+------------------+------------------------------------------+
 | RECORD-LEVEL     | Individual       | HIGHEST - per-   | HIGHEST - keys   | Protecting specific fields like SSN,     |
 | ENCRYPTION       | fields or        | record           | per field/record | credit card numbers, or diagnosis codes. |
 | (Field/Column)   | records          | overhead         | or column        | Most granular level. Best for protecting |
 |                  |                  |                  |                  | only the most sensitive data fields.    |
 +------------------+------------------+------------------+------------------+------------------------------------------+
-
 
 ================================================================================
 PART 2: MEDDEFENSE ENCRYPTION LEVEL MAP

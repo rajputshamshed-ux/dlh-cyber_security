@@ -152,8 +152,6 @@ VERIFY SAN ENTRIES
 | COMMAND TO VIEW ONLY SAN:                                                  |
 | openssl req -text -noout -in portal.csr | grep -A 4 "Subject Alternative" |
 +----------------------------------------------------------------------------+
-
-
 ================================================================================
 PART 4: THE FULL LIFECYCLE
 ================================================================================
@@ -161,12 +159,14 @@ PART 4: THE FULL LIFECYCLE
 +----------------------------------------------------------------------------+
 | CERTIFICATE LIFECYCLE PROCEDURE (FROM CSR TO PRODUCTION)                  |
 |                                                                             |
-| Step 1: CSR GENERATED (COMPLETE)                                          |
+| STEP 1: CSR GENERATED (COMPLETE)                                          |
 | - Key: ECC P-256 generated                                               |
 | - CSR: portal.csr generated with all required fields                     |
 | - CSR inspected and verified                                             |
 |                                                                             |
 | STEP 2: SUBMISSION TO CA                                                   |
+|                                                                             |
+| Submission to CA process:                                                  |
 |                                                                             |
 | CA CHOICE: Let's Encrypt via ACME protocol                              |
 | - REASON: Free, automated, widely trusted, 90-day renewal               |
@@ -178,49 +178,50 @@ PART 4: THE FULL LIFECYCLE
 | 2. For commercial CA: Upload portal.csr to CA portal (e.g., DigiCert)   |
 | 3. Provide contact email for validation notifications                   |
 |                                                                             |
-| Step 3: VALIDATION PROCESS (CA VERIFIES)                                 |
+| STEP 3: VALIDATION PROCESS (CA VERIFIES)                                 |
 | - Let's Encrypt: HTTP-01 challenge (place file on web server)           |
 | - OR DNS-01 challenge (add TXT record to DNS)                          |
 | - CA verifies: Domain ownership is proven                              |
 | - CA verifies: CSR fields are valid                                     |
 | - CA verifies: Key is strong enough                                     |
 |                                                                             |
-| Step 4: CERTIFICATE ISSUANCE                                               |
+| STEP 4: CERTIFICATE ISSUANCE                                               |
 | - CA signs the certificate with its intermediate key                    |
 | - CA returns: Leaf certificate + intermediate certificate               |
 | - Certificate is valid for 90 days (Let's Encrypt)                     |
 |                                                                             |
-| Step 5: INSTALLATION ON WEB SERVER                                        |
+| STEP 5: INSTALLATION ON WEB SERVER                                        |
 | - Copy certificate to web-srv-01: /etc/ssl/certs/portal.crt             |
 | - Copy intermediate to: /etc/ssl/certs/intermediate.crt                 |
 | - Update Apache/Nginx configuration to use new certificate              |
 | - Ensure the full chain is sent (leaf + intermediate)                   |
 | - Restart web service (graceful restart, no downtime)                  |
 |                                                                             |
-| Step 6: VERIFICATION                                                      |
+| STEP 6: VERIFICATION                                                      |
 | - Test: openssl s_client -connect portal.meddefense.local:443 -showcerts|
 | - Test: https://portal.meddefense.local in browser                     |
 | - Check: Certificate chain is complete                                  |
 | - Check: SAN entries match the URL                                      |
 | - Check: Expiration date is correct                                     |
 |                                                                             |
-| Step 7: DECOMMISSION OF OLD CERTIFICATE                                   |
+| STEP 7: DECOMMISSION OF OLD CERTIFICATE                                   |
 | - After verification, remove old certificate from server                |
 | - Revoke old certificate with CA (optional but recommended)             |
 | - Update documentation                                                   |
 |                                                                             |
-| Step 8: MONITORING FOR NEXT RENEWAL                                       |
+| STEP 8: MONITORING FOR NEXT RENEWAL                                       |
 | - Set calendar reminder 30 days before expiration                      |
 | - For Let's Encrypt: certbot automatic renewal (cron job)              |
 | - Monitor: daily check of certificate expiration                       |
 | - Alert: send notification when certificate expires in 30 days         |
 |                                                                             |
-| Step 9: INCIDENT RESPONSE (IF KEY COMPROMISED)                          |
+| STEP 9: INCIDENT RESPONSE (IF KEY COMPROMISED)                          |
 | - Revoke certificate immediately                                         |
 | - Generate new key and CSR                                               |
 | - Submit new CSR to CA                                                   |
 | - Install new certificate                                                 |
 +----------------------------------------------------------------------------+
+
 ================================================================================
 REFERENCES
 ================================================================================

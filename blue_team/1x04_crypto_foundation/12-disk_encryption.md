@@ -259,4 +259,10 @@ PART 4: MEDDEFENSE BACKUP ENCRYPTION DESIGN
 | ensures that even if the NAS is compromised, the cloud replica        |
 | remains secure. The cloud key should be stored in AWS KMS or a        |
 | separate password manager.                                              |
+|
+ c) FILE-LEVEL ENCRYPTION: Encrypts individual files (Veeam native)      |
+|    - PROS: Granular control, encrypted files can be transferred          |
+|    - CONS: Slower, more complex management                              |
+|    - NOT RECOMMENDED for large backups                                   |
+
 +----------------------------------------------------------------------------+

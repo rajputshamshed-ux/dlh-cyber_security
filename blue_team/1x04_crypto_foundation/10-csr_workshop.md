@@ -166,72 +166,69 @@ PART 4: THE FULL LIFECYCLE
 | - CSR: portal.csr generated with all required fields                     |
 | - CSR inspected and verified                                             |
 |                                                                             |
-| STEP 2: SUBMISSION TO CA                                                   |
+| Submission to CA                                                           |
 |                                                                             |
-| CA CHOICE: Let's Encrypt via ACME protocol                              |
-| - REASON: Free, automated, widely trusted, 90-day renewal               |
-| - ALTERNATIVE: DigiCert or Sectigo for OV certificate                    |
+| The CSR is submitted to a Certificate Authority. Let's Encrypt via       |
+| ACME protocol is the recommended choice because it is free, automated,  |
+| and widely trusted with 90-day renewal. Alternative: DigiCert or        |
+| Sectigo for OV certificate.                                               |
 |                                                                             |
-| SUBMISSION PROCESS:                                                       |
-| 1. For Let's Encrypt: Use certbot tool                                   |
-|    sudo certbot certonly --csr portal.csr --manual                       |
-| 2. For commercial CA: Upload portal.csr to CA portal (e.g., DigiCert)   |
+| Submission Process:                                                       |
+| 1. For Let's Encrypt: certbot certonly --csr portal.csr --manual        |
+| 2. For commercial CA: Upload portal.csr to CA portal                    |
 | 3. Provide contact email for validation notifications                   |
 |                                                                             |
-| STEP 3: VALIDATION PROCESS                                                 |
+| Validation process                                                         |
 |                                                                             |
 | The Certificate Authority validates the CSR before issuing the           |
-| certificate. This process confirms:                                        |
+| certificate. This process confirms:                                      |
 |                                                                             |
-| 1. DOMAIN OWNERSHIP: The requester controls the domain                     |
-|    - HTTP-01 challenge: Place a file on the web server                    |
-|    - DNS-01 challenge: Add a TXT record to DNS                           |
-|    - Email-01 challenge: Respond to an email at a domain address         |
+| 1. DOMAIN OWNERSHIP: The requester controls the domain                   |
+|    - HTTP-01 challenge: Place a file on the web server                  |
+|    - DNS-01 challenge: Add a TXT record to DNS                         |
+|    - Email-01 challenge: Respond to an email at a domain address       |
 |                                                                             |
-| 2. CSR VALIDITY: The CSR fields are correctly formatted                    |
-|    - Common Name matches the requested domain                            |
-|    - Organization name is valid (for OV/EV certificates)                 |
-|    - SAN entries are properly formatted                                   |
+| 2. CSR VALIDITY: The CSR fields are correctly formatted                 |
+|    - Common Name matches the requested domain                          |
+|    - Organization name is valid (for OV/EV certificates)               |
+|    - SAN entries are properly formatted                                 |
 |                                                                             |
-| 3. KEY STRENGTH: The private key meets minimum requirements               |
-|    - ECC P-256 is approved                                               |
-|    - RSA-2048 or higher is approved                                      |
+| 3. KEY STRENGTH: The private key meets minimum requirements             |
+|    - ECC P-256 is approved                                             |
+|    - RSA-2048 or higher is approved                                    |
 |                                                                             |
-| 4. VALIDATION RESULT:                                                      |
-|    - Success: CA issues the certificate                                  |
-|    - Failure: CA returns an error with the reason                        |
+| Certificate issuance                                                      |
 |                                                                             |
-| STEP 4: CERTIFICATE ISSUANCE                                               |
-| - CA signs the certificate with its intermediate key                    |
-| - CA returns: Leaf certificate + intermediate certificate               |
-| - Certificate is valid for 90 days (Let's Encrypt)                     |
+| CA signs the certificate with its intermediate key. CA returns:         |
+| Leaf certificate + intermediate certificate. Valid for 90 days.        |
 |                                                                             |
-| STEP 5: INSTALLATION ON THE WEB SERVER                                    |
-| - Copy certificate to web-srv-01: /etc/ssl/certs/portal.crt             |
-| - Copy intermediate to: /etc/ssl/certs/intermediate.crt                 |
-| - Update Apache/Nginx configuration to use new certificate              |
-| - Ensure the full chain is sent (leaf + intermediate)                   |
-| - Restart web service (graceful restart, no downtime)                  |
+| Installation on the web server                                            |
 |                                                                             |
-| STEP 6: VERIFICATION                                                      |
+| 1. Copy certificate to /etc/ssl/certs/portal.crt                        |
+| 2. Copy intermediate to /etc/ssl/certs/intermediate.crt                 |
+| 3. Update Apache/Nginx configuration to use new certificate             |
+| 4. Ensure the full chain is sent (leaf + intermediate)                 |
+| 5. Restart web service (graceful restart, no downtime)                 |
+|                                                                             |
+| Verification                                                              |
 | - Test: openssl s_client -connect portal.meddefense.local:443 -showcerts|
 | - Test: https://portal.meddefense.local in browser                     |
 | - Check: Certificate chain is complete                                  |
 | - Check: SAN entries match the URL                                      |
 | - Check: Expiration date is correct                                     |
 |                                                                             |
-| STEP 7: DECOMMISSION OF OLD CERTIFICATE                                   |
+| DECOMMISSION OF OLD CERTIFICATE                                           |
 | - After verification, remove old certificate from server                |
 | - Revoke old certificate with CA (optional but recommended)             |
 | - Update documentation                                                   |
 |                                                                             |
-| STEP 8: MONITORING FOR NEXT RENEWAL                                       |
+| MONITORING FOR NEXT RENEWAL                                               |
 | - Set calendar reminder 30 days before expiration                      |
 | - For Let's Encrypt: certbot automatic renewal (cron job)              |
 | - Monitor: daily check of certificate expiration                       |
 | - Alert: send notification when certificate expires in 30 days         |
 |                                                                             |
-| STEP 9: INCIDENT RESPONSE (IF KEY COMPROMISED)                          |
+| INCIDENT RESPONSE (IF KEY COMPROMISED)                                  |
 | - Revoke certificate immediately                                         |
 | - Generate new key and CSR                                               |
 | - Submit new CSR to CA                                                   |
@@ -253,3 +250,4 @@ REFERENCES
 ================================================================================
 END OF CSR WORKSHOP REPORT
 ================================================================================
+

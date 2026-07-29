@@ -83,6 +83,11 @@ CREATE openssl.cnf CONFIGURATION FILE
 | DNS.4 = patient.meddefense.local                                          |
 +----------------------------------------------------------------------------+
 
+Decommission
+------------
+- After verification, remove old certificate from server
+- Revoke old certificate with CA (optional but recommended)
+- Update documentation
 GENERATE THE CSR
 ----------------
 +----------------------------------------------------------------------------+

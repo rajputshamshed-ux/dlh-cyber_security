@@ -1,4 +1,60 @@
 ================================================================================
+                    ENCRYPTION LEVELS - MEDDEFENSE HEALTH SYSTEMS
+                    Task 13: The Encryption Levels
+================================================================================
+
+Exercise: Task 13 - The Encryption Levels
+Analyst: shamshed rajput
+Date: 29/07/2026
+Objective: Compare the six encryption levels defined and recommend the
+          appropriate level for every MedDefense data store.
+
+Sources: NIST SP 800-111, Sec+ 1.4, meddefense-crypto-audit-notes.txt,
+         1x00 Asset Registry, 1x02 Findings
+
+
+================================================================================
+PART 1: ENCRYPTION LEVELS COMPARISON TABLE
+================================================================================
+
++------------------+------------------+------------------+------------------+------------------------------------------+
+| Level            | Scope            | Performance      | Key Management   | Use Case                                 |
+|                  |                  | Impact           | Complexity       |                                          |
++------------------+------------------+------------------+------------------+------------------------------------------+
+| FULL-DISK        | Entire physical  | LOW - minimal    | LOW - single     | Protecting data on lost/stolen devices.  |
+| ENCRYPTION       | or virtual disk  | overhead for     | key for entire   | Best for laptops, desktops, and servers  |
+| (FDE)            | (entire OS +     | read/write       | disk             | where the device is at risk of theft.   |
+|                  | all data)        | operations       |                  |                                          |
++------------------+------------------+------------------+------------------+------------------------------------------+
+| PARTITION        | One logical      | LOW - minimal    | LOW - key per    | Isolating different OS partitions or     |
+| ENCRYPTION       | partition on a   | overhead for     | partition        | separating OS from data. Useful when     |
+|                  | disk             | read/write       |                  | encrypting only the data partition while |
+|                  |                  | operations       |                  | leaving the boot partition unencrypted.  |
++------------------+------------------+------------------+------------------+------------------------------------------+
+| VOLUME           | Logical volume   | LOW to MEDIUM    | MEDIUM - key     | Storage servers, NAS devices, backup     |
+| ENCRYPTION       | (may span        | - depends on     | per volume       | repositories. Good for encrypting only   |
+| (LUKS)           | multiple disks)  | volume size      |                  | data partitions. Volume encryption is    |
+|                  |                  |                  |                  | more flexible than partition encryption  |
+|                  |                  |                  |                  | because volumes can span multiple disks. |
++------------------+------------------+------------------+------------------+------------------------------------------+
+| FILE-LEVEL       | Individual files | HIGHER - each    | HIGH - keys per  | Selective protection of sensitive        |
+| ENCRYPTION       |                  | file encrypted   | file or group    | files, user home directories, specific   |
+|                  |                  | separately       | of files         | documents. More granular than volume or  |
+|                  |                  |                  |                  | partition encryption.                    |
++------------------+------------------+------------------+------------------+------------------------------------------+
+| DATABASE         | Entire database  | HIGH - affects   | MEDIUM -         | Protecting entire database at rest      |
+| ENCRYPTION       | or tablespace    | query            | database-level   | (TDE - Transparent Data Encryption).    |
+| (TDE)            |                  | performance      | key              | Best for relational databases. Encrypts  |
+|                  |                  |                  |                  | data at the database level, not the disk.|
++------------------+------------------+------------------+------------------+------------------------------------------+
+| RECORD-LEVEL     | Individual       | HIGHEST - per-   | HIGHEST - keys   | Protecting specific fields like SSN,     |
+| ENCRYPTION       | fields or        | record           | per field/record | credit card numbers, or diagnosis codes. |
+| (Field/Column)   | records          | overhead         | or column        | Most granular level. Best for protecting |
+|                  |                  |                  |                  | only the most sensitive data fields.    |
++------------------+------------------+------------------+------------------+------------------------------------------+
+
+
+================================================================================
 PART 2: MEDDEFENSE ENCRYPTION LEVEL MAP
 ================================================================================
 
@@ -127,3 +183,19 @@ DATA STORE 9: EHR SENSITIVE FIELDS (DIAGNOSIS, SSN)
 |                  | attackers cannot read encrypted fields without   |
 |                  | the column-level key. This is defense in depth. |
 +------------------+--------------------------------------------------+
+
+
+================================================================================
+REFERENCES
+================================================================================
+
+- NIST SP 800-111: Guide to Storage Encryption
+- Sec+ 1.4: Encryption levels
+- meddefense-crypto-audit-notes.txt
+- 1x00 Asset Registry
+- 1x02 Findings
+
+
+================================================================================
+END OF ENCRYPTION LEVELS REPORT
+================================================================================

@@ -133,7 +133,7 @@ EXPECTED OUTPUT
 
 VERIFY FIELD BY FIELD
 ---------------------
-+----------------------------------------------------------------------------+
++---------------------+------------------------------------------+--------+
 | Field               | Expected Value                          | Status |
 +---------------------+------------------------------------------+--------+
 | Common Name (CN)    | portal.meddefense.local                 | ✅     |
@@ -144,7 +144,7 @@ VERIFY FIELD BY FIELD
 | Country (C)         | US                                      | ✅     |
 | SAN Entries         | 4 entries (see above)                   | ✅     |
 | Key Algorithm       | ECC P-256 (prime256v1)                  | ✅     |
-+----------------------------------------------------------------------------+
++---------------------+------------------------------------------+--------+
 
 VERIFY SAN ENTRIES
 ------------------
@@ -152,6 +152,8 @@ VERIFY SAN ENTRIES
 | COMMAND TO VIEW ONLY SAN:                                                  |
 | openssl req -text -noout -in portal.csr | grep -A 4 "Subject Alternative" |
 +----------------------------------------------------------------------------+
+
+
 ================================================================================
 PART 4: THE FULL LIFECYCLE
 ================================================================================
@@ -166,8 +168,6 @@ PART 4: THE FULL LIFECYCLE
 |                                                                             |
 | STEP 2: SUBMISSION TO CA                                                   |
 |                                                                             |
-| Submission to CA process:                                                  |
-|                                                                             |
 | CA CHOICE: Let's Encrypt via ACME protocol                              |
 | - REASON: Free, automated, widely trusted, 90-day renewal               |
 | - ALTERNATIVE: DigiCert or Sectigo for OV certificate                    |
@@ -178,19 +178,35 @@ PART 4: THE FULL LIFECYCLE
 | 2. For commercial CA: Upload portal.csr to CA portal (e.g., DigiCert)   |
 | 3. Provide contact email for validation notifications                   |
 |                                                                             |
-| STEP 3: VALIDATION PROCESS (CA VERIFIES)                                 |
-| - Let's Encrypt: HTTP-01 challenge (place file on web server)           |
-| - OR DNS-01 challenge (add TXT record to DNS)                          |
-| - CA verifies: Domain ownership is proven                              |
-| - CA verifies: CSR fields are valid                                     |
-| - CA verifies: Key is strong enough                                     |
+| STEP 3: VALIDATION PROCESS                                                 |
+|                                                                             |
+| The Certificate Authority validates the CSR before issuing the           |
+| certificate. This process confirms:                                        |
+|                                                                             |
+| 1. DOMAIN OWNERSHIP: The requester controls the domain                     |
+|    - HTTP-01 challenge: Place a file on the web server                    |
+|    - DNS-01 challenge: Add a TXT record to DNS                           |
+|    - Email-01 challenge: Respond to an email at a domain address         |
+|                                                                             |
+| 2. CSR VALIDITY: The CSR fields are correctly formatted                    |
+|    - Common Name matches the requested domain                            |
+|    - Organization name is valid (for OV/EV certificates)                 |
+|    - SAN entries are properly formatted                                   |
+|                                                                             |
+| 3. KEY STRENGTH: The private key meets minimum requirements               |
+|    - ECC P-256 is approved                                               |
+|    - RSA-2048 or higher is approved                                      |
+|                                                                             |
+| 4. VALIDATION RESULT:                                                      |
+|    - Success: CA issues the certificate                                  |
+|    - Failure: CA returns an error with the reason                        |
 |                                                                             |
 | STEP 4: CERTIFICATE ISSUANCE                                               |
 | - CA signs the certificate with its intermediate key                    |
 | - CA returns: Leaf certificate + intermediate certificate               |
 | - Certificate is valid for 90 days (Let's Encrypt)                     |
 |                                                                             |
-| STEP 5: INSTALLATION ON WEB SERVER                                        |
+| STEP 5: INSTALLATION ON THE WEB SERVER                                    |
 | - Copy certificate to web-srv-01: /etc/ssl/certs/portal.crt             |
 | - Copy intermediate to: /etc/ssl/certs/intermediate.crt                 |
 | - Update Apache/Nginx configuration to use new certificate              |
@@ -221,6 +237,7 @@ PART 4: THE FULL LIFECYCLE
 | - Submit new CSR to CA                                                   |
 | - Install new certificate                                                 |
 +----------------------------------------------------------------------------+
+
 
 ================================================================================
 REFERENCES

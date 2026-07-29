@@ -88,6 +88,15 @@ Decommission
 - After verification, remove old certificate from server
 - Revoke old certificate with CA (optional but recommended)
 - Update documentation
+
+Monitoring for next renewal
+---------------------------
+- Set calendar reminder 30 days before expiration
+- For Let's Encrypt: certbot automatic renewal (cron job)
+- Monitor: daily check of certificate expiration
+- Alert: send notification when certificate expires in 30 days
+
+
 GENERATE THE CSR
 ----------------
 +----------------------------------------------------------------------------+

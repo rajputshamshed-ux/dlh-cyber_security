@@ -63,14 +63,15 @@ PART 2: MEDDEFENSE ENCRYPTION LEVEL MAP
 DATA STORE 1: PATIENT RECORDS IN POSTGRESQL (ehr-db-01)
 --------------------------------------------------------
 +------------------+--------------------------------------------------+
-| Recommended      | VOLUME ENCRYPTION (LUKS) + DATABASE ENCRYPTION    |
-| Level            | (TDE)                                            |
+| Recommended      | DATABASE ENCRYPTION (TDE)                        |
+| Level            |                                                  |
 +------------------+--------------------------------------------------+
 | Justification    | Patient records contain PHI for 50,000 patients.  |
-|                  | LUKS protects the underlying storage against     |
-|                  | physical theft. TDE protects the database files  |
-|                  | from unauthorized access at the OS level. The   |
-|                  | combination provides defense in depth.            |
+|                  | TDE protects the database files at rest. This   |
+|                  | is the most appropriate level because clinical   |
+|                  | staff need continuous access to patient data,   |
+|                  | and TDE encrypts data without changing          |
+|                  | application behavior.                           |
 +------------------+--------------------------------------------------+
 
 
@@ -84,63 +85,66 @@ DATA STORE 2: BACKUP DATA ON NAS-01
 |                  | volume encryption protects the entire backup     |
 |                  | partition. This is the industry standard for     |
 |                  | Linux storage and is compatible with Synology    |
-|                  | DSM. Backup performance impact is minimal        |
-|                  | (sequential writes during off-peak hours).       |
+|                  | DSM. Backup performance impact is minimal.      |
 +------------------+--------------------------------------------------+
 
 
 DATA STORE 3: FINANCIAL RECORDS IN MYSQL (billing-srv-01)
 -----------------------------------------------------------
 +------------------+--------------------------------------------------+
-| Recommended      | VOLUME ENCRYPTION (LUKS) + DATABASE ENCRYPTION    |
-| Level            | (TDE)                                            |
+| Recommended      | DATABASE ENCRYPTION (TDE)                        |
+| Level            |                                                  |
 +------------------+--------------------------------------------------+
-| Justification    | Billing data contains SSNs, insurance info, and  |
-|                  | credit card data. LUKS protects the storage      |
-|                  | against theft. MySQL TDE (Enterprise) protects   |
-|                  | the database files. Alternative: encrypt data    |
-|                  | at the application level (record-level).         |
+| Justification    | Billing data contains SSNs and credit card info. |
+|                  | MySQL TDE protects the database at rest without  |
+|                  | changing application behavior. This is preferred |
+|                  | over volume encryption because it protects the   |
+|                  | data at the logical level where it is accessed. |
 +------------------+--------------------------------------------------+
 
 
 DATA STORE 4: MEDICAL IMAGES ON PACS (pacs-srv-01)
 ----------------------------------------------------
 +------------------+--------------------------------------------------+
-| Recommended      | VOLUME ENCRYPTION (LUKS) + FILE-LEVEL            |
-| Level            | ENCRYPTION                                       |
+| Recommended      | FILE-LEVEL ENCRYPTION                            |
+| Level            |                                                  |
 +------------------+--------------------------------------------------+
-| Justification    | DICOM images contain embedded PHI. LUKS protects |
-|                  | the storage. File-level encryption allows for    |
-|                  | granular protection of individual DICOM files.   |
-|                  | Performance impact is acceptable for imaging     |
-|                  | workloads where read access is frequent.         |
+| Justification    | DICOM images contain embedded PHI. File-level    |
+|                  | encryption allows granular protection of each    |
+|                  | imaging file. This is more appropriate than      |
+|                  | volume encryption because PACS images can be     |
+|                  | selectively protected based on sensitivity.      |
 +------------------+--------------------------------------------------+
 
 
 DATA STORE 5: EMAIL DATA IN O365
 ---------------------------------
 +------------------+--------------------------------------------------+
-| Recommended      | MICROSOFT-MANAGED ENCRYPTION                      |
-| Level            | (O365 DEFAULT)                                   |
+| Recommended      | RECORD-LEVEL ENCRYPTION (S/MIME or OME)          |
+| Level            |                                                  |
 +------------------+--------------------------------------------------+
-| Justification    | Microsoft manages encryption for O365 at rest    |
-|                  | (BitLocker) and in transit (TLS 1.2). No action  |
-|                  | needed. However, MedDefense should enable S/MIME |
-|                  | or OME for PHI sent via email to prevent         |
-|                  | plaintext exposure.                              |
+| Justification    | O365 provides encryption at rest (BitLocker)     |
+|                  | and in transit (TLS 1.2) by default. However,   |
+|                  | PHI sent via email requires additional protection|
+|                  | at the record level. MedDefense should enable    |
+|                  | S/MIME or OME to encrypt individual email        |
+|                  | messages containing PHI. This is the most        |
+|                  | granular level and ensures patient data is       |
+|                  | protected even when transmitted via email.       |
 +------------------+--------------------------------------------------+
 
 
 DATA STORE 6: EMPLOYEE LAPTOPS
 -------------------------------
 +------------------+--------------------------------------------------+
-| Recommended      | FULL-DISK ENCRYPTION (LUKS or BitLocker)         |
+| Recommended      | FULL-DISK ENCRYPTION (BitLocker or LUKS)         |
 | Level            |                                                  |
 +------------------+--------------------------------------------------+
 | Justification    | Laptops are at high risk of theft or loss. FDE   |
 |                  | protects ALL data on the device. Windows         |
 |                  | BitLocker or Linux LUKS is recommended. Key      |
-|                  | should be escrowed to allow recovery.            |
+|                  | should be escrowed to allow recovery. This is    |
+|                  | the most appropriate level for portable devices. |
 +------------------+--------------------------------------------------+
 
 
@@ -150,10 +154,10 @@ DATA STORE 7: BD ALARIS PUMP FIRMWARE/CONFIGURATION
 | Recommended      | FIRMWARE SECURITY (VENDOR-MANAGED) + NETWORK     |
 | Level            | ISOLATION                                       |
 +------------------+--------------------------------------------------+
-| Justification    | IoT devices have limited processing power.       |
-|                  | Firmware encryption is managed by BD. Network    |
-|                  | isolation (VLAN 30 from segmentation design) is  |
-|                  | the primary MedDefense control.                  |
+| Justification    | IoT devices have limited processing power and    |
+|                  | cannot run full encryption. Firmware encryption  |
+|                  | is managed by BD. Network isolation (VLAN 30)   |
+|                  | is the primary MedDefense control.              |
 +------------------+--------------------------------------------------+
 
 
@@ -166,9 +170,9 @@ DATA STORE 8: OS/DATA SEPARATION ON LEGACY SERVERS (print-srv-01)
 | Justification    | The print server runs Windows Server 2012 R2      |
 |                  | (EOL). Partition encryption allows separating    |
 |                  | the OS partition (unencrypted for boot) from    |
-|                  | the data partition (encrypted). This reduces    |
-|                  | encryption overhead on the OS while protecting  |
-|                  | configuration files and logs.                   |
+|                  | the data partition (encrypted). This is the      |
+|                  | most appropriate level for legacy systems that   |
+|                  | need to boot unencrypted.                       |
 +------------------+--------------------------------------------------+
 
 
@@ -183,9 +187,9 @@ DATA STORE 9: EHR SENSITIVE FIELDS (DIAGNOSIS, SSN)
 |                  | encryption protects specific columns in the     |
 |                  | PostgreSQL database. Even with database access,  |
 |                  | attackers cannot read encrypted fields without   |
-|                  | the column-level key. This is defense in depth. |
+|                  | the column-level key. This is defense in depth  |
+|                  | and the most granular level.                    |
 +------------------+--------------------------------------------------+
-
 
 ================================================================================
 REFERENCES

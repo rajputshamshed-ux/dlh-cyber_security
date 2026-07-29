@@ -178,3 +178,85 @@ SCRIPT: 12-luks_manager.sh
 | #   Mount: /mnt/<name>                                                   |
 | #   Device: /dev/mapper/<name>                                           |
 +----------------------------------------------------------------------------+
+================================================================================
+PART 4: MEDDEFENSE BACKUP ENCRYPTION DESIGN
+================================================================================
+
++----------------------------------------------------------------------------+
+| MEDDEFENSE BACKUP ENCRYPTION STRATEGY - NAS-01                            |
+|                                                                             |
+| 1. ENCRYPTION LEVEL: Volume-level encryption (LUKS)                       |
+|                                                                             |
+| Three encryption levels were considered for NAS-01:                       |
+|                                                                             |
+| a) FULL-DISK ENCRYPTION: Encrypts the entire disk including OS            |
+|    - PROS: Simple, protects everything                                  |
+|    - CONS: Encrypts unnecessary data, performance impact on NAS OS       |
+|    - NOT RECOMMENDED for NAS-01                                           |
+|                                                                             |
+| b) VOLUME-LEVEL ENCRYPTION (LUKS): Encrypts only the backup partition    |
+|    - PROS: Industry standard, good performance, selective encryption    |
+|    - CONS: Requires manual key management                                |
+|    - RECOMMENDED for NAS-01                                               |
+|                                                                             |
+| c) FILE-LEVEL ENCRYPTION: Encrypts individual files (Veeam native)      |
+|    - PROS: Granular control, encrypted files can be transferred          |
+|    - CONS: Slower, more complex management                              |
+|    - NOT RECOMMENDED for large backups                                   |
+|                                                                             |
+| WHY VOLUME-LEVEL (LUKS):                                                  |
+| - full-disk encryption would encrypt the entire NAS OS                  |
+| - File-level encryption is slower and more complex for large backups   |
+| - LUKS volume encryption is the industry standard for Linux storage    |
+| - It encrypts the backup partition without affecting NAS OS            |
+| - Compatible with Synology DSM and Linux backup servers               |
+|                                                                             |
+| 2. PERFORMANCE IMPACT:                                                    |
+|                                                                             |
+| Based on T1 measurements:                                                 |
+| - AES-256-GCM adds approximately 15-20% CPU overhead                    |
+| - For backups (sequential writes), impact is minimal                   |
+| - Estimated overhead: 0.5-1.0 seconds per 100MB                        |
+| - Acceptable for nightly 2-4 AM backup window                          |
+|                                                                             |
+| 3. KEY STORAGE (CRITICAL):                                               |
+|                                                                             |
+| WHERE NOT TO STORE:                                                       |
+| - NOT on the NAS itself (if NAS is stolen, key is stolen)              |
+| - NOT in the same room (fire/flood destroys both)                      |
+| - NOT in the same network (ransomware can encrypt both)               |
+|                                                                             |
+| WHERE TO STORE:                                                           |
+| - Secure password manager (Bitwarden/Vault) with MFA                   |
+| - Physical key stored in fireproof safe offsite                        |
+| - Split key management (two persons required to unlock)               |
+| - HSM (Hardware Security Module) if budget allows                      |
+|                                                                             |
+| 4. WHAT HAPPENS IF THE KEY IS LOST:                                     |
+|                                                                             |
+| - Data is PERMANENTLY UNRECOVERABLE                                     |
+| - There are no backdoors in LUKS encryption                             |
+| - All backups must be considered lost                                  |
+| - Disaster recovery procedure: restore from offsite backups (if any)   |
+| - MITIGATION: Store key in multiple secure locations                  |
+| - MITIGATION: Regular key backup to secure, separate system           |
+|                                                                             |
+| 5. OFFSITE BACKUP REPLICATION (from 1x03 strategy):                    |
+|                                                                             |
+| The cloud replica (AWS S3) MUST ALSO BE ENCRYPTED.                     |
+|                                                                             |
+| OPTIONS:                                                                  |
+| a) Client-side encryption: Encrypt backups BEFORE sending to cloud     |
+|    - Key is managed by MedDefense, not AWS                            |
+|    - More secure, but requires key management                          |
+|                                                                             |
+| b) Server-side encryption: AWS S3 SSE-KMS with Customer-Managed Key  |
+|    - AWS manages the encryption, but MedDefense controls the key     |
+|    - Easier to implement                                              |
+|                                                                             |
+| RECOMMENDATION:                                                          |
+| Use client-side encryption with a separate key from the NAS. This      |
+| ensures that even if the NAS is compromised, the cloud replica        |
+| remains secure. The cloud key should be stored in AWS KMS or a        |
+| separate password manager.                                              |
++----------------------------------------------------------------------------+

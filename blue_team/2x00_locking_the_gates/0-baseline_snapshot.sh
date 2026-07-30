@@ -1,4 +1,4 @@
-*#!/bin/bash
+#!/bin/bash
 set -euo pipefail
 
 # ==============================================================================
@@ -54,7 +54,16 @@ SSH_PERMIT_ROOT="$(sshd -T 2>/dev/null | grep "^permitrootlogin " | awk '{print 
 SSH_PASSWORD_AUTH="$(sshd -T 2>/dev/null | grep "^passwordauthentication " | awk '{print $2}' || echo "not_found")"
 SSH_EMPTY_PASSWORDS="$(sshd -T 2>/dev/null | grep "^permitemptypasswords " | awk '{print $2}' || echo "not_found")"
 
-# 9. Build JSON
+# 9. sysctl security parameters
+SYSCTL_IP_FORWARD="$(sysctl -n net.ipv4.ip_forward 2>/dev/null || echo "not_found")"
+SYSCTL_SYN_COOKIES="$(sysctl -n net.ipv4.tcp_syncookies 2>/dev/null || echo "not_found")"
+SYSCTL_RP_FILTER="$(sysctl -n net.ipv4.conf.all.rp_filter 2>/dev/null || echo "not_found")"
+SYSCTL_ACCEPT_REDIRECTS="$(sysctl -n net.ipv4.conf.all.accept_redirects 2>/dev/null || echo "not_found")"
+SYSCTL_ACCEPT_SOURCE_ROUTE="$(sysctl -n net.ipv4.conf.all.accept_source_route 2>/dev/null || echo "not_found")"
+SYSCTL_ASLR="$(sysctl -n kernel.randomize_va_space 2>/dev/null || echo "not_found")"
+SYSCTL_CORE_DUMPS="$(sysctl -n fs.suid_dumpable 2>/dev/null || echo "not_found")"
+
+# 10. Build JSON
 cat > "${JSON_OUTPUT}" << EOF
 {
   "hostname": "${HOSTNAME}",
@@ -70,13 +79,20 @@ cat > "${JSON_OUTPUT}" << EOF
   "sudo_members": ${SUDO_COUNT},
   "ssh_permit_root": "${SSH_PERMIT_ROOT}",
   "ssh_password_auth": "${SSH_PASSWORD_AUTH}",
-  "ssh_empty_passwords": "${SSH_EMPTY_PASSWORDS}"
+  "ssh_empty_passwords": "${SSH_EMPTY_PASSWORDS}",
+  "sysctl_ip_forward": "${SYSCTL_IP_FORWARD}",
+  "sysctl_syn_cookies": "${SYSCTL_SYN_COOKIES}",
+  "sysctl_rp_filter": "${SYSCTL_RP_FILTER}",
+  "sysctl_accept_redirects": "${SYSCTL_ACCEPT_REDIRECTS}",
+  "sysctl_accept_source_route": "${SYSCTL_ACCEPT_SOURCE_ROUTE}",
+  "sysctl_aslr": "${SYSCTL_ASLR}",
+  "sysctl_core_dumps": "${SYSCTL_CORE_DUMPS}"
 }
 EOF
 
 chmod 600 "${JSON_OUTPUT}"
 
-# 10. Print summary
+# 11. Print summary
 echo ""
 echo "======================================================================"
 echo "  BASELINE SNAPSHOT COMPLETE - ${HOSTNAME}"

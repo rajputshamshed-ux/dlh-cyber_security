@@ -2,12 +2,13 @@
 # ==============================================================================
 # BASELINE SNAPSHOT - MEDDEFENSE HEALTH SYSTEMS
 # Task 0: The Baseline Snapshot
-# ==============================================================================
 # Analyst: shamshed rajput
 # Date: 30/07/2026
 # Target: billing-srv-01 (Ubuntu 22.04.3 LTS)
 # Purpose: Capture complete security state BEFORE any hardening.
 # ==============================================================================
+
+set -euo pipefail
 
 OUTPUT_DIR="/var/log/meddefense/baseline"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
@@ -17,74 +18,81 @@ JSON_OUTPUT="${OUTPUT_DIR}/${HOSTNAME}_baseline_${TIMESTAMP}.json"
 mkdir -p "$OUTPUT_DIR"
 
 # ------------------------------------------------------------------------------
-# EXECUTIVE SUMMARY FUNCTION
+# EXECUTIVE SUMMARY
 # ------------------------------------------------------------------------------
 print_summary() {
     echo ""
     echo "======================================================================"
-    echo "  BASELINE SNAPSHOT COMPLETE - $HOSTNAME"
+    echo "  BASELINE SNAPSHOT COMPLETE - ${HOSTNAME}"
     echo "======================================================================"
-    echo "  Hostname:            $HOSTNAME"
-    echo "  OS:                  $OS_VERSION"
-    echo "  Kernel:              $KERNEL_VERSION"
-    echo "  Uptime:              $UPTIME"
-    echo "  Running services:    $SERVICE_COUNT"
-    echo "  Open ports (TCP):    $PORT_COUNT"
-    echo "  SUID binaries:       $SUID_COUNT"
-    echo "  SGID binaries:       $SGID_COUNT"
-    echo "  World-writable files: $WW_COUNT"
-    echo "  Local user accounts:  $USER_COUNT"
-    echo "  Sudo group members:   $SUDO_COUNT"
+    echo "  Hostname:            ${HOSTNAME}"
+    echo "  OS:                  ${OS_VERSION}"
+    echo "  Kernel:              ${KERNEL_VERSION}"
+    echo "  Uptime:              ${UPTIME}"
+    echo "  Running services:    ${SERVICE_COUNT}"
+    echo "  Open ports (TCP):    ${PORT_COUNT}"
+    echo "  SUID binaries:       ${SUID_COUNT}"
+    echo "  SGID binaries:       ${SGID_COUNT}"
+    echo "  World-writable files: ${WW_COUNT}"
+    echo "  Local user accounts:  ${USER_COUNT}"
+    echo "  Sudo group members:   ${SUDO_COUNT}"
     echo "----------------------------------------------------------------------"
-    echo "  JSON output:         $JSON_OUTPUT"
+    echo "  JSON output:         ${JSON_OUTPUT}"
     echo "======================================================================"
     echo ""
+}
+
+# ------------------------------------------------------------------------------
+# SAFE COMMAND EXECUTION
+# ------------------------------------------------------------------------------
+safe_cmd() {
+    "$@" 2>/dev/null || echo ""
 }
 
 # ------------------------------------------------------------------------------
 # MAIN BASELINE COLLECTION
 # ------------------------------------------------------------------------------
 
-echo "[$(date '+%H:%M:%S')] Starting baseline snapshot for $HOSTNAME..."
+echo "[$(date '+%H:%M:%S')] Starting baseline snapshot for ${HOSTNAME}..."
 
 # 1. SYSTEM IDENTIFICATION
 echo "[$(date '+%H:%M:%S')] Collecting system identification..."
-OS_VERSION=$(grep PRETTY_NAME /etc/os-release 2>/dev/null | cut -d'"' -f2 || echo "Unknown")
+OS_VERSION=$(safe_cmd grep PRETTY_NAME /etc/os-release | cut -d'"' -f2)
 KERNEL_VERSION=$(uname -r)
-UPTIME=$(uptime -p 2>/dev/null | sed 's/^up //' || echo "Unknown")
+UPTIME=$(safe_cmd uptime -p | sed 's/^up //')
 ARCHITECTURE=$(uname -m)
 
 # 2. RUNNING SERVICES
 echo "[$(date '+%H:%M:%S')] Enumerating running services..."
-SERVICES_LIST=$(systemctl list-units --type=service --state=running --no-legend --no-pager 2>/dev/null | awk '{print $1}' | sort)
-SERVICE_COUNT=$(echo "$SERVICES_LIST" | grep -c . 2>/dev/null || echo 0)
+SERVICES_LIST=$(systemctl list-units --type=service --state=running --no-legend --no-pager 2>/dev/null | awk '{print $1}' | sort || true)
+SERVICE_COUNT=$(echo "${SERVICES_LIST}" | grep -c . || echo 0)
 
 # 3. OPEN PORTS
 echo "[$(date '+%H:%M:%S')] Enumerating open ports..."
-OPEN_PORTS_TCP=$(ss -tlnp 2>/dev/null | awk 'NR>1 {print $4}' | awk -F: '{print $NF}' | sort -n | uniq)
-PORT_COUNT=$(echo "$OPEN_PORTS_TCP" | grep -c . 2>/dev/null || echo 0)
+OPEN_PORTS_TCP=$(ss -tlnp 2>/dev/null | awk 'NR>1 {print $4}' | awk -F: '{print $NF}' | sort -n | uniq || true)
+PORT_COUNT=$(echo "${OPEN_PORTS_TCP}" | grep -c . || echo 0)
 
-# 4. SUID BINARIES (limité pour éviter les timeouts)
-echo "[$(date '+%H:%M:%S')] Finding SUID binaries (this may take a moment)..."
-SUID_BINARIES=$(timeout 30 find /usr /bin /sbin /lib -perm -4000 -type f 2>/dev/null | sort)
-SUID_COUNT=$(echo "$SUID_BINARIES" | grep -c . 2>/dev/null || echo 0)
+# 4. SUID BINARIES
+echo "[$(date '+%H:%M:%S')] Finding SUID binaries..."
+SUID_BINARIES=$(timeout 30 find /usr /bin /sbin /lib -perm -4000 -type f 2>/dev/null | sort || true)
+SUID_COUNT=$(echo "${SUID_BINARIES}" | grep -c . || echo 0)
 
 # 5. SGID BINARIES
 echo "[$(date '+%H:%M:%S')] Finding SGID binaries..."
-SGID_BINARIES=$(timeout 30 find /usr /bin /sbin /lib -perm -2000 -type f 2>/dev/null | sort)
-SGID_COUNT=$(echo "$SGID_BINARIES" | grep -c . 2>/dev/null || echo 0)
+SGID_BINARIES=$(timeout 30 find /usr /bin /sbin /lib -perm -2000 -type f 2>/dev/null | sort || true)
+SGID_COUNT=$(echo "${SGID_BINARIES}" | grep -c . || echo 0)
 
-# 6. WORLD-WRITABLE FILES (limité)
+# 6. WORLD-WRITABLE FILES
 echo "[$(date '+%H:%M:%S')] Finding world-writable files..."
-WORLD_WRITABLE=$(timeout 30 find /etc /home /var /tmp -perm -0002 -type f 2>/dev/null | sort)
-WW_COUNT=$(echo "$WORLD_WRITABLE" | grep -c . 2>/dev/null || echo 0)
+WORLD_WRITABLE=$(timeout 30 find /etc /home /var /tmp -perm -0002 -type f 2>/dev/null | sort || true)
+WW_COUNT=$(echo "${WORLD_WRITABLE}" | grep -c . || echo 0)
 
 # 7. USER ACCOUNTS
 echo "[$(date '+%H:%M:%S')] Enumerating user accounts..."
-LOCAL_USERS=$(awk -F: '$3>=1000 && $3<65534 {print $1}' /etc/passwd 2>/dev/null | sort)
-USER_COUNT=$(echo "$LOCAL_USERS" | grep -c . 2>/dev/null || echo 0)
-SUDO_MEMBERS=$(getent group sudo 2>/dev/null | cut -d: -f4 | tr ',' '\n' | sort)
-SUDO_COUNT=$(echo "$SUDO_MEMBERS" | grep -c . 2>/dev/null || echo 0)
+LOCAL_USERS=$(awk -F: '$3>=1000 && $3<65534 {print $1}' /etc/passwd 2>/dev/null | sort || true)
+USER_COUNT=$(echo "${LOCAL_USERS}" | grep -c . || echo 0)
+SUDO_MEMBERS=$(getent group sudo 2>/dev/null | cut -d: -f4 | tr ',' '\n' | sort || true)
+SUDO_COUNT=$(echo "${SUDO_MEMBERS}" | grep -c . || echo 0)
 
 # 8. SSH CONFIGURATION
 echo "[$(date '+%H:%M:%S')] Capturing SSH configuration..."
@@ -117,77 +125,49 @@ fi
 # ------------------------------------------------------------------------------
 echo "[$(date '+%H:%M:%S')] Building JSON output..."
 
-cat > "$JSON_OUTPUT" << EOF
+cat > "${JSON_OUTPUT}" << EOF
 {
   "metadata": {
     "script": "0-baseline_snapshot.sh",
     "analyst": "shamshed rajput",
     "date": "$(date -Iseconds)",
-    "hostname": "$HOSTNAME",
+    "hostname": "${HOSTNAME}",
     "project": "2x00_locking_the_gates",
     "organization": "MedDefense Health Systems"
   },
   "system_identification": {
-    "hostname": "$HOSTNAME",
-    "os_version": "$OS_VERSION",
-    "kernel_version": "$KERNEL_VERSION",
-    "architecture": "$ARCHITECTURE",
-    "uptime": "$UPTIME"
+    "hostname": "${HOSTNAME}",
+    "os_version": "${OS_VERSION}",
+    "kernel_version": "${KERNEL_VERSION}",
+    "architecture": "${ARCHITECTURE}",
+    "uptime": "${UPTIME}"
   },
   "executive_summary": {
-    "running_services": $SERVICE_COUNT,
-    "open_ports_tcp": $PORT_COUNT,
-    "suid_binaries": $SUID_COUNT,
-    "sgid_binaries": $SGID_COUNT,
-    "world_writable_files": $WW_COUNT,
-    "local_users": $USER_COUNT,
-    "sudo_members": $SUDO_COUNT,
-    "apparmor_profiles": $APPARMOR_COUNT,
-    "apparmor_enforce": $APPARMOR_ENFORCE,
-    "ufw_active": "$UFW_ACTIVE"
+    "running_services": ${SERVICE_COUNT},
+    "open_ports_tcp": ${PORT_COUNT},
+    "suid_binaries": ${SUID_COUNT},
+    "sgid_binaries": ${SGID_COUNT},
+    "world_writable_files": ${WW_COUNT},
+    "local_users": ${USER_COUNT},
+    "sudo_members": ${SUDO_COUNT},
+    "apparmor_profiles": ${APPARMOR_COUNT},
+    "apparmor_enforce": ${APPARMOR_ENFORCE},
+    "ufw_active": "${UFW_ACTIVE}"
   },
   "ssh_configuration": {
-    "permit_root_login": "$SSH_PERMIT_ROOT",
-    "password_authentication": "$SSH_PASSWORD_AUTH",
-    "pubkey_authentication": "$SSH_PUBKEY_AUTH",
-    "permit_empty_passwords": "$SSH_EMPTY_PASSWORDS",
-    "max_auth_tries": "$SSH_MAX_AUTH_TRIES"
-  },
-  "open_ports": {
-    "tcp_count": $PORT_COUNT,
-    "tcp_ports": $(echo "$OPEN_PORTS_TCP" | jq -R -s 'split("\n") | map(select(length > 0))' 2>/dev/null || echo "[]")
-  },
-  "suid_binaries": {
-    "count": $SUID_COUNT,
-    "list": $(echo "$SUID_BINARIES" | jq -R -s 'split("\n") | map(select(length > 0))' 2>/dev/null || echo "[]")
-  },
-  "sgid_binaries": {
-    "count": $SGID_COUNT,
-    "list": $(echo "$SGID_BINARIES" | jq -R -s 'split("\n") | map(select(length > 0))' 2>/dev/null || echo "[]")
-  },
-  "world_writable_files": {
-    "count": $WW_COUNT,
-    "list": $(echo "$WORLD_WRITABLE" | jq -R -s 'split("\n") | map(select(length > 0))' 2>/dev/null || echo "[]")
-  },
-  "user_accounts": {
-    "local_users_count": $USER_COUNT,
-    "local_users": $(echo "$LOCAL_USERS" | jq -R -s 'split("\n") | map(select(length > 0))' 2>/dev/null || echo "[]"),
-    "sudo_members_count": $SUDO_COUNT,
-    "sudo_members": $(echo "$SUDO_MEMBERS" | jq -R -s 'split("\n") | map(select(length > 0))' 2>/dev/null || echo "[]")
-  },
-  "findings_reference": {
-    "1x02_f009": "SSH password authentication - lateral movement risk (Crimson Tide Phase 3)",
-    "1x02_f011": "Ubuntu 18.04 ESM resolved via OS upgrade",
-    "1x02_f026": "Outdated kernel CVEs resolved via OS upgrade",
-    "crimson_tide": "Hospital breaches start with misconfigured reachable services"
+    "permit_root_login": "${SSH_PERMIT_ROOT}",
+    "password_authentication": "${SSH_PASSWORD_AUTH}",
+    "pubkey_authentication": "${SSH_PUBKEY_AUTH}",
+    "permit_empty_passwords": "${SSH_EMPTY_PASSWORDS}",
+    "max_auth_tries": "${SSH_MAX_AUTH_TRIES}"
   }
 }
 EOF
 
-chmod 600 "$JSON_OUTPUT"
+chmod 600 "${JSON_OUTPUT}"
 
 # Print executive summary
 print_summary
 
-echo "[$(date '+%H:%M:%S')] JSON report saved to: $JSON_OUTPUT"
+echo "[$(date '+%H:%M:%S')] JSON report saved to: ${JSON_OUTPUT}"
 exit 0

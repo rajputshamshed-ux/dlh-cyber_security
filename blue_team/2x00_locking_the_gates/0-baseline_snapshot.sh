@@ -49,10 +49,13 @@ USER_COUNT="$(echo "${LOCAL_USERS}" | grep -c . || echo 0)"
 SUDO_MEMBERS="$(getent group sudo 2>/dev/null | cut -d: -f4 | tr ',' '\n' | sort)"
 SUDO_COUNT="$(echo "${SUDO_MEMBERS}" | grep -c . || echo 0)"
 
-# 8. SSH configuration
-SSH_PERMIT_ROOT="$(sshd -T 2>/dev/null | grep "^permitrootlogin " | awk '{print $2}' || echo "not_found")"
-SSH_PASSWORD_AUTH="$(sshd -T 2>/dev/null | grep "^passwordauthentication " | awk '{print $2}' || echo "not_found")"
-SSH_EMPTY_PASSWORDS="$(sshd -T 2>/dev/null | grep "^permitemptypasswords " | awk '{print $2}' || echo "not_found")"
+# 8. SSH configuration from sshd_config
+SSH_CONFIG="/etc/ssh/sshd_config"
+SSH_PERMIT_ROOT="$(grep -i "^PermitRootLogin" ${SSH_CONFIG} 2>/dev/null | awk '{print $2}' || echo "not_found")"
+SSH_PASSWORD_AUTH="$(grep -i "^PasswordAuthentication" ${SSH_CONFIG} 2>/dev/null | awk '{print $2}' || echo "not_found")"
+SSH_PUBKEY_AUTH="$(grep -i "^PubkeyAuthentication" ${SSH_CONFIG} 2>/dev/null | awk '{print $2}' || echo "not_found")"
+SSH_EMPTY_PASSWORDS="$(grep -i "^PermitEmptyPasswords" ${SSH_CONFIG} 2>/dev/null | awk '{print $2}' || echo "not_found")"
+SSH_MAX_AUTH_TRIES="$(grep -i "^MaxAuthTries" ${SSH_CONFIG} 2>/dev/null | awk '{print $2}' || echo "not_found")"
 
 # 9. sysctl security parameters
 SYSCTL_IP_FORWARD="$(sysctl -n net.ipv4.ip_forward 2>/dev/null || echo "not_found")"

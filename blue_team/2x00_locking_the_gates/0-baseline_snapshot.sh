@@ -43,7 +43,7 @@ SGID_COUNT="$(echo "${SGID_BINARIES}" | grep -c . || echo 0)"
 WORLD_WRITABLE="$(find /etc /home /var /tmp -perm -0002 -type f 2>/dev/null | sort)"
 WW_COUNT="$(echo "${WORLD_WRITABLE}" | grep -c . || echo 0)"
 
-# 7. User accounts
+# 7. User accounts and sudo
 LOCAL_USERS="$(awk -F: '$3>=1000 && $3<65534 {print $1}' /etc/passwd | sort)"
 USER_COUNT="$(echo "${LOCAL_USERS}" | grep -c . || echo 0)"
 SUDO_MEMBERS="$(getent group sudo 2>/dev/null | cut -d: -f4 | tr ',' '\n' | sort)"
@@ -82,7 +82,9 @@ cat > "${JSON_OUTPUT}" << EOF
   "sudo_members": ${SUDO_COUNT},
   "ssh_permit_root": "${SSH_PERMIT_ROOT}",
   "ssh_password_auth": "${SSH_PASSWORD_AUTH}",
+  "ssh_pubkey_auth": "${SSH_PUBKEY_AUTH}",
   "ssh_empty_passwords": "${SSH_EMPTY_PASSWORDS}",
+  "ssh_max_auth_tries": "${SSH_MAX_AUTH_TRIES}",
   "sysctl_ip_forward": "${SYSCTL_IP_FORWARD}",
   "sysctl_syn_cookies": "${SYSCTL_SYN_COOKIES}",
   "sysctl_rp_filter": "${SYSCTL_RP_FILTER}",

@@ -1,0 +1,208 @@
+{
+  "metadata": {
+    "script": "3-remediation_queue.sh",
+    "analyst": "shamshed rajput",
+    "date": "2026-08-03T15:04:52+02:00",
+    "organization": "MedDefense Health Systems",
+    "total_remediation_actions": 12,
+    "sort_order": "priority_score_descending"
+  },
+  "remediation_queue": [
+    {
+      "queue_position": 1,
+      "control_id": "CIS-5.2.8",
+      "status": "non_compliant",
+      "priority_score": 100,
+      "impact": "critical",
+      "remediation_script": "4-hardening_ssh.sh",
+      "lynis_evidence": "SSH-7410: Password authentication enabled",
+      "operational_risk": "Password authentication is the primary lateral movement vector for Crimson Tide Phase 3",
+      "estimated_effort_minutes": 5,
+      "requires_reboot": false,
+      "validation_command": "grep '^CIS-5.2.8' /var/log/meddefense/hardening_validation.log"
+    }
+,
+    {
+      "queue_position": 2,
+      "control_id": "CIS-5.2.7",
+      "status": "non_compliant",
+      "priority_score": 98,
+      "impact": "critical",
+      "remediation_script": "4-hardening_ssh.sh",
+      "lynis_evidence": "SSH-7408: Root login permitted",
+      "operational_risk": "Direct root login bypasses audit trail; attacker with root password has unrestricted access",
+      "estimated_effort_minutes": 9,
+      "requires_reboot": false,
+      "validation_command": "grep '^CIS-5.2.7' /var/log/meddefense/hardening_validation.log"
+    }
+,
+    {
+      "queue_position": 3,
+      "control_id": "CIS-5.2.1",
+      "status": "non_compliant",
+      "priority_score": 95,
+      "impact": "critical",
+      "remediation_script": "4-hardening_ssh.sh",
+      "lynis_evidence": "SSH-7408: SSH permissions not restricted",
+      "operational_risk": "Unauthorized users can read SSH configuration, exposing allowed users and authentication methods",
+      "estimated_effort_minutes": 15,
+      "requires_reboot": false,
+      "validation_command": "grep '^CIS-5.2.1' /var/log/meddefense/hardening_validation.log"
+    }
+,
+    {
+      "queue_position": 4,
+      "control_id": "CIS-1.6.1",
+      "status": "non_compliant",
+      "priority_score": 92,
+      "impact": "critical",
+      "remediation_script": "6-hardening_apparmor.sh",
+      "lynis_evidence": "APP-5120: AppArmor profiles not in enforce mode",
+      "operational_risk": "Unconfined services can access any filesystem path; compromised Apache can read /etc/shadow",
+      "estimated_effort_minutes": 21,
+      "requires_reboot": false,
+      "validation_command": "grep '^CIS-1.6.1' /var/log/meddefense/hardening_validation.log"
+    }
+,
+    {
+      "queue_position": 5,
+      "control_id": "CIS-4.1.1",
+      "status": "non_compliant",
+      "priority_score": 90,
+      "impact": "critical",
+      "remediation_script": "7-hardening_auditd.sh",
+      "lynis_evidence": "ACCT-9624: auditd not installed or not enabled",
+      "operational_risk": "No kernel-level audit trail; attacker can clear logs with no forensic evidence remaining",
+      "estimated_effort_minutes": 25,
+      "requires_reboot": false,
+      "validation_command": "grep '^CIS-4.1.1' /var/log/meddefense/hardening_validation.log"
+    }
+,
+    {
+      "queue_position": 6,
+      "control_id": "CIS-3.1.1",
+      "status": "non_compliant",
+      "priority_score": 88,
+      "impact": "high",
+      "remediation_script": "5-hardening_sysctl.sh",
+      "lynis_evidence": "KRNL-6000: IPv4 forwarding enabled",
+      "operational_risk": "Compromised server becomes a network pivot point for lateral movement",
+      "estimated_effort_minutes": 29,
+      "requires_reboot": true,
+      "validation_command": "grep '^CIS-3.1.1' /var/log/meddefense/hardening_validation.log"
+    }
+,
+    {
+      "queue_position": 7,
+      "control_id": "CIS-5.2.5",
+      "status": "non_compliant",
+      "priority_score": 85,
+      "impact": "high",
+      "remediation_script": "4-hardening_ssh.sh",
+      "lynis_evidence": "SSH-7410: MaxAuthTries not restricted",
+      "operational_risk": "Brute-force SSH attacks succeed with unlimited authentication attempts",
+      "estimated_effort_minutes": 35,
+      "requires_reboot": false,
+      "validation_command": "grep '^CIS-5.2.5' /var/log/meddefense/hardening_validation.log"
+    }
+,
+    {
+      "queue_position": 8,
+      "control_id": "CIS-3.5.1",
+      "status": "non_compliant",
+      "priority_score": 82,
+      "impact": "high",
+      "remediation_script": "8-hardening_firewall.sh",
+      "lynis_evidence": "FIRE-4512: No host firewall configured",
+      "operational_risk": "No host-level protection; any device on flat network can connect to all services",
+      "estimated_effort_minutes": 41,
+      "requires_reboot": false,
+      "validation_command": "grep '^CIS-3.5.1' /var/log/meddefense/hardening_validation.log"
+    }
+,
+    {
+      "queue_position": 9,
+      "control_id": "CIS-3.2.1",
+      "status": "non_compliant",
+      "priority_score": 75,
+      "impact": "high",
+      "remediation_script": "5-hardening_sysctl.sh",
+      "lynis_evidence": "KRNL-6000: Source-routed packets accepted",
+      "operational_risk": "Source-routed packets can bypass firewall ACLs and network segmentation",
+      "estimated_effort_minutes": 55,
+      "requires_reboot": true,
+      "validation_command": "grep '^CIS-3.2.1' /var/log/meddefense/hardening_validation.log"
+    }
+,
+    {
+      "queue_position": 10,
+      "control_id": "CIS-3.1.2",
+      "status": "non_compliant",
+      "priority_score": 72,
+      "impact": "high",
+      "remediation_script": "5-hardening_sysctl.sh",
+      "lynis_evidence": "KRNL-6000: ICMP redirects accepted",
+      "operational_risk": "On-path attacker can redirect traffic for man-in-the-middle interception",
+      "estimated_effort_minutes": 61,
+      "requires_reboot": true,
+      "validation_command": "grep '^CIS-3.1.2' /var/log/meddefense/hardening_validation.log"
+    }
+,
+    {
+      "queue_position": 11,
+      "control_id": "CIS-5.2.4",
+      "status": "non_compliant",
+      "priority_score": 70,
+      "impact": "high",
+      "remediation_script": "4-hardening_ssh.sh",
+      "lynis_evidence": "SSH-7440: X11 forwarding not disabled",
+      "operational_risk": "X11 forwarding enables graphical session tunneling for data exfiltration",
+      "estimated_effort_minutes": 65,
+      "requires_reboot": false,
+      "validation_command": "grep '^CIS-5.2.4' /var/log/meddefense/hardening_validation.log"
+    }
+,
+    {
+      "queue_position": 12,
+      "control_id": "CIS-5.2.18",
+      "status": "non_compliant",
+      "priority_score": 60,
+      "impact": "medium",
+      "remediation_script": "4-hardening_ssh.sh",
+      "lynis_evidence": "SSH-7440: Idle timeout not configured",
+      "operational_risk": "Abandoned SSH sessions provide persistent access for attackers",
+      "estimated_effort_minutes": 85,
+      "requires_reboot": false,
+      "validation_command": "grep '^CIS-5.2.18' /var/log/meddefense/hardening_validation.log"
+    }
+,
+    {
+      "queue_position": 13,
+      "control_id": "CIS-5.1.2",
+      "status": "non_compliant",
+      "priority_score": 55,
+      "impact": "medium",
+      "remediation_script": "9-hardening_filesystem.sh",
+      "lynis_evidence": "FILE-7524: crontab permissions not restricted",
+      "operational_risk": "World-readable crontab exposes scheduled tasks and potential credential locations",
+      "estimated_effort_minutes": 95,
+      "requires_reboot": false,
+      "validation_command": "grep '^CIS-5.1.2' /var/log/meddefense/hardening_validation.log"
+    }
+,
+    {
+      "queue_position": 14,
+      "control_id": "CIS-3.3.1",
+      "status": "partially_compliant",
+      "priority_score": 45,
+      "impact": "low",
+      "remediation_script": "5-hardening_sysctl.sh",
+      "lynis_evidence": "KRNL-6000: SYN cookies not confirmed",
+      "operational_risk": "SYN flood DoS attacks can overwhelm server during ransomware encryption phase",
+      "estimated_effort_minutes": 115,
+      "requires_reboot": true,
+      "validation_command": "grep '^CIS-3.3.1' /var/log/meddefense/hardening_validation.log"
+    }
+
+  ]
+}

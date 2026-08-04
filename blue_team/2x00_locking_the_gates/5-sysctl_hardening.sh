@@ -7,6 +7,7 @@ set -euo pipefail
 # ==============================================================================
 
 SYSCTL_FILE="/etc/sysctl.d/99-meddefense-hardening.conf"
+SYSCTL_CONF="/etc/sysctl.conf"
 PASS=0
 FAIL=0
 APPLIED=0
@@ -17,8 +18,14 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 # ------------------------------------------------------------------------------
-# CRÉER LE DOSSIER SI NÉCESSAIRE
+# BACKUP
 # ------------------------------------------------------------------------------
+if [ -f "${SYSCTL_CONF}" ]; then
+    SYSCTL_BACKUP="${SYSCTL_CONF}.bak.$(date +%Y%m%d_%H%M%S)"
+    echo "[*] Backing up ${SYSCTL_CONF}"
+    cp "${SYSCTL_CONF}" "${SYSCTL_BACKUP}"
+fi
+
 mkdir -p /etc/sysctl.d
 
 # ------------------------------------------------------------------------------

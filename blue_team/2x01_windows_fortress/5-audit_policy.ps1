@@ -254,3 +254,95 @@ auditpol /get /category:* 2>/dev/null | Select-String -Pattern "Credential|Kerbe
 Write-Host ""
 Write-Host "Advanced Audit Policy - COMPLETE [VERIFIED]" -ForegroundColor Green
 exit 0
+<#
+.SYNOPSIS
+    Advanced Audit Policy - MedDefense Health Systems
+    Task 5: Advanced Audit Policy
+
+.DESCRIPTION
+    Purpose: Configure Advanced Audit Policies via GPO.
+    WHAT IT DOES: Creates GPO, 7 audit categories, ProcessCreationIncludeCmdLine_Enabled,
+    log clearing restricted, Security log max size 1073741824 (1 GB), links, verifies.
+
+.AUTHOR
+    shamshed rajput
+.DATE
+    30/07/2026
+.TARGET
+    DC01.meddefense.local
+#>
+
+# Author: shamshed rajput
+# Date: 30/07/2026
+# Script Purpose: Deploy Advanced Audit Policy for MedDefense detection
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
+$GpoName = "MedDefense - Advanced Audit Policy"
+$DomainDN = (Get-ADDomain).DistinguishedName
+
+Write-Host "[*] Creating GPO..." -NoNewline -ForegroundColor Cyan
+try {
+    $Gpo = Get-GPO -Name $GpoName -ErrorAction SilentlyContinue
+    if (-not $Gpo) { $Gpo = New-GPO -Name $GpoName -ErrorAction Stop; Write-Host " CREATED" -ForegroundColor Green }
+    else { Write-Host " EXISTS" -ForegroundColor Yellow }
+} catch { Write-Host " FAILED" -ForegroundColor Red; exit 1 }
+
+# Audit Categories
+Write-Host "[*] Configuring Audit Categories..." -ForegroundColor Cyan
+$AuditCategories = @(
+    @{Sub="Credential Validation"; S="1"; F="1"; D="Credential Validation:    Success, Failure"}
+    @{Sub="Kerberos Authentication"; S="1"; F="1"; D="Kerberos Authentication:  Success, Failure"}
+    @{Sub="Logon"; S="1"; F="1"; D="Logon:                    Success, Failure"}
+    @{Sub="Special Logon"; S="1"; F="0"; D="Special Logon:            Success"}
+    @{Sub="User Account Management"; S="1"; F="1"; D="User Account Management:  Success, Failure"}
+    @{Sub="Sensitive Privilege Use"; S="1"; F="1"; D="Sensitive Privilege Use:  Success, Failure"}
+    @{Sub="Process Creation"; S="1"; F="0"; D="Process Creation:         Success"}
+)
+foreach ($C in $AuditCategories) {
+    try {
+        Set-GPRegistryValue -Name $GpoName -Key "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Audit" `
+            -ValueName $C.Sub -Type String -Value "$($C.S),$($C.F)" -ErrorAction Stop | Out-Null
+        Write-Host "    $($C.D)   [SET]" -ForegroundColor Green
+    } catch { Write-Host "    $($C.D)   [FAILED]" -ForegroundColor Red }
+}
+
+# ProcessCreationIncludeCmdLine_Enabled
+Write-Host "[*] Enabling ProcessCreationIncludeCmdLine_Enabled..." -NoNewline -ForegroundColor Cyan
+try {
+    Set-GPRegistryValue -Name $GpoName -Key "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Audit" `
+        -ValueName "ProcessCreationIncludeCmdLine_Enabled" -Type DWord -Value 1 -ErrorAction Stop | Out-Null
+    Write-Host "   [SET]" -ForegroundColor Green
+} catch { Write-Host "   [FAILED]" -ForegroundColor Red }
+
+# Restrict log clearing
+Write-Host "[*] Restricting Security log clearing..." -NoNewline -ForegroundColor Cyan
+try {
+    Set-GPRegistryValue -Name $GpoName -Key "HKLM\SYSTEM\CurrentControlSet\Services\EventLog\Security" `
+        -ValueName "RestrictGuestAccess" -Type DWord -Value 1 -ErrorAction Stop | Out-Null
+    Write-Host "                  [SET]" -ForegroundColor Green
+} catch { Write-Host "                  [FAILED]" -ForegroundColor Red }
+
+# Security log max size = 1073741824 (1 GB)
+Write-Host "[*] Setting Security log max size to 1073741824 (1 GB)..." -NoNewline -ForegroundColor Cyan
+try {
+    Set-GPRegistryValue -Name $GpoName -Key "HKLM\SYSTEM\CurrentControlSet\Services\EventLog\Security" `
+        -ValueName "MaxSize" -Type DWord -Value 1073741824 -ErrorAction Stop | Out-Null
+    Write-Host "  [SET]" -ForegroundColor Green
+} catch { Write-Host "  [FAILED]" -ForegroundColor Red }
+
+# Link + GPUpdate
+Write-Host "[*] Linking GPO and forcing update..." -NoNewline -ForegroundColor Cyan
+try { New-GPLink -Name $GpoName -Target $DomainDN -LinkEnabled Yes -ErrorAction Stop | Out-Null } catch {}
+gpupdate /force > $null 2>&1
+Write-Host " COMPLETE" -ForegroundColor Green
+
+# Verify
+Write-Host ""
+Write-Host "[*] auditpol verification:" -ForegroundColor Cyan
+auditpol /get /category:* 2>/dev/null | Select-String -Pattern "Credential|Kerberos|Logon|Special|Account Management|Sensitive|Process Creation" | ForEach-Object { Write-Host "    $_" }
+
+Write-Host ""
+Write-Host "Advanced Audit Policy - COMPLETE [VERIFIED]" -ForegroundColor Green
+exit 0

@@ -298,3 +298,118 @@ Write-Host "  PASSWORD AND LOCKOUT POLICY - COMPLETE"
 Write-Host "======================================================================"
 
 exit 0
+<#
+.SYNOPSIS
+    Password and Lockout Policy - MedDefense Health Systems
+    Task 4: Password and Lockout Policy
+
+.DESCRIPTION
+    Purpose: Deploy a CIS-compliant password and account lockout policy
+    via Group Policy.
+    
+    WHAT IT DOES: Creates GPO, configures password (min 14, complexity,
+    history 24), account lockout (threshold 5, duration 15min, observation
+    window 15min), links to domain, forces GPUpdate, verifies policy.
+
+.AUTHOR
+    shamshed rajput
+
+.DATE
+    30/07/2026
+
+.TARGET
+    DC01.meddefense.local
+#>
+
+# Author: shamshed rajput
+# Date: 30/07/2026
+# Script Purpose: Deploy CIS-compliant password and lockout policy for MedDefense
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
+$GpoName = "MedDefense - Password and Lockout Policy"
+$DomainDN = (Get-ADDomain).DistinguishedName
+
+Write-Host "[*] Creating GPO: `"$GpoName`"..." -NoNewline -ForegroundColor Cyan
+
+# 1. CREATE GPO
+try {
+    $Gpo = Get-GPO -Name $GpoName -ErrorAction SilentlyContinue
+    if (-not $Gpo) {
+        $Gpo = New-GPO -Name $GpoName -ErrorAction Stop
+        Write-Host " CREATED" -ForegroundColor Green
+    } else {
+        Write-Host " EXISTS" -ForegroundColor Yellow
+    }
+} catch {
+    Write-Host " FAILED" -ForegroundColor Red
+    exit 1
+}
+
+# 2. PASSWORD POLICY
+Write-Host "[*] Configuring Password Policy..." -ForegroundColor Cyan
+$PasswordSettings = @(
+    @{Key="MinimumPasswordLength"; Value=14; Display="Minimum Length: 14"}
+    @{Key="ComplexityEnabled"; Value=$true; Display="Complexity: Enabled"}
+    @{Key="PasswordHistoryCount"; Value=24; Display="History: 24"}
+    @{Key="MaxPasswordAge"; Value="0"; Display="Maximum Age: 0"}
+    @{Key="MinPasswordAge"; Value="1"; Display="Minimum Age: 1 day"}
+)
+foreach ($Setting in $PasswordSettings) {
+    try {
+        Set-GPRegistryValue -Name $GpoName -Key "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" `
+            -ValueName $Setting.Key -Type DWord -Value $Setting.Value -ErrorAction Stop | Out-Null
+        Write-Host "    $($Setting.Display.PadRight(30)) [SET]" -ForegroundColor Green
+    } catch {
+        Write-Host "    $($Setting.Display.PadRight(30)) [FAILED]" -ForegroundColor Red
+    }
+}
+
+# 3. ACCOUNT LOCKOUT with LockoutBadCount, LockoutDuration, ResetLockoutCount, LockoutObservationWindow
+Write-Host "[*] Configuring Account Lockout..." -ForegroundColor Cyan
+$LockoutSettings = @(
+    @{Key="LockoutBadCount"; Value=5; Display="Threshold: 5 attempts"}
+    @{Key="LockoutDuration"; Value=-15; Display="Duration: 15 minutes"}
+    @{Key="ResetLockoutCount"; Value=-15; Display="Reset Counter: 15 minutes"}
+    @{Key="LockoutObservationWindow"; Value=-15; Display="Observation Window: 15 minutes"}
+)
+foreach ($Setting in $LockoutSettings) {
+    try {
+        Set-GPRegistryValue -Name $GpoName -Key "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" `
+            -ValueName $Setting.Key -Type DWord -Value $Setting.Value -ErrorAction Stop | Out-Null
+        Write-Host "    $($Setting.Display.PadRight(30)) [SET]" -ForegroundColor Green
+    } catch {
+        Write-Host "    $($Setting.Display.PadRight(30)) [FAILED]" -ForegroundColor Red
+    }
+}
+
+# 4. LINK GPO TO DOMAIN ROOT
+Write-Host "[*] Linking GPO to domain root..." -NoNewline -ForegroundColor Cyan
+try {
+    $ExistingLink = Get-GPLinks -Domain $DomainDN | Where-Object { $_.DisplayName -eq $GpoName } -ErrorAction SilentlyContinue
+    if (-not $ExistingLink) {
+        New-GPLink -Name $GpoName -Target $DomainDN -LinkEnabled Yes -ErrorAction Stop | Out-Null
+        Write-Host " LINKED" -ForegroundColor Green
+    } else {
+        Write-Host " ALREADY LINKED" -ForegroundColor Yellow
+    }
+} catch {
+    Write-Host " FAILED" -ForegroundColor Red
+}
+
+# 5. FORCE GPUPDATE
+Write-Host "[*] Forcing Group Policy update..." -NoNewline -ForegroundColor Cyan
+gpupdate /force > $null 2>&1
+Write-Host " COMPLETE" -ForegroundColor Green
+
+# 6. VERIFY
+Write-Host ""
+Write-Host "[*] Verifying effective policy..." -ForegroundColor Cyan
+$Pol = Get-ADDefaultDomainPasswordPolicy
+Write-Host "    MinLength: $($Pol.MinPasswordLength) | Complexity: $(if ($Pol.ComplexityEnabled) {'Yes'} else {'No'}) | History: $($Pol.PasswordHistoryCount)"
+Write-Host "    LockoutThreshold: $($Pol.LockoutThreshold) | LockoutDuration: $($Pol.LockoutDuration.TotalMinutes)min | LockoutObservationWindow: $($Pol.LockoutObservationWindow.TotalMinutes)min"
+
+Write-Host ""
+Write-Host "Password and Lockout Policy - COMPLETE" -ForegroundColor Green
+exit 0

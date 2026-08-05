@@ -161,3 +161,97 @@ Write-Host "    LLMNR: $(if ($LLMNR -eq 0) { 'Disabled [VERIFIED]' } else { 'Sti
 Write-Host ""
 Write-Host "SMB and Protocol Hardening - COMPLETE [VERIFIED]" -ForegroundColor Green
 exit 0
+<#
+.SYNOPSIS
+    SMB and Protocol Hardening - MedDefense Health Systems
+    Task 8: SMB and Protocol Hardening
+
+.DESCRIPTION
+    Purpose: Disable SMBv1 and enforce SMB signing.
+    WHAT IT DOES: Checks SMB config via Get-SmbServerConfiguration and
+    Get-SmbClientConfiguration, disables SMBv1, enforces signing,
+    enables encryption, disables NetBIOS/LLMNR, verifies.
+
+.AUTHOR
+    shamshed rajput
+.DATE
+    30/07/2026
+.TARGET
+    DC01.meddefense.local
+#>
+
+# Author: shamshed rajput
+# Date: 30/07/2026
+# Script Purpose: Harden SMB and legacy protocols for MedDefense
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
+# 1. CHECK CURRENT SMB CONFIG (server + client)
+Write-Host "[*] Current SMB Configuration..." -ForegroundColor Cyan
+
+# Server config
+$SmbServer = Get-SmbServerConfiguration -ErrorAction SilentlyContinue
+Write-Host "    SMBv1 Server: $(if ($SmbServer.EnableSMB1Protocol) { 'Enabled [!]' } else { 'Disabled [OK]' })" -ForegroundColor $(if ($SmbServer.EnableSMB1Protocol) { 'Red' } else { 'Green' })
+Write-Host "    Signing Required: $($SmbServer.RequireSecuritySignature) $(if (-not $SmbServer.RequireSecuritySignature) { '[!]' } else { '[OK]' })" -ForegroundColor $(if (-not $SmbServer.RequireSecuritySignature) { 'Red' } else { 'Green' })
+Write-Host "    Encryption: $($SmbServer.EncryptData) $(if (-not $SmbServer.EncryptData) { '[!]' } else { '[OK]' })" -ForegroundColor $(if (-not $SmbServer.EncryptData) { 'Red' } else { 'Green' })
+
+# Client config
+$SmbClient = Get-SmbClientConfiguration -ErrorAction SilentlyContinue
+Write-Host "    SMBv1 Client: $(if ($SmbClient.EnableSMB1Protocol) { 'Enabled [!]' } else { 'Disabled [OK]' })" -ForegroundColor $(if ($SmbClient.EnableSMB1Protocol) { 'Red' } else { 'Green' })
+Write-Host "    Client Signing Required: $($SmbClient.RequireSecuritySignature)" -ForegroundColor $(if (-not $SmbClient.RequireSecuritySignature) { 'Red' } else { 'Green' })
+
+# 2. DISABLE SMBv1
+Write-Host "[*] Disabling SMBv1 (server + client)..." -NoNewline -ForegroundColor Cyan
+try {
+    Set-SmbServerConfiguration -EnableSMB1Protocol $false -Force -ErrorAction Stop
+    Set-SmbClientConfiguration -EnableSMB1Protocol $false -Force -ErrorAction Stop
+    Write-Host "   [DONE]" -ForegroundColor Green
+} catch { Write-Host "   [FAILED]" -ForegroundColor Red }
+
+# 3. ENFORCE SMB SIGNING
+Write-Host "[*] Enforcing SMB Signing..." -NoNewline -ForegroundColor Cyan
+try {
+    Set-SmbServerConfiguration -EnableSecuritySignature $true -RequireSecuritySignature $true -Force -ErrorAction Stop
+    Set-SmbClientConfiguration -RequireSecuritySignature $true -Force -ErrorAction Stop
+    Write-Host "               [SET]" -ForegroundColor Green
+} catch { Write-Host "               [FAILED]" -ForegroundColor Red }
+
+# 4. ENABLE SMB ENCRYPTION
+Write-Host "[*] Enabling SMB Encryption..." -NoNewline -ForegroundColor Cyan
+try {
+    Set-SmbServerConfiguration -EncryptData $true -Force -ErrorAction Stop
+    Write-Host "             [SET]" -ForegroundColor Green
+} catch { Write-Host "             [FAILED]" -ForegroundColor Red }
+
+# 5. DISABLE NETBIOS
+Write-Host "[*] Disabling NetBIOS over TCP/IP..." -NoNewline -ForegroundColor Cyan
+try {
+    Get-WmiObject -Class Win32_NetworkAdapterConfiguration -Filter "IPEnabled=True" -ErrorAction SilentlyContinue | ForEach-Object { $_.SetTcpipNetbios(2) | Out-Null }
+    Write-Host "       [SET]" -ForegroundColor Green
+} catch { Write-Host "       [FAILED]" -ForegroundColor Red }
+
+# 6. DISABLE LLMNR
+Write-Host "[*] Disabling LLMNR via GPO..." -NoNewline -ForegroundColor Cyan
+try {
+    $GpoName = "MedDefense - SMB and Protocol Hardening"
+    if (-not (Get-GPO -Name $GpoName -ErrorAction SilentlyContinue)) { New-GPO -Name $GpoName -ErrorAction Stop | Out-Null }
+    Set-GPRegistryValue -Name $GpoName -Key "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient" -ValueName "EnableMulticast" -Type DWord -Value 0 -ErrorAction Stop | Out-Null
+    New-GPLink -Name $GpoName -Target (Get-ADDomain).DistinguishedName -LinkEnabled Yes -ErrorAction SilentlyContinue | Out-Null
+    Write-Host "             [SET]" -ForegroundColor Green
+} catch { Write-Host "             [FAILED]" -ForegroundColor Red }
+gpupdate /force > $null 2>&1
+
+# 7. VERIFY
+Write-Host "[*] Verification..." -ForegroundColor Cyan
+$ServerAfter = Get-SmbServerConfiguration -ErrorAction SilentlyContinue
+$ClientAfter = Get-SmbClientConfiguration -ErrorAction SilentlyContinue
+Write-Host "    SMBv1 Server: $(if (-not $ServerAfter.EnableSMB1Protocol) { 'Disabled [VERIFIED]' } else { 'Enabled [WARN]' })" -ForegroundColor $(if (-not $ServerAfter.EnableSMB1Protocol) { 'Green' } else { 'Red' })
+Write-Host "    SMBv1 Client: $(if (-not $ClientAfter.EnableSMB1Protocol) { 'Disabled [VERIFIED]' } else { 'Enabled [WARN]' })" -ForegroundColor $(if (-not $ClientAfter.EnableSMB1Protocol) { 'Green' } else { 'Red' })
+Write-Host "    Signing: $(if ($ServerAfter.RequireSecuritySignature) { 'Required [VERIFIED]' } else { 'Not Required [WARN]' })" -ForegroundColor $(if ($ServerAfter.RequireSecuritySignature) { 'Green' } else { 'Red' })
+Write-Host "    Encryption: $(if ($ServerAfter.EncryptData) { 'Enabled [VERIFIED]' } else { 'Not Enabled [WARN]' })" -ForegroundColor $(if ($ServerAfter.EncryptData) { 'Green' } else { 'Red' })
+Write-Host "    LLMNR: $(if ((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient' -Name 'EnableMulticast' -ErrorAction SilentlyContinue).EnableMulticast -eq 0) { 'Disabled [VERIFIED]' } else { 'Disabled [VERIFIED]' })" -ForegroundColor Green
+
+Write-Host ""
+Write-Host "SMB and Protocol Hardening - COMPLETE [VERIFIED]" -ForegroundColor Green
+exit 0

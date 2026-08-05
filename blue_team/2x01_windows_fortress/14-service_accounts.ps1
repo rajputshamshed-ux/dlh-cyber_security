@@ -7,10 +7,13 @@
     Purpose: Audit all MedDefense service accounts, identify security
     weaknesses and implement hardening measures.
     
-    WHAT IT DOES: Lists service accounts with security posture, flags
-    excessive privileges/old passwords/unconstrained delegation,
-    remediates by enabling AccountNotDelegated, denying interactive logon,
-    removing from privileged groups via Remove-ADGroupMember.
+    WHAT IT DOES: Lists service accounts with security posture (group
+    memberships via MemberOf, password age, delegation settings via
+    TrustedForDelegation, SPN configuration via ServicePrincipalName,
+    last logon), flags excessive privileges/old passwords/unconstrained
+    delegation/suspicious logons, remediates by enabling AccountNotDelegated,
+    denying interactive logon, removing from privileged groups via
+    Remove-ADGroupMember.
 
 .AUTHOR
     shamshed rajput
@@ -55,9 +58,11 @@ foreach ($Svc in $ServiceAccounts) {
         }
     }
     
-    # Delegation
+    # Delegation (TrustedForDelegation)
     if ($Svc.TrustedForDelegation -eq $true) {
         Write-Host "  Delegation: Unconstrained               [!]" -ForegroundColor Red
+    } else {
+        Write-Host "  Delegation: Not configured" -ForegroundColor Green
     }
     
     # DES
@@ -65,15 +70,23 @@ foreach ($Svc in $ServiceAccounts) {
         Write-Host "  UseDESKeyOnly: True                     [!]" -ForegroundColor Red
     }
     
+    # SPN (ServicePrincipalName)
+    if ($Svc.ServicePrincipalName) {
+        $SpnList = $Svc.ServicePrincipalName -join ", "
+        Write-Host "  SPN: $SpnList" -ForegroundColor Yellow
+    }
+    
     # Last logon
     if ($Svc.LastLogonDate) {
         $LogonTime = $Svc.LastLogonDate.ToString("HH:mm")
         if ($Svc.LastLogonDate.Hour -lt 6) {
             Write-Host "  Last logon: $LogonTime AM                    [!!!]" -ForegroundColor Red
+        } else {
+            Write-Host "  Last logon: $($Svc.LastLogonDate)" -ForegroundColor Green
         }
     }
     
-    # Privileged groups
+    # Privileged groups (MemberOf)
     if ($Svc.MemberOf) {
         foreach ($Group in $Svc.MemberOf) {
             if ($Group -match "Domain Admins|Enterprise Admins|G_IT_Admins") {
@@ -86,15 +99,14 @@ foreach ($Svc in $ServiceAccounts) {
 }
 
 # REMEDIATE
-Write-Host "[*] Remediating service accounts (AccountNotDelegated + DES cleared + Remove from privileged groups)..." -ForegroundColor Cyan
-
+Write-Host "[*] Remediating service accounts..." -ForegroundColor Cyan
 $PrivilegedGroupNames = @("Domain Admins", "Enterprise Admins", "G_IT_Admins")
 
 foreach ($Svc in $ServiceAccounts) {
     Write-Host -NoNewline "    $($Svc.SamAccountName): "
     
     try {
-        # Enable AccountNotDelegated
+        # Enable AccountNotDelegated (sensitive, cannot be delegated)
         Set-ADAccountControl -Identity $Svc.SamAccountName -AccountNotDelegated $true -ErrorAction Stop
         
         # Clear DES
@@ -114,7 +126,7 @@ foreach ($Svc in $ServiceAccounts) {
         
         Write-Host "[HARDENED]" -ForegroundColor Green
     } catch {
-        Write-Host "[FAILED] - $_" -ForegroundColor Red
+        Write-Host "[FAILED]" -ForegroundColor Red
     }
 }
 

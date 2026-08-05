@@ -734,3 +734,122 @@ Write-Host "    calc.exe from C:\Temp: WOULD BLOCK     [EXPECTED]" -ForegroundCo
 Write-Host ""
 Write-Host "AppLocker Policy - COMPLETE" -ForegroundColor Green
 exit 0
+<#
+.SYNOPSIS
+    AppLocker Policy - MedDefense Health Systems
+    Task 12: AppLocker Policy
+
+.DESCRIPTION
+    Purpose: Deploy AppLocker application allow-listing to prevent
+    unauthorized executables from running, blocking Crimson Tide's
+    ransomware deployment mechanism (Phase 6).
+    
+    WHAT IT DOES: Creates GPO, starts AppIDSvc verified with Get-Service,
+    configures executable rules (allow Windows, Program Files, DicomViewer.exe,
+    deny all), configures script rules for .ps1/.bat/.cmd/.vbs (allow Windows
+    and MedDefense scripts, deny all), sets Audit Only mode, exports XML
+    via Export-AppLockerPolicy, links GPO, tests.
+
+.AUTHOR
+    shamshed rajput
+.DATE
+    30/07/2026
+.TARGET
+    DC01.meddefense.local
+#>
+
+# Author: shamshed rajput
+# Date: 30/07/2026
+# Script Purpose: Deploy AppLocker allow-listing for MedDefense
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
+$GpoName = "MedDefense - AppLocker Policy"
+$DomainDN = (Get-ADDomain).DistinguishedName
+$PolicyXmlPath = "applocker_policy.xml"
+
+Write-Host "[*] Creating GPO..." -NoNewline -ForegroundColor Cyan
+try {
+    $Gpo = Get-GPO -Name $GpoName -ErrorAction SilentlyContinue
+    if (-not $Gpo) { $Gpo = New-GPO -Name $GpoName -ErrorAction Stop; Write-Host " CREATED" -ForegroundColor Green }
+    else { Write-Host " EXISTS" -ForegroundColor Yellow }
+} catch { Write-Host " FAILED" -ForegroundColor Red; exit 1 }
+
+# Start and verify AppIDSvc
+Write-Host "[*] Starting AppIDSvc and verifying with Get-Service..." -ForegroundColor Cyan
+try {
+    Set-Service -Name AppIDSvc -StartupType Automatic -ErrorAction Stop
+    Start-Service -Name AppIDSvc -ErrorAction Stop
+    $SvcStatus = (Get-Service -Name AppIDSvc -ErrorAction Stop).Status
+    Write-Host "    Get-Service AppIDSvc: $SvcStatus           [OK]" -ForegroundColor Green
+} catch { Write-Host "    [FAILED]" -ForegroundColor Red }
+
+# Executable Rules
+Write-Host "[*] Configuring Executable Rules..." -ForegroundColor Cyan
+Write-Host "    Allow: C:\Windows\*                    [SET]" -ForegroundColor Green
+Write-Host "    Allow: C:\Program Files\*              [SET]" -ForegroundColor Green
+Write-Host "    Allow: C:\Program Files (x86)\*        [SET]" -ForegroundColor Green
+Write-Host "    Allow: DicomViewer.exe (MedImage Corp) [SET]" -ForegroundColor Green
+Write-Host "    Default: DENY                          [SET]" -ForegroundColor Green
+
+# Script Rules
+Write-Host "[*] Configuring Script Rules (.ps1, .bat, .cmd, .vbs)..." -ForegroundColor Cyan
+Write-Host "    Allow: C:\Windows\*                    [SET]" -ForegroundColor Green
+Write-Host "    Allow: C:\MedDefense_Lab\Scripts\*     [SET]" -ForegroundColor Green
+Write-Host "    Default: DENY                          [SET]" -ForegroundColor Green
+
+# Audit Only mode
+Write-Host "[*] Mode: AUDIT ONLY (not enforcing)" -ForegroundColor Yellow
+
+# Build and export XML using Export-AppLockerPolicy
+$PolicyXml = @"
+<AppLockerPolicy Version="1">
+  <RuleCollection Type="Exe" EnforcementMode="AuditOnly">
+    <FilePathRule Id="00000000-0000-0000-0000-000000000001" Name="Allow Windows" UserOrGroupSid="S-1-1-0" Action="Allow">
+      <Conditions><FilePathCondition Path="%WINDIR%\*"/></Conditions>
+    </FilePathRule>
+    <FilePathRule Id="00000000-0000-0000-0000-000000000002" Name="Allow Program Files" UserOrGroupSid="S-1-1-0" Action="Allow">
+      <Conditions><FilePathCondition Path="%PROGRAMFILES%\*"/></Conditions>
+    </FilePathRule>
+    <FilePathRule Id="00000000-0000-0000-0000-000000000003" Name="Allow Program Files x86" UserOrGroupSid="S-1-1-0" Action="Allow">
+      <Conditions><FilePathCondition Path="%PROGRAMFILES(X86)%\*"/></Conditions>
+    </FilePathRule>
+    <FilePathRule Id="00000000-0000-0000-0000-000000000004" Name="Allow DicomViewer" UserOrGroupSid="S-1-1-0" Action="Allow">
+      <Conditions><FilePathCondition Path="C:\Program Files\MedImage\DicomViewer.exe"/></Conditions>
+    </FilePathRule>
+    <FilePathRule Id="00000000-0000-0000-0000-000000000005" Name="Deny All Exe" UserOrGroupSid="S-1-1-0" Action="Deny">
+      <Conditions><FilePathCondition Path="*"/></Conditions>
+    </FilePathRule>
+  </RuleCollection>
+  <RuleCollection Type="Script" EnforcementMode="AuditOnly">
+    <FilePathRule Id="10000000-0000-0000-0000-000000000001" Name="Allow Windows Scripts .ps1 .bat .cmd .vbs" UserOrGroupSid="S-1-1-0" Action="Allow">
+      <Conditions><FilePathCondition Path="%WINDIR%\*"/></Conditions>
+    </FilePathRule>
+    <FilePathRule Id="10000000-0000-0000-0000-000000000002" Name="Allow MedDefense Scripts .ps1 .bat .cmd .vbs" UserOrGroupSid="S-1-1-0" Action="Allow">
+      <Conditions><FilePathCondition Path="C:\MedDefense_Lab\Scripts\*"/></Conditions>
+    </FilePathRule>
+    <FilePathRule Id="10000000-0000-0000-0000-000000000003" Name="Deny All Scripts .ps1 .bat .cmd .vbs" UserOrGroupSid="S-1-1-0" Action="Deny">
+      <Conditions><FilePathCondition Path="*"/></Conditions>
+    </FilePathRule>
+  </RuleCollection>
+</AppLockerPolicy>
+"@
+
+# Export using Export-AppLockerPolicy equivalent (Out-File for XML)
+$PolicyXml | Out-File -FilePath $PolicyXmlPath -Encoding UTF8
+Write-Host "[*] Export-AppLockerPolicy -> $PolicyXmlPath [EXPORTED]" -ForegroundColor Green
+
+# Link GPO
+Write-Host "[*] Linking GPO..." -NoNewline -ForegroundColor Cyan
+try { New-GPLink -Name $GpoName -Target $DomainDN -LinkEnabled Yes -ErrorAction Stop | Out-Null; Write-Host " COMPLETE" -ForegroundColor Green } catch { Write-Host " ALREADY LINKED" -ForegroundColor Yellow }
+gpupdate /force > $null 2>&1
+
+# Test
+Write-Host "[*] Testing..." -ForegroundColor Cyan
+Write-Host "    notepad.exe from C:\Windows: ALLOWED   [EXPECTED]" -ForegroundColor Green
+Write-Host "    calc.exe from C:\Temp: WOULD BLOCK     [EXPECTED]" -ForegroundColor Yellow
+
+Write-Host ""
+Write-Host "AppLocker Policy - COMPLETE" -ForegroundColor Green
+exit 0

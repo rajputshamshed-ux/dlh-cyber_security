@@ -299,3 +299,294 @@ Write-Host "Total events documented: $TotalEvents" -ForegroundColor Cyan
 Write-Host "Reference saved to: $ReportFile" -ForegroundColor Green
 
 exit 0
+<#
+.SYNOPSIS
+    Windows Telemetry Reference Builder - MedDefense Health Systems
+    Task 3: Windows Telemetry Reference Builder
+
+.DESCRIPTION
+    Purpose: Build a machine-readable Windows event reference that connects
+    security events to MedDefense detection use cases.
+    
+    WHAT IT DOES: Generates windows_event_reference.json mapping 17 Event IDs
+    (9 Security, 2 PowerShell, 6 Sysmon) to audit dependency, detection
+    meaning, Crimson Tide phase, triage priority, and validation method.
+    
+    WHY: This is the bridge between audit policy configuration, Sysmon
+    deployment, PowerShell logging, and Module 3 SOC detection work.
+    
+    WHEN TO USE: Before deploying audit policy (Task 6). Before Sysmon
+    deployment (Task 10). SOC analyst training. SIEM rule creation.
+
+.REFERENCES
+    Crimson Tide Phases 1-7
+    CISA Advisory: 5 hospitals breached
+
+.AUTHOR
+    shamshed rajput
+
+.DATE
+    30/07/2026
+
+.TARGET
+    DC01.meddefense.local - Windows Server 2022 Domain Controller
+#>
+
+# Author: shamshed rajput
+# Script Purpose: Build Windows event telemetry reference for MedDefense SOC
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
+$ReportFile = "windows_event_reference.json"
+Write-Host "[*] Building Windows telemetry reference..." -ForegroundColor Cyan
+
+$Events = @(
+    # SECURITY LOG - 4624
+    [PSCustomObject]@{
+        event_id = 4624
+        event_name = "Successful Logon"
+        log_source = "Security"
+        audit_or_sensor_dependency = "Audit Logon (Success)"
+        security_meaning = "A user or computer successfully authenticated to the domain"
+        normal_frequency = "High - hundreds per hour"
+        triage_priority = "Medium"
+        crimson_tide_phase = "Phase 2, Phase 4"
+        example_suspicious_pattern = "Multiple successful logons from same source IP to different hosts"
+        validation_method = "Check LogonType field"
+    }
+    # SECURITY LOG - 4625 (failed logon)
+    [PSCustomObject]@{
+        event_id = 4625
+        event_name = "Failed Logon"
+        log_source = "Security"
+        audit_or_sensor_dependency = "Audit Logon (Failure)"
+        security_meaning = "A failed logon attempt was recorded - user or computer failed to authenticate"
+        normal_frequency = "Low - few per day"
+        triage_priority = "High"
+        crimson_tide_phase = "Phase 2 (Credential Brute Force), Phase 3 (Password Spraying)"
+        example_suspicious_pattern = "Dozens of failed logon events for same account from different workstations (password spraying)"
+        validation_method = "Check FailureReason field and count per account per hour"
+    }
+    # SECURITY LOG - 4648
+    [PSCustomObject]@{
+        event_id = 4648
+        event_name = "Explicit Credential Logon"
+        log_source = "Security"
+        audit_or_sensor_dependency = "Audit Logon"
+        security_meaning = "A process logged on using explicit credentials"
+        normal_frequency = "Low"
+        triage_priority = "High"
+        crimson_tide_phase = "Phase 2, Phase 4"
+        example_suspicious_pattern = "4648 from svchost.exe using Domain Admin credentials"
+        validation_method = "Check ProcessName field"
+    }
+    # SECURITY LOG - 4672
+    [PSCustomObject]@{
+        event_id = 4672
+        event_name = "Special Logon"
+        log_source = "Security"
+        audit_or_sensor_dependency = "Audit Special Logon"
+        security_meaning = "An account with administrator privileges logged on"
+        normal_frequency = "Low"
+        triage_priority = "High"
+        crimson_tide_phase = "Phase 3, Phase 4"
+        example_suspicious_pattern = "Special logon for service account that should never have interactive sessions"
+        validation_method = "Check if the account is a service account"
+    }
+    # SECURITY LOG - 4688
+    [PSCustomObject]@{
+        event_id = 4688
+        event_name = "Process Creation"
+        log_source = "Security"
+        audit_or_sensor_dependency = "Audit Process Tracking"
+        security_meaning = "A new process was created on the system"
+        normal_frequency = "High"
+        triage_priority = "Medium"
+        crimson_tide_phase = "Phase 3, Phase 5, Phase 7"
+        example_suspicious_pattern = "cmd.exe spawning from w3wp.exe or powershell.exe -enc"
+        validation_method = "Check ParentProcessName field"
+    }
+    # SECURITY LOG - 4720
+    [PSCustomObject]@{
+        event_id = 4720
+        event_name = "Account Created"
+        log_source = "Security"
+        audit_or_sensor_dependency = "Audit Account Management"
+        security_meaning = "A new user account was created in Active Directory"
+        normal_frequency = "Very Low"
+        triage_priority = "Critical"
+        crimson_tide_phase = "Phase 2, Phase 5"
+        example_suspicious_pattern = "Account created outside business hours by unexpected admin"
+        validation_method = "Check InitiatingUser field"
+    }
+    # SECURITY LOG - 4726
+    [PSCustomObject]@{
+        event_id = 4726
+        event_name = "Account Deleted"
+        log_source = "Security"
+        audit_or_sensor_dependency = "Audit Account Management"
+        security_meaning = "A user account was deleted from Active Directory"
+        normal_frequency = "Very Low"
+        triage_priority = "Critical"
+        crimson_tide_phase = "Phase 5, Phase 7"
+        example_suspicious_pattern = "Multiple accounts deleted in rapid succession"
+        validation_method = "Check if deleted accounts were privileged"
+    }
+    # SECURITY LOG - 4732
+    [PSCustomObject]@{
+        event_id = 4732
+        event_name = "Member Added to Group"
+        log_source = "Security"
+        audit_or_sensor_dependency = "Audit Account Management"
+        security_meaning = "A user was added to a security group"
+        normal_frequency = "Low"
+        triage_priority = "Critical"
+        crimson_tide_phase = "Phase 2, Phase 5"
+        example_suspicious_pattern = "User added to Domain Admins group by unexpected admin"
+        validation_method = "Check TargetGroupName field"
+    }
+    # SECURITY LOG - 1102
+    [PSCustomObject]@{
+        event_id = 1102
+        event_name = "Audit Log Cleared"
+        log_source = "Security"
+        audit_or_sensor_dependency = "System Integrity"
+        security_meaning = "The Security event log was cleared"
+        normal_frequency = "Almost Never"
+        triage_priority = "Critical"
+        crimson_tide_phase = "Phase 5"
+        example_suspicious_pattern = "Log cleared outside maintenance window"
+        validation_method = "Check timestamp against maintenance schedule"
+    }
+    # POWERSHELL - 4103
+    [PSCustomObject]@{
+        event_id = 4103
+        event_name = "PowerShell Pipeline Execution"
+        log_source = "Microsoft-Windows-PowerShell/Operational"
+        audit_or_sensor_dependency = "PowerShell Script Block Logging"
+        security_meaning = "PowerShell executed a pipeline"
+        normal_frequency = "Medium"
+        triage_priority = "High"
+        crimson_tide_phase = "Phase 3, Phase 5, Phase 6"
+        example_suspicious_pattern = "Invoke-Mimikatz, Invoke-Kerberoast, DownloadString"
+        validation_method = "Search for known offensive PowerShell keywords"
+    }
+    # POWERSHELL - 4104
+    [PSCustomObject]@{
+        event_id = 4104
+        event_name = "PowerShell Script Block Logging"
+        log_source = "Microsoft-Windows-PowerShell/Operational"
+        audit_or_sensor_dependency = "PowerShell Script Block Logging"
+        security_meaning = "PowerShell executed a script block"
+        normal_frequency = "Medium"
+        triage_priority = "High"
+        crimson_tide_phase = "Phase 3, Phase 5, Phase 7"
+        example_suspicious_pattern = "Obfuscated code or Base64 strings in ScriptBlockText"
+        validation_method = "Check ScriptBlockText for obfuscation"
+    }
+    # SYSMON - 1
+    [PSCustomObject]@{
+        event_id = 1
+        event_name = "Sysmon Process Creation"
+        log_source = "Microsoft-Windows-Sysmon/Operational"
+        audit_or_sensor_dependency = "Sysmon driver + config"
+        security_meaning = "Process created with full command line and hashes"
+        normal_frequency = "High"
+        triage_priority = "Medium"
+        crimson_tide_phase = "Phase 3, Phase 7"
+        example_suspicious_pattern = "cmd.exe with parent msbuild.exe or wscript.exe"
+        validation_method = "Check Hashes against VirusTotal"
+    }
+    # SYSMON - 3
+    [PSCustomObject]@{
+        event_id = 3
+        event_name = "Sysmon Network Connection"
+        log_source = "Microsoft-Windows-Sysmon/Operational"
+        audit_or_sensor_dependency = "Sysmon driver + config"
+        security_meaning = "Process initiated TCP/UDP connection"
+        normal_frequency = "High"
+        triage_priority = "High"
+        crimson_tide_phase = "Phase 4, Phase 6, Phase 7"
+        example_suspicious_pattern = "Internal process connecting to external IP on port 445 or 3389"
+        validation_method = "Check DestinationIp against threat intelligence"
+    }
+    # SYSMON - 7
+    [PSCustomObject]@{
+        event_id = 7
+        event_name = "Sysmon Image Load"
+        log_source = "Microsoft-Windows-Sysmon/Operational"
+        audit_or_sensor_dependency = "Sysmon driver + config"
+        security_meaning = "DLL loaded by a process"
+        normal_frequency = "Very High"
+        triage_priority = "Medium"
+        crimson_tide_phase = "Phase 3, Phase 5"
+        example_suspicious_pattern = "Unsigned DLL loaded by lsass.exe"
+        validation_method = "Check Signed field"
+    }
+    # SYSMON - 11
+    [PSCustomObject]@{
+        event_id = 11
+        event_name = "Sysmon File Create"
+        log_source = "Microsoft-Windows-Sysmon/Operational"
+        audit_or_sensor_dependency = "Sysmon driver + config"
+        security_meaning = "File created or overwritten"
+        normal_frequency = "High"
+        triage_priority = "Medium"
+        crimson_tide_phase = "Phase 3, Phase 7"
+        example_suspicious_pattern = "Executable created in C:\\Windows\\Temp by unexpected process"
+        validation_method = "Check TargetFilename extension and path"
+    }
+    # SYSMON - 13
+    [PSCustomObject]@{
+        event_id = 13
+        event_name = "Sysmon Registry Event"
+        log_source = "Microsoft-Windows-Sysmon/Operational"
+        audit_or_sensor_dependency = "Sysmon driver + config"
+        security_meaning = "Registry key modified"
+        normal_frequency = "Medium"
+        triage_priority = "High"
+        crimson_tide_phase = "Phase 2, Phase 5"
+        example_suspicious_pattern = "Modification to Run keys or Winlogon\Shell"
+        validation_method = "Check TargetObject path"
+    }
+    # SYSMON - 22
+    [PSCustomObject]@{
+        event_id = 22
+        event_name = "Sysmon DNS Query"
+        log_source = "Microsoft-Windows-Sysmon/Operational"
+        audit_or_sensor_dependency = "Sysmon driver + config"
+        security_meaning = "Process performed DNS query"
+        normal_frequency = "Very High"
+        triage_priority = "Medium"
+        crimson_tide_phase = "Phase 6, Phase 7"
+        example_suspicious_pattern = "DNS queries to newly registered or random-looking domains"
+        validation_method = "Check QueryName against threat intelligence"
+    }
+)
+
+$SecurityCount = ($Events | Where-Object { $_.log_source -eq "Security" } | Measure-Object).Count
+$PowerShellCount = ($Events | Where-Object { $_.log_source -like "*PowerShell*" } | Measure-Object).Count
+$SysmonCount = ($Events | Where-Object { $_.log_source -like "*Sysmon*" } | Measure-Object).Count
+$TotalEvents = ($Events | Measure-Object).Count
+
+$Reference = [PSCustomObject]@{
+    Metadata = [PSCustomObject]@{
+        Script = "3-telemetry_reference.ps1"
+        Author = "shamshed rajput"
+        Purpose = "Build Windows event telemetry reference for MedDefense SOC"
+        Date = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss")
+    }
+    Summary = [PSCustomObject]@{ TotalEvents = $TotalEvents; SecurityEvents = $SecurityCount; PowerShellEvents = $PowerShellCount; SysmonEvents = $SysmonCount }
+    Events = $Events
+}
+
+$Reference | ConvertTo-Json -Depth 5 | Out-File -FilePath $ReportFile -Encoding UTF8
+
+Write-Host "Security events mapped: $SecurityCount" -ForegroundColor Green
+Write-Host "PowerShell events mapped: $PowerShellCount" -ForegroundColor Green
+Write-Host "Sysmon events mapped: $SysmonCount" -ForegroundColor Green
+Write-Host "Total events documented: $TotalEvents" -ForegroundColor Cyan
+Write-Host "Reference saved to: $ReportFile" -ForegroundColor Green
+
+exit 0

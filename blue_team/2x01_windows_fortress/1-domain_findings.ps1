@@ -124,8 +124,8 @@ if ($PNECount -gt 0) {
         -Remediation "Remove PasswordNeverExpires flag. Enforce 90-day rotation via GPO." -MappedTask "Task 2 - Password Policy Hardening"
 }
 
-# 5. DISABLED ACCOUNTS IN PRIVILEGED GROUPS (Domain Admins, Enterprise Admins, G_IT_Admins)
-Write-Host "[*] Checking disabled accounts in privileged groups (Domain Admins, Enterprise Admins, G_IT_Admins)..." -ForegroundColor Cyan
+# 5. DISABLED ACCOUNTS IN PRIVILEGED GROUPS
+Write-Host "[*] Checking disabled accounts in Domain Admins, Enterprise Admins, G_IT_Admins..." -ForegroundColor Cyan
 $DisabledPrivileged = @()
 foreach ($GroupName in $PrivilegedGroups) {
     try {
@@ -174,12 +174,12 @@ if ($StaleCount -gt 0) {
         -Remediation "Disable or remove computer objects with no logon in 90+ days." -MappedTask "Task 8 - Object Cleanup"
 }
 
-# 8. AUDIT POLICY - uses auditpol to check Process Creation, Logon, Account Management, Object Access
+# 8. AUDIT POLICY - uses auditpol with Process Creation, Special Logon, Account Management, Object Access
 Write-Host "[*] Checking audit policy with auditpol..." -ForegroundColor Cyan
 $AuditPolOutput = auditpol /get /category:* 2>/dev/null | Out-String
-$MissingAudit = @()
 
-$RequiredSubcategories = @("Process Creation", "Logon", "Account Management", "Object Access", "Detailed Tracking")
+$RequiredSubcategories = @("Process Creation", "Special Logon", "Account Management", "Object Access", "Detailed Tracking")
+$MissingAudit = @()
 foreach ($Sub in $RequiredSubcategories) {
     if ($AuditPolOutput -notmatch $Sub) {
         $MissingAudit += $Sub
@@ -188,9 +188,9 @@ foreach ($Sub in $RequiredSubcategories) {
 
 if ($MissingAudit.Count -gt 0) {
     Add-Finding -Id "FIND-AUDIT-001" -Severity "HIGH" -Category "Audit Policy" -Asset "Domain Controllers" `
-        -Evidence "Advanced Audit Policy: not configured. Missing: $($MissingAudit -join ', ')" `
-        -Risk "No visibility into process creation, logons, or account changes. Crimson Tide operated undetected for 5 days." `
-        -Remediation "Enable Advanced Audit Policy via GPO for: Process Creation, Logon, Account Management, Object Access, PowerShell/Sysmon readiness." `
+        -Evidence "Advanced Audit Policy: not configured for: $($MissingAudit -join ', ')" `
+        -Risk "No visibility into Process Creation, Special Logon, Account Management. Crimson Tide operated undetected for 5 days." `
+        -Remediation "Enable Advanced Audit Policy via GPO for: Process Creation, Special Logon, Account Management, Object Access, PowerShell/Sysmon readiness." `
         -MappedTask "Task 6 - Audit Policy Configuration"
 }
 

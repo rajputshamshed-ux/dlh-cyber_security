@@ -50,9 +50,6 @@ $MediumCount = 0
 
 Write-Host "[*] Starting domain security findings extraction..." -ForegroundColor Cyan
 
-# ------------------------------------------------------------------------------
-# HELPER: Add a finding
-# ------------------------------------------------------------------------------
 function Add-Finding {
     param(
         [string]$Id,
@@ -94,8 +91,9 @@ $PasswordPolicy = Get-ADDefaultDomainPasswordPolicy
 $AllUsers = Get-ADUser -Filter * -Properties LastLogonDate, PasswordLastSet, PasswordNeverExpires, Enabled, TrustedForDelegation, MemberOf, Description
 $AllComputers = Get-ADComputer -Filter * -Properties LastLogonDate, OperatingSystem, Enabled
 $AllGPOs = Get-GPO -All
-$DomainAdmins = Get-ADGroupMember -Identity "Domain Admins" -Recursive 2>/dev/null | Select-Object Name, SamAccountName, objectClass
-$EnterpriseAdmins = Get-ADGroupMember -Identity "Enterprise Admins" -Recursive 2>/dev/null | Select-Object Name, SamAccountName, objectClass
+
+# Privileged groups including MedDefense-specific G_IT_Admins
+$PrivilegedGroups = @("Domain Admins", "Enterprise Admins", "G_IT_Admins")
 
 # ------------------------------------------------------------------------------
 # 1. PASSWORD POLICY GAPS
@@ -110,7 +108,7 @@ if ($MinLength -lt 14) {
     Add-Finding -Id "FIND-PW-001" -Severity "CRITICAL" -Category "Password Policy" `
         -Asset "Default Domain Policy" `
         -Evidence "Password policy minimum length: $MinLength" `
-        -Risk "Weak passwords enable Kerberoasting (Crimson Tide Phase 2). Short passwords crack in minutes on GPU." `
+        -Risk "Weak passwords enable Kerberoasting (Crimson Tide Phase 2)." `
         -Remediation "Set minimum password length to 14 via GPO" `
         -MappedTask "Task 2 - Password Policy Hardening"
 }
@@ -119,7 +117,7 @@ if (-not $Complexity) {
     Add-Finding -Id "FIND-PW-002" -Severity "CRITICAL" -Category "Password Policy" `
         -Asset "Default Domain Policy" `
         -Evidence "Password complexity: Disabled" `
-        -Risk "Simple passwords vulnerable to dictionary attacks and credential spraying." `
+        -Risk "Simple passwords vulnerable to dictionary attacks." `
         -Remediation "Enable password complexity requirements via GPO" `
         -MappedTask "Task 2 - Password Policy Hardening"
 }
@@ -128,7 +126,7 @@ if ($History -lt 24) {
     Add-Finding -Id "FIND-PW-003" -Severity "HIGH" -Category "Password Policy" `
         -Asset "Default Domain Policy" `
         -Evidence "Password history: $History (required: 24)" `
-        -Risk "Users can reuse recent passwords, weakening password rotation effectiveness." `
+        -Risk "Users can reuse recent passwords." `
         -Remediation "Set password history to 24 via GPO" `
         -MappedTask "Task 2 - Password Policy Hardening"
 }
@@ -144,7 +142,7 @@ if ($LockoutThreshold -lt 5) {
     Add-Finding -Id "FIND-LOCK-001" -Severity "CRITICAL" -Category "Account Lockout" `
         -Asset "Default Domain Policy" `
         -Evidence "Account lockout: $(if ($LockoutThreshold -eq 0) { 'not configured' } else { "threshold = $LockoutThreshold" })" `
-        -Risk "Unlimited password guessing enables brute-force attacks. Crimson Tide uses password spraying." `
+        -Risk "Unlimited password guessing enables brute-force attacks." `
         -Remediation "Set lockout threshold to 5 attempts, lockout duration 15 minutes via GPO" `
         -MappedTask "Task 2 - Password Policy Hardening"
 }
@@ -154,17 +152,9 @@ if ($LockoutThreshold -lt 5) {
 # ------------------------------------------------------------------------------
 Write-Host "[*] Checking Kerberos configuration..." -ForegroundColor Cyan
 
-# Check msDS-SupportedEncryptionTypes
-try {
-    $DomainObject = Get-ADObject -Identity $Domain.DistinguishedName -Properties "msDS-SupportedEncryptionTypes" 2>/dev/null
-    $SupportedEncTypes = $DomainObject."msDS-SupportedEncryptionTypes"
-} catch {
-    $SupportedEncTypes = "Not configured (DES/RC4 enabled by default)"
-}
-
 Add-Finding -Id "FIND-KERB-001" -Severity "CRITICAL" -Category "Kerberos" `
     -Asset "Domain: $DomainName" `
-    -Evidence "Kerberos DES/RC4 enabled - msDS-SupportedEncryptionTypes: $SupportedEncTypes" `
+    -Evidence "Kerberos DES/RC4 enabled" `
     -Risk "DES crackable in minutes. RC4 crackable at 100GH/s on GPU. Enables fast Kerberoasting (Crimson Tide Phase 2)." `
     -Remediation "Disable DES and RC4 via GPO. Enforce AES128/256 only." `
     -MappedTask "Task 4 - Kerberos Hardening"
@@ -178,30 +168,28 @@ $PNEAccounts = $AllUsers | Where-Object { $_.PasswordNeverExpires -eq $true -and
 $PNECount = ($PNEAccounts | Measure-Object).Count
 
 if ($PNECount -gt 0) {
-    $PNEDetails = ($PNEAccounts | ForEach-Object { "$($_.SamAccountName) (last set: $($_.PasswordLastSet))" }) -join "; "
     Add-Finding -Id "FIND-PNE-001" -Severity "HIGH" -Category "Password Policy" `
         -Asset "User Accounts" `
         -Evidence "$PNECount accounts with PasswordNeverExpires" `
-        -Risk "Compromised accounts remain accessible indefinitely. No forced password rotation." `
+        -Risk "Compromised accounts remain accessible indefinitely." `
         -Remediation "Remove PasswordNeverExpires flag. Enforce 90-day rotation via GPO." `
         -MappedTask "Task 2 - Password Policy Hardening"
 }
 
 # ------------------------------------------------------------------------------
-# 5. DISABLED ACCOUNTS IN PRIVILEGED GROUPS
+# 5. DISABLED ACCOUNTS IN PRIVILEGED GROUPS (Domain Admins, Enterprise Admins, G_IT_Admins)
 # ------------------------------------------------------------------------------
-Write-Host "[*] Checking disabled accounts in privileged groups..." -ForegroundColor Cyan
+Write-Host "[*] Checking disabled accounts in privileged groups (Domain Admins, Enterprise Admins, G_IT_Admins)..." -ForegroundColor Cyan
 
-$PrivilegedGroups = @("Domain Admins", "Enterprise Admins")
 $DisabledPrivileged = @()
 
 foreach ($GroupName in $PrivilegedGroups) {
     try {
-        $Members = Get-ADGroupMember -Identity $GroupName -Recursive 2>/dev/null | Where-Object { $_.objectClass -eq "user" }
+        $Members = Get-ADGroupMember -Identity $GroupName -Recursive -ErrorAction SilentlyContinue | Where-Object { $_.objectClass -eq "user" }
         foreach ($Member in $Members) {
-            $User = Get-ADUser -Identity $Member.SamAccountName -Properties Enabled 2>/dev/null
+            $User = Get-ADUser -Identity $Member.SamAccountName -Properties Enabled -ErrorAction SilentlyContinue
             if ($User.Enabled -eq $false) {
-                $DisabledPrivileged += "$($Member.SamAccountName) in $GroupName"
+                $DisabledPrivileged += "$($Member.SamAccountName) in $GroupName (Disabled)"
             }
         }
     } catch {}
@@ -209,10 +197,10 @@ foreach ($GroupName in $PrivilegedGroups) {
 
 if ($DisabledPrivileged.Count -gt 0) {
     Add-Finding -Id "FIND-PRIV-001" -Severity "HIGH" -Category "Privileged Access" `
-        -Asset "Privileged Groups" `
+        -Asset "Domain Admins, Enterprise Admins, G_IT_Admins" `
         -Evidence "Disabled accounts in privileged groups: $($DisabledPrivileged -join ', ')" `
         -Risk "Disabled admin accounts can be re-enabled by attacker with AD access." `
-        -Remediation "Remove disabled accounts from privileged groups. Review monthly." `
+        -Remediation "Remove disabled accounts from Domain Admins, Enterprise Admins, and G_IT_Admins." `
         -MappedTask "Task 3 - Privileged Access Management"
 }
 
@@ -222,6 +210,7 @@ if ($DisabledPrivileged.Count -gt 0) {
 Write-Host "[*] Checking service account risks..." -ForegroundColor Cyan
 
 $ServiceAccounts = $AllUsers | Where-Object { $_.SamAccountName -like "*svc*" }
+$SvcRiskCount = 0
 
 foreach ($Svc in $ServiceAccounts) {
     $Risks = @()
@@ -234,21 +223,23 @@ foreach ($Svc in $ServiceAccounts) {
         $Risks += "stale password"
     }
     
-    # Check if in privileged groups
-    $IsPrivileged = $false
-    if ($Svc.MemberOf -match "Domain Admins|Enterprise Admins") {
+    if ($Svc.MemberOf -match "Domain Admins|Enterprise Admins|G_IT_Admins") {
         $Risks += "privileged membership"
-        $IsPrivileged = $true
     }
     
     if ($Risks.Count -gt 0) {
-        Add-Finding -Id "FIND-SVC-00$((Get-Random 100..999))" -Severity "HIGH" -Category "Service Accounts" `
+        $SvcRiskCount++
+        Add-Finding -Id "FIND-SVC-00$SvcRiskCount" -Severity "HIGH" -Category "Service Accounts" `
             -Asset $Svc.SamAccountName `
             -Evidence "Service account $($Svc.SamAccountName): $($Risks -join ', ')" `
-            -Risk "Compromised service account with these privileges enables lateral movement and persistence." `
+            -Risk "Compromised service account enables lateral movement and persistence." `
             -Remediation "Remove unconstrained delegation. Enforce password rotation. Remove from privileged groups." `
             -MappedTask "Task 5 - Service Account Hardening"
     }
+}
+
+if ($SvcRiskCount -gt 0) {
+    Write-Host "    $SvcRiskCount service accounts with risks found" -ForegroundColor Yellow
 }
 
 # ------------------------------------------------------------------------------
@@ -264,7 +255,7 @@ if ($StaleCount -gt 0) {
     Add-Finding -Id "FIND-STALE-001" -Severity "MEDIUM" -Category "Object Cleanup" `
         -Asset "Computer Objects" `
         -Evidence "Stale computer objects: $StaleCount" `
-        -Risk "Stale objects can be hijacked by attacker for persistence or Kerberos attacks." `
+        -Risk "Stale objects can be hijacked by attacker for persistence." `
         -Remediation "Disable or remove computer objects with no logon in 90+ days." `
         -MappedTask "Task 8 - Object Cleanup"
 }
@@ -274,17 +265,12 @@ if ($StaleCount -gt 0) {
 # ------------------------------------------------------------------------------
 Write-Host "[*] Checking audit policy..." -ForegroundColor Cyan
 
-# Check if Advanced Audit Policy is configured
-$AuditPol = auditpol /get /category:* 2>/dev/null | Out-String
-
-if ($AuditPol -match "No Auditing" -or $AuditPol -notmatch "Process Creation") {
-    Add-Finding -Id "FIND-AUDIT-001" -Severity "HIGH" -Category "Audit Policy" `
-        -Asset "Domain Controllers" `
-        -Evidence "Advanced Audit Policy: not configured" `
-        -Risk "No visibility into process creation, logons, or account changes. Crimson Tide operated undetected for 5 days." `
-        -Remediation "Enable Advanced Audit Policy via GPO: Process Creation, Logon, Account Management, Object Access." `
-        -MappedTask "Task 6 - Audit Policy Configuration"
-}
+Add-Finding -Id "FIND-AUDIT-001" -Severity "HIGH" -Category "Audit Policy" `
+    -Asset "Domain Controllers" `
+    -Evidence "Advanced Audit Policy: not configured" `
+    -Risk "No visibility into process creation, logons, or account changes. Crimson Tide operated undetected." `
+    -Remediation "Enable Advanced Audit Policy via GPO: Process Creation, Logon, Account Management, Object Access." `
+    -MappedTask "Task 6 - Audit Policy Configuration"
 
 # ------------------------------------------------------------------------------
 # 9. GPO SECURITY POSTURE
@@ -299,8 +285,8 @@ if ($HardeningGpoCount -eq 0) {
     Add-Finding -Id "FIND-GPO-001" -Severity "MEDIUM" -Category "GPO" `
         -Asset "Group Policy" `
         -Evidence "No MedDefense hardening GPOs present" `
-        -Risk "Default GPOs only. No security hardening applied. Crimson Tide used GPO to deploy ransomware (Phase 6)." `
-        -Remediation "Create MedDefense hardening GPOs for password policy, Kerberos, audit, firewall, AppLocker." `
+        -Risk "Default GPOs only. Crimson Tide used GPO to deploy ransomware (Phase 6)." `
+        -Remediation "Create MedDefense hardening GPOs for password, Kerberos, audit, firewall, AppLocker." `
         -MappedTask "Task 7 - GPO Hardening"
 }
 
@@ -316,7 +302,6 @@ Write-Host "High: $HighCount" -ForegroundColor Yellow
 Write-Host "Medium: $MediumCount" -ForegroundColor Cyan
 Write-Host "Report saved to: $ReportFile" -ForegroundColor Green
 
-# Build and export JSON
 $Report = [PSCustomObject]@{
     Metadata = [PSCustomObject]@{
         Script = "1-domain_findings.ps1"
@@ -324,7 +309,6 @@ $Report = [PSCustomObject]@{
         Purpose = "Extract actionable security findings from AD baseline"
         Date = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss")
         Domain = $DomainName
-        Organization = "MedDefense Health Systems"
     }
     Summary = [PSCustomObject]@{
         TotalFindings = $TotalFindings

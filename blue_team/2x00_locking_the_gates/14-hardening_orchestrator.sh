@@ -15,6 +15,9 @@ set -euo pipefail
 #      IMAGINE: A chef preparing a 13-course meal. Each dish must be done
 #      in order. If one fails, the kitchen stops. At the end, a report
 #      shows what was cooked, how long it took, and the before/after taste.
+# WHEN TO USE: New server deployment, compromised server rebuild, HIPAA
+#              audit evidence, Crimson Tide emergency hardening of 3 servers
+#              in 2 hours with a single command instead of 13 manual steps.
 # ATTACKS BLOCKED: All Crimson Tide phases (1-7) through layered hardening.
 # ==============================================================================
 # Analyst: shamshed rajput
@@ -60,15 +63,17 @@ SCRIPTS=(
 STEPS_SCHEDULED=${#SCRIPTS[@]}
 
 # ------------------------------------------------------------------------------
-# PRE-CHECKS
+# PRE-CHECKS: Verify all required scripts exist
 # ------------------------------------------------------------------------------
 echo "[*] Running pre-checks..."
 
 MISSING=0
 for script in "${SCRIPTS[@]}"; do
     if [ ! -f "${SCRIPT_DIR}/${script}" ]; then
-        echo "    [MISSING] ${script}"
+        echo "    [MISSING] ${script} - file does not exist"
         MISSING=$((MISSING + 1))
+    else
+        echo "    [OK] ${script} exists"
     fi
 done
 
@@ -135,7 +140,6 @@ for script in "${SCRIPTS[@]}"; do
     END_TIME=$(date +%s)
     DURATION=$((END_TIME - START_TIME))
     
-    # Add step to JSON
     if [ "${FIRST_STEP}" = true ]; then
         FIRST_STEP=false
     else
@@ -152,7 +156,6 @@ for script in "${SCRIPTS[@]}"; do
     }
 EOF
     
-    # Stop on failure
     if [ "${STATUS}" = "FAIL" ]; then
         echo ""
         echo "[ERROR] Hardening failed at: ${script}"
@@ -173,9 +176,9 @@ if command -v lynis >/dev/null 2>&1; then
         AFTER_SCORE=$(grep "^hardening_index=" /var/log/lynis-report.dat 2>/dev/null | cut -d'=' -f2 || echo 0)
     fi
 fi
-echo "After Lynis score: ${AFTER_SCORE}"
 
 DELTA=$((AFTER_SCORE - BEFORE_SCORE))
+echo "After Lynis score: ${AFTER_SCORE}"
 echo "Delta: ${DELTA}"
 
 # ------------------------------------------------------------------------------

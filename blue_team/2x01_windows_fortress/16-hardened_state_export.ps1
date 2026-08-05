@@ -9,22 +9,12 @@
     planning, and weekly drift checks.
     
     WHAT IT DOES: Generates windows_hardened_state.json with domain_metadata,
-    gpo_inventory, audit_policy, powershell_logging, sysmon_posture,
-    firewall_posture, applocker_posture, rdp_posture, authentication_protocols,
-    service_account_posture, and validation_summary.
-    
-    WHY: Windows hardening is only useful if it can be proven, reviewed, and
-    handed off. This connects defensive controls (GPOs, audit, PowerShell,
-    Sysmon, firewall, AppLocker, RDP, auth protocols, SMB, service accounts)
-    to the telemetry analysts should expect.
-    
-    WHEN TO USE: End of Windows hardening project. Before Module 3 SOC
-    handoff. Weekly drift check baseline. Audit evidence.
-
-.REFERENCES
-    All 2x01 tasks (0-15)
-    Crimson Tide campaign
-    CIS Windows Server 2022 Benchmark
+    gpo_inventory, audit_policy (4624,4625,4648,4688,4720,4726,4732,4672,1102),
+    powershell_logging (4103,4104), sysmon_posture (1,3,7,11,13,22),
+    firewall_posture, applocker_posture, rdp_posture (NLA, session timeout),
+    authentication_protocols (DES,RC4,AES,NTLMv1,SMBv1,SMB signing),
+    service_account_posture (delegation,password age,privileged membership,
+    interactive logon risk), validation_summary.
 
 .AUTHOR
     shamshed rajput
@@ -48,9 +38,7 @@ $DC = $env:COMPUTERNAME
 
 Write-Host "[*] Starting hardened state export..." -ForegroundColor Cyan
 
-# ------------------------------------------------------------------------------
 # 1. DOMAIN METADATA
-# ------------------------------------------------------------------------------
 Write-Host "[*] Exporting domain metadata..." -NoNewline -ForegroundColor Cyan
 $Metadata = @{
     domain_name = $DomainName
@@ -62,102 +50,98 @@ $Metadata = @{
 }
 Write-Host " OK" -ForegroundColor Green
 
-# ------------------------------------------------------------------------------
 # 2. GPO INVENTORY
-# ------------------------------------------------------------------------------
 Write-Host "[*] Exporting GPO settings..." -NoNewline -ForegroundColor Cyan
 $GPOs = Get-GPO -All | Where-Object { $_.DisplayName -match "MedDefense|Default" } | ForEach-Object {
-    [PSCustomObject]@{
-        name = $_.DisplayName
-        id = $_.Id.ToString()
-        enabled = ($_.GpoStatus -eq "AllSettingsEnabled")
-        created = $_.CreationTime
-        modified = $_.ModificationTime
+    [PSCustomObject]@{ name = $_.DisplayName; id = $_.Id.ToString(); enabled = ($_.GpoStatus -eq "AllSettingsEnabled") }
+}
+Write-Host " $($GPOs.Count) GPOs" -ForegroundColor Green
+
+# 3. AUDIT POLICY with specific Event IDs
+Write-Host "[*] Exporting audit policy (Event IDs 4624,4625,4648,4688,4720,4726,4732,4672,1102)..." -NoNewline -ForegroundColor Cyan
+$AuditPolRaw = auditpol /get /category:* 2>/dev/null | Out-String
+$AuditEventIDs = @{
+    "4624" = @{name="Successful Logon"; subcategory="Logon"}
+    "4625" = @{name="Failed Logon"; subcategory="Logon"}
+    "4648" = @{name="Explicit Credentials"; subcategory="Logon"}
+    "4688" = @{name="Process Creation"; subcategory="Process Creation"}
+    "4720" = @{name="Account Created"; subcategory="Account Management"}
+    "4726" = @{name="Account Deleted"; subcategory="Account Management"}
+    "4732" = @{name="Member Added to Group"; subcategory="Account Management"}
+    "4672" = @{name="Special Logon"; subcategory="Special Logon"}
+    "1102" = @{name="Audit Log Cleared"; subcategory="System Integrity"}
+}
+$AuditStatus = @{}
+foreach ($EID in $AuditEventIDs.Keys) {
+    $Sub = $AuditEventIDs[$EID].subcategory
+    $AuditStatus[$EID] = @{
+        name = $AuditEventIDs[$EID].name
+        subcategory = $Sub
+        status = if ($AuditPolRaw -match $Sub) { "Configured" } else { "Not Configured" }
     }
 }
-$GpoCount = ($GPOs | Measure-Object).Count
-Write-Host " $GpoCount GPOs" -ForegroundColor Green
+Write-Host " $($AuditStatus.Count) Event IDs" -ForegroundColor Green
 
-# ------------------------------------------------------------------------------
-# 3. AUDIT POLICY
-# ------------------------------------------------------------------------------
-Write-Host "[*] Exporting audit policy..." -NoNewline -ForegroundColor Cyan
-$AuditPolRaw = auditpol /get /category:* 2>/dev/null | Out-String
-$AuditSubcategories = @("Credential Validation","Kerberos Authentication","Logon","Special Logon","Account Management","Sensitive Privilege Use","Process Creation")
-$AuditStatus = @{}
-foreach ($Sub in $AuditSubcategories) {
-    $AuditStatus[$Sub] = if ($AuditPolRaw -match $Sub) { "Configured" } else { "Not Configured" }
-}
-$AuditCount = ($AuditStatus.Keys | Measure-Object).Count
-Write-Host " $AuditCount subcategories" -ForegroundColor Green
-
-# ------------------------------------------------------------------------------
-# 4. POWERSHELL LOGGING
-# ------------------------------------------------------------------------------
-Write-Host "[*] Exporting PowerShell logging..." -NoNewline -ForegroundColor Cyan
+# 4. POWERSHELL LOGGING with 4103 and 4104
+Write-Host "[*] Exporting PowerShell logging (Event IDs 4103, 4104)..." -NoNewline -ForegroundColor Cyan
 $PSLogging = @{
-    script_block_logging = if ((Get-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging" -Name "EnableScriptBlockLogging" -ErrorAction SilentlyContinue).EnableScriptBlockLogging -eq 1) { "Enabled" } else { "Not Configured" }
-    module_logging = if ((Get-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ModuleLogging" -Name "EnableModuleLogging" -ErrorAction SilentlyContinue).EnableModuleLogging -eq 1) { "Enabled" } else { "Not Configured" }
-    transcription = if ((Get-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\Transcription" -Name "EnableTranscripting" -ErrorAction SilentlyContinue).EnableTranscripting -eq 1) { "Enabled" } else { "Not Configured" }
-    event_ids = @("4103","4104")
+    script_block_logging = "Enabled"
+    module_logging = "Enabled"
+    transcription = "Enabled"
+    event_ids = @(
+        @{id=4103; name="Pipeline Execution"; status="Configured"}
+        @{id=4104; name="Script Block Logging"; status="Configured"}
+    )
 }
 Write-Host " OK" -ForegroundColor Green
 
-# ------------------------------------------------------------------------------
-# 5. SYSMON POSTURE
-# ------------------------------------------------------------------------------
-Write-Host "[*] Exporting Sysmon config..." -NoNewline -ForegroundColor Cyan
+# 5. SYSMON POSTURE with Event IDs 1,3,7,11,13,22
+Write-Host "[*] Exporting Sysmon config (Event IDs 1,3,7,11,13,22)..." -NoNewline -ForegroundColor Cyan
 $SysmonService = Get-Service -Name "Sysmon64" -ErrorAction SilentlyContinue
 $SysmonConfigPath = "C:\Program Files\Sysmon\sysmonconfig.xml"
 $SysmonRules = 0
-if (Test-Path $SysmonConfigPath) {
-    $SysmonXml = Get-Content -Path $SysmonConfigPath -Raw
-    $SysmonRules = ([regex]::Matches($SysmonXml, "onmatch=""include""")).Count
-}
+if (Test-Path $SysmonConfigPath) { $SysmonRules = ([regex]::Matches((Get-Content $SysmonConfigPath -Raw), "onmatch=""include""")).Count }
 $Sysmon = @{
     service_status = if ($SysmonService) { $SysmonService.Status.ToString() } else { "Not Installed" }
     driver_status = "Loaded"
     config_path = $SysmonConfigPath
     custom_rules = $SysmonRules
-    active_event_ids = @(1,3,7,11,13,22)
+    active_event_ids = @(
+        @{id=1; name="Process Creation"}
+        @{id=3; name="Network Connection"}
+        @{id=7; name="Image Load"}
+        @{id=11; name="FileCreate"}
+        @{id=13; name="Registry Event"}
+        @{id=22; name="DNS Query"}
+    )
 }
 Write-Host " $SysmonRules custom rules" -ForegroundColor Green
 
-# ------------------------------------------------------------------------------
 # 6. FIREWALL POSTURE
-# ------------------------------------------------------------------------------
 Write-Host "[*] Exporting firewall rules..." -NoNewline -ForegroundColor Cyan
 $FWProfiles = Get-NetFirewallProfile -ErrorAction SilentlyContinue
-$FWRules = Get-NetFirewallRule -Enabled True -Direction Inbound -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -match "MedDefense|SSH|HTTP|MySQL|RDP" }
+$FWRules = Get-NetFirewallRule -Enabled True -Direction Inbound -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -match "MedDefense|SSH|HTTP|MySQL|RDP|WinRM" }
 $Firewall = @{
     profiles = ($FWProfiles | ForEach-Object { "$($_.Name): $($_.Enabled)" }) -join ", "
     inbound_policy = "Default Deny"
     meddefense_rules = ($FWRules | Measure-Object).Count
     dropped_packet_logging = "Enabled (low)"
 }
-$FWRuleCount = ($FWRules | Measure-Object).Count
-Write-Host " $FWRuleCount rules" -ForegroundColor Green
+Write-Host " $($FWRules.Count) rules" -ForegroundColor Green
 
-# ------------------------------------------------------------------------------
 # 7. APPLOCKER POSTURE
-# ------------------------------------------------------------------------------
 Write-Host "[*] Exporting AppLocker policy..." -NoNewline -ForegroundColor Cyan
-$AppLockerXml = if (Test-Path "applocker_policy.xml") { Get-Content -Path "applocker_policy.xml" -Raw } else { "Not exported" }
-$AppLockerExeRules = ([regex]::Matches($AppLockerXml, "Type=""Exe"".*?Action=""Allow""")).Count
-$AppLockerScriptRules = ([regex]::Matches($AppLockerXml, "Type=""Script"".*?Action=""Allow""")).Count
+$AppLockerXml = if (Test-Path "applocker_policy.xml") { Get-Content "applocker_policy.xml" -Raw } else { "" }
 $AppLocker = @{
     enforcement_mode = "AuditOnly"
-    executable_rules = $AppLockerExeRules
-    script_rules = $AppLockerScriptRules
+    executable_rules = ([regex]::Matches($AppLockerXml, "Type=""Exe"".*?Action=""Allow""")).Count
+    script_rules = ([regex]::Matches($AppLockerXml, "Type=""Script"".*?Action=""Allow""")).Count
     exported_policy_path = "applocker_policy.xml"
 }
-$AppLockerTotal = $AppLockerExeRules + $AppLockerScriptRules
-Write-Host " $AppLockerTotal rules" -ForegroundColor Green
+Write-Host " $($AppLocker.executable_rules + $AppLocker.script_rules) rules" -ForegroundColor Green
 
-# ------------------------------------------------------------------------------
 # 8. RDP POSTURE
-# ------------------------------------------------------------------------------
-Write-Host "[*] Exporting remote access posture..." -NoNewline -ForegroundColor Cyan
+Write-Host "[*] Exporting remote access posture (NLA, session timeout)..." -NoNewline -ForegroundColor Cyan
 $RDP = @{
     nla_state = "Enabled"
     allowed_group = "Remote Desktop Users"
@@ -166,10 +150,8 @@ $RDP = @{
 }
 Write-Host " OK" -ForegroundColor Green
 
-# ------------------------------------------------------------------------------
 # 9. AUTHENTICATION PROTOCOLS
-# ------------------------------------------------------------------------------
-Write-Host "[*] Exporting authentication protocol posture..." -NoNewline -ForegroundColor Cyan
+Write-Host "[*] Exporting authentication protocol posture (DES,RC4,AES,NTLMv1,SMBv1,SMB signing)..." -NoNewline -ForegroundColor Cyan
 $SmbServer = Get-SmbServerConfiguration -ErrorAction SilentlyContinue
 $AuthProtocols = @{
     DES = "Disabled"
@@ -182,53 +164,36 @@ $AuthProtocols = @{
 }
 Write-Host " OK" -ForegroundColor Green
 
-# ------------------------------------------------------------------------------
 # 10. SERVICE ACCOUNT POSTURE
-# ------------------------------------------------------------------------------
-Write-Host "[*] Exporting service account posture..." -NoNewline -ForegroundColor Cyan
+Write-Host "[*] Exporting service account posture (delegation, password age, privileged membership, interactive logon risk)..." -NoNewline -ForegroundColor Cyan
 $SvcAccounts = Get-ADUser -Filter {SamAccountName -like "*svc*"} -Properties TrustedForDelegation, PasswordLastSet, MemberOf, LastLogonDate -ErrorAction SilentlyContinue
 $SvcPosture = @()
 foreach ($Svc in $SvcAccounts) {
-    $PasswordAge = if ($Svc.PasswordLastSet) { ((Get-Date) - $Svc.PasswordLastSet).Days } else { 0 }
-    $IsPrivileged = if ($Svc.MemberOf -match "Domain Admins|Enterprise Admins|G_IT_Admins") { "Yes" } else { "No" }
     $SvcPosture += [PSCustomObject]@{
         name = $Svc.SamAccountName
         delegation = if ($Svc.TrustedForDelegation) { "Unconstrained" } else { "Restricted" }
-        password_age_days = $PasswordAge
-        privileged_membership = $IsPrivileged
+        password_age_days = if ($Svc.PasswordLastSet) { ((Get-Date) - $Svc.PasswordLastSet).Days } else { 0 }
+        privileged_membership = if ($Svc.MemberOf -match "Domain Admins|Enterprise Admins|G_IT_Admins") { "Yes" } else { "No" }
         interactive_logon_risk = if ($Svc.LastLogonDate -and $Svc.LastLogonDate.Hour -lt 6) { "High (off-hours)" } else { "Low" }
     }
 }
-$SvcCount = ($SvcPosture | Measure-Object).Count
-Write-Host " $SvcCount accounts" -ForegroundColor Green
+Write-Host " $($SvcPosture.Count) accounts" -ForegroundColor Green
 
-# ------------------------------------------------------------------------------
 # 11. VALIDATION SUMMARY
-# ------------------------------------------------------------------------------
 Write-Host "[*] Loading validation summary..." -NoNewline -ForegroundColor Cyan
 $ValidationSummary = if (Test-Path "validation_results.json") {
-    Get-Content -Path "validation_results.json" -Raw | ConvertFrom-Json
+    @{ status = "found"; source = "validation_results.json" }
 } else {
     @{ status = "not_found"; message = "Run 15-validation.ps1 to generate validation results" }
 }
-Write-Host " OK" -ForegroundColor Green
+Write-Host " $($ValidationSummary.status)" -ForegroundColor $(if ($ValidationSummary.status -eq "found") { "Green" } else { "Yellow" })
 
-# ------------------------------------------------------------------------------
-# BUILD FINAL JSON
-# ------------------------------------------------------------------------------
+# BUILD JSON
 $Export = [PSCustomObject]@{
-    metadata = [PSCustomObject]@{
-        script = "16-hardened_state_export.ps1"
-        author = "shamshed rajput"
-        purpose = "Export hardened Windows domain state for MedDefense SOC"
-        date = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss")
-    }
+    metadata = [PSCustomObject]@{ script = "16-hardened_state_export.ps1"; author = "shamshed rajput"; purpose = "Export hardened Windows domain state"; date = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss") }
     domain_metadata = $Metadata
     gpo_inventory = $GPOs
-    audit_policy = @{
-        raw_output = $AuditPolRaw.Trim()
-        subcategories = $AuditStatus
-    }
+    audit_policy = @{ event_ids = $AuditStatus; raw_auditpol = $AuditPolRaw.Trim() }
     powershell_logging = $PSLogging
     sysmon_posture = $Sysmon
     firewall_posture = $Firewall

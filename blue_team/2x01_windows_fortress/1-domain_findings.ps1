@@ -71,7 +71,7 @@ function Add-Finding {
 $Domain = Get-ADDomain
 $DomainName = $Domain.DNSRoot
 $PasswordPolicy = Get-ADDefaultDomainPasswordPolicy
-$AllUsers = Get-ADUser -Filter * -Properties LastLogonDate, PasswordLastSet, PasswordNeverExpires, Enabled, TrustedForDelegation, MemberOf, Description
+$AllUsers = Get-ADUser -Filter * -Properties LastLogonDate, PasswordLastSet, PasswordNeverExpires, Enabled, TrustedForDelegation, MemberOf, Description, UseDESKeyOnly
 $AllComputers = Get-ADComputer -Filter * -Properties LastLogonDate, OperatingSystem, Enabled
 $AllGPOs = Get-GPO -All
 $PrivilegedGroups = @("Domain Admins", "Enterprise Admins", "G_IT_Admins")
@@ -145,7 +145,7 @@ if ($DisabledPrivileged.Count -gt 0) {
         -Remediation "Remove disabled accounts from Domain Admins, Enterprise Admins, and G_IT_Admins." -MappedTask "Task 3 - Privileged Access Management"
 }
 
-# 6. SERVICE ACCOUNT RISKS
+# 6. SERVICE ACCOUNT RISKS (includes UseDESKeyOnly check)
 Write-Host "[*] Checking service account risks..." -ForegroundColor Cyan
 $ServiceAccounts = $AllUsers | Where-Object { $_.SamAccountName -like "*svc*" }
 $SvcRiskCount = 0
@@ -154,12 +154,13 @@ foreach ($Svc in $ServiceAccounts) {
     if ($Svc.TrustedForDelegation -eq $true) { $Risks += "unconstrained delegation" }
     if ($Svc.PasswordNeverExpires -eq $true) { $Risks += "stale password" }
     if ($Svc.MemberOf -match "Domain Admins|Enterprise Admins|G_IT_Admins") { $Risks += "privileged membership" }
+    if ($Svc.UseDESKeyOnly -eq $true) { $Risks += "UseDESKeyOnly flag set" }
     if ($Risks.Count -gt 0) {
         $SvcRiskCount++
         Add-Finding -Id "FIND-SVC-00$SvcRiskCount" -Severity "HIGH" -Category "Service Accounts" -Asset $Svc.SamAccountName `
             -Evidence "Service account $($Svc.SamAccountName): $($Risks -join ', ')" `
-            -Risk "Compromised service account enables lateral movement." `
-            -Remediation "Remove unconstrained delegation. Enforce password rotation. Remove from privileged groups." -MappedTask "Task 5 - Service Account Hardening"
+            -Risk "Compromised service account with UseDESKeyOnly, unconstrained delegation, or privileged membership enables lateral movement." `
+            -Remediation "Remove UseDESKeyOnly flag, unconstrained delegation. Enforce password rotation. Remove from privileged groups." -MappedTask "Task 5 - Service Account Hardening"
     }
 }
 
@@ -174,24 +175,19 @@ if ($StaleCount -gt 0) {
         -Remediation "Disable or remove computer objects with no logon in 90+ days." -MappedTask "Task 8 - Object Cleanup"
 }
 
-# 8. AUDIT POLICY - uses auditpol with Process Creation, Special Logon, Account Management, Object Access
+# 8. AUDIT POLICY
 Write-Host "[*] Checking audit policy with auditpol..." -ForegroundColor Cyan
 $AuditPolOutput = auditpol /get /category:* 2>/dev/null | Out-String
-
-$RequiredSubcategories = @("Process Creation", "Special Logon", "Account Management", "Object Access", "Detailed Tracking")
+$RequiredSubcategories = @("Process Creation", "Special Logon", "Account Management", "Object Access")
 $MissingAudit = @()
 foreach ($Sub in $RequiredSubcategories) {
-    if ($AuditPolOutput -notmatch $Sub) {
-        $MissingAudit += $Sub
-    }
+    if ($AuditPolOutput -notmatch $Sub) { $MissingAudit += $Sub }
 }
-
 if ($MissingAudit.Count -gt 0) {
     Add-Finding -Id "FIND-AUDIT-001" -Severity "HIGH" -Category "Audit Policy" -Asset "Domain Controllers" `
-        -Evidence "Advanced Audit Policy: not configured for: $($MissingAudit -join ', ')" `
-        -Risk "No visibility into Process Creation, Special Logon, Account Management. Crimson Tide operated undetected for 5 days." `
-        -Remediation "Enable Advanced Audit Policy via GPO for: Process Creation, Special Logon, Account Management, Object Access, PowerShell/Sysmon readiness." `
-        -MappedTask "Task 6 - Audit Policy Configuration"
+        -Evidence "Advanced Audit Policy not configured for: $($MissingAudit -join ', ')" `
+        -Risk "No visibility into Process Creation, Special Logon, Account Management. Crimson Tide operated undetected." `
+        -Remediation "Enable Advanced Audit Policy via GPO." -MappedTask "Task 6 - Audit Policy Configuration"
 }
 
 # 9. GPO SECURITY POSTURE
@@ -202,10 +198,10 @@ $HardeningGpoCount = ($HardeningGPOs | Measure-Object).Count
 if ($HardeningGpoCount -eq 0) {
     Add-Finding -Id "FIND-GPO-001" -Severity "MEDIUM" -Category "GPO" -Asset "Group Policy" `
         -Evidence "No MedDefense hardening GPOs present" -Risk "Crimson Tide used GPO to deploy ransomware (Phase 6)." `
-        -Remediation "Create MedDefense hardening GPOs for password, Kerberos, audit, firewall, AppLocker." -MappedTask "Task 7 - GPO Hardening"
+        -Remediation "Create MedDefense hardening GPOs." -MappedTask "Task 7 - GPO Hardening"
 }
 
-# SUMMARY AND EXPORT
+# SUMMARY
 $TotalFindings = ($Findings | Measure-Object).Count
 Write-Host ""
 Write-Host "Findings: $TotalFindings" -ForegroundColor White
@@ -215,16 +211,9 @@ Write-Host "Medium: $MediumCount" -ForegroundColor Cyan
 Write-Host "Report saved to: $ReportFile" -ForegroundColor Green
 
 $Report = [PSCustomObject]@{
-    Metadata = [PSCustomObject]@{
-        Script = "1-domain_findings.ps1"
-        Author = "shamshed rajput"
-        Purpose = "Extract actionable security findings from AD baseline"
-        Date = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss")
-        Domain = $DomainName
-    }
+    Metadata = [PSCustomObject]@{ Script = "1-domain_findings.ps1"; Author = "shamshed rajput"; Purpose = "Extract actionable security findings from AD baseline"; Date = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss"); Domain = $DomainName }
     Summary = [PSCustomObject]@{ TotalFindings = $TotalFindings; Critical = $CriticalCount; High = $HighCount; Medium = $MediumCount }
     Findings = $Findings
 }
-
 $Report | ConvertTo-Json -Depth 5 | Out-File -FilePath $ReportFile -Encoding UTF8
 exit 0

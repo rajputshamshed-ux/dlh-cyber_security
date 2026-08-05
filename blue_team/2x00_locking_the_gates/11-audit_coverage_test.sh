@@ -20,6 +20,18 @@ TESTS_EXECUTED=0
 TESTS_CAPTURED=0
 TESTS_MISSED=0
 
+# ------------------------------------------------------------------------------
+# CLEANUP FUNCTION
+# ------------------------------------------------------------------------------
+cleanup() {
+    echo "[*] Running cleanup..."
+    rm -rf "${TMP_TEST_DIR}"
+}
+trap cleanup EXIT
+
+# ------------------------------------------------------------------------------
+# RUN TEST
+# ------------------------------------------------------------------------------
 run_test() {
     local test_num="$1"
     local test_name="$2"
@@ -29,8 +41,6 @@ run_test() {
     TESTS_EXECUTED=$((TESTS_EXECUTED + 1))
     echo -n "[${test_num}/6] ${test_name}"
     
-    local before_time
-    before_time=$(date +%s)
     eval "${test_command}" 2>/dev/null || true
     sleep 1
     
@@ -49,32 +59,25 @@ run_test() {
     fi
 }
 
+# ------------------------------------------------------------------------------
+# MAIN
+# ------------------------------------------------------------------------------
 echo "[*] Running audit telemetry coverage tests..."
 mkdir -p "${TMP_TEST_DIR}"
 
 echo "{" > "${OUTPUT_FILE}.tmp"
 echo '  "tests": [' >> "${OUTPUT_FILE}.tmp"
 
-# Test 1: sudo (priv_esc key)
 run_test "1" "sudo execution" "priv_esc" "sudo -n true"
-
-# Test 2: shadow access (identity key)
 run_test "2" "shadow access" "identity" "cat /etc/shadow"
-
-# Test 3: wget AND curl execution (suspicious_download key)
 run_test "3" "suspicious download tool" "suspicious_download" "wget --version; curl --version"
-
-# Test 4: sshd_config read (sshd_config key)
 run_test "4" "sshd config read" "sshd_config" "cat /etc/ssh/sshd_config"
 
-# Test 5: monitored file write (meddefense_db key)
 echo "# MedDefense billing test" > "${TEST_FILE}"
 run_test "5" "monitored test file write" "meddefense_db" "echo 'test' >> ${TEST_FILE}"
 
-# Test 6: cron config check (cron_jobs key)
 run_test "6" "cron configuration check" "cron_jobs" "cat /etc/crontab"
 
-# Remove trailing comma, close JSON
 sed -i '$ s/,$//' "${OUTPUT_FILE}.tmp"
 cat >> "${OUTPUT_FILE}.tmp" << EOF
   ],
@@ -89,7 +92,7 @@ EOF
 mv "${OUTPUT_FILE}.tmp" "${OUTPUT_FILE}"
 
 echo "[*] Cleaning test artifacts..."
-rm -rf "${TMP_TEST_DIR}"
+cleanup
 
 echo ""
 echo "======================================================================"

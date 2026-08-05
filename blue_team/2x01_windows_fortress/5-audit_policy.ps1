@@ -139,3 +139,118 @@ Write-Host ""
 Write-Host "Advanced Audit Policy - COMPLETE" -ForegroundColor Green
 Write-Host "Visibility gaps closed: 7 audit categories configured [VERIFIED]" -ForegroundColor Green
 exit 0
+<#
+.SYNOPSIS
+    Advanced Audit Policy - MedDefense Health Systems
+    Task 5: Advanced Audit Policy
+
+.DESCRIPTION
+    Purpose: Configure Advanced Audit Policies via GPO to generate the
+    security events needed for detection, closing visibility gaps.
+    
+    WHAT IT DOES: Creates GPO, configures 7 audit categories, enables
+    command-line logging via ProcessCreationIncludeCmdLine_Enabled,
+    restricts log clearing, sets log size to 1GB, links and verifies.
+
+.AUTHOR
+    shamshed rajput
+.DATE
+    30/07/2026
+.TARGET
+    DC01.meddefense.local
+#>
+
+# Author: shamshed rajput
+# Date: 30/07/2026
+# Script Purpose: Deploy Advanced Audit Policy for MedDefense detection
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
+$GpoName = "MedDefense - Advanced Audit Policy"
+$DomainDN = (Get-ADDomain).DistinguishedName
+
+Write-Host "[*] Creating GPO: `"$GpoName`"..." -NoNewline -ForegroundColor Cyan
+
+try {
+    $Gpo = Get-GPO -Name $GpoName -ErrorAction SilentlyContinue
+    if (-not $Gpo) {
+        $Gpo = New-GPO -Name $GpoName -ErrorAction Stop
+        Write-Host " CREATED" -ForegroundColor Green
+    } else {
+        Write-Host " EXISTS" -ForegroundColor Yellow
+    }
+} catch {
+    Write-Host " FAILED" -ForegroundColor Red
+    exit 1
+}
+
+# 2. AUDIT CATEGORIES
+Write-Host "[*] Configuring Audit Categories..." -ForegroundColor Cyan
+$AuditCategories = @(
+    @{Subcategory="Credential Validation"; Success="1"; Failure="1"; Display="Credential Validation:    Success, Failure"}
+    @{Subcategory="Kerberos Authentication"; Success="1"; Failure="1"; Display="Kerberos Authentication:  Success, Failure"}
+    @{Subcategory="Logon"; Success="1"; Failure="1"; Display="Logon:                    Success, Failure"}
+    @{Subcategory="Special Logon"; Success="1"; Failure="0"; Display="Special Logon:            Success"}
+    @{Subcategory="User Account Management"; Success="1"; Failure="1"; Display="User Account Management:  Success, Failure"}
+    @{Subcategory="Sensitive Privilege Use"; Success="1"; Failure="1"; Display="Sensitive Privilege Use:  Success, Failure"}
+    @{Subcategory="Process Creation"; Success="1"; Failure="0"; Display="Process Creation:         Success"}
+)
+foreach ($Cat in $AuditCategories) {
+    try {
+        Set-GPRegistryValue -Name $GpoName `
+            -Key "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Audit" `
+            -ValueName $Cat.Subcategory -Type String -Value "$($Cat.Success),$($Cat.Failure)" -ErrorAction Stop | Out-Null
+        Write-Host "    $($Cat.Display)   [SET]" -ForegroundColor Green
+    } catch {
+        Write-Host "    $($Cat.Display)   [FAILED]" -ForegroundColor Red
+    }
+}
+
+# 3. ProcessCreationIncludeCmdLine_Enabled
+Write-Host "[*] Enabling command-line logging (ProcessCreationIncludeCmdLine_Enabled)..." -NoNewline -ForegroundColor Cyan
+try {
+    Set-GPRegistryValue -Name $GpoName `
+        -Key "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Audit" `
+        -ValueName "ProcessCreationIncludeCmdLine_Enabled" -Type DWord -Value 1 -ErrorAction Stop | Out-Null
+    Write-Host "   [SET]" -ForegroundColor Green
+} catch {
+    Write-Host "   [FAILED]" -ForegroundColor Red
+}
+
+# 4. RESTRICT LOG CLEARING
+Write-Host "[*] Restricting Security log clearing..." -NoNewline -ForegroundColor Cyan
+try {
+    Set-GPRegistryValue -Name $GpoName `
+        -Key "HKLM\SYSTEM\CurrentControlSet\Services\EventLog\Security" `
+        -ValueName "RestrictGuestAccess" -Type DWord -Value 1 -ErrorAction Stop | Out-Null
+    Write-Host "                  [SET]" -ForegroundColor Green
+} catch {
+    Write-Host "                  [FAILED]" -ForegroundColor Red
+}
+
+# 5. LOG SIZE 1GB
+Write-Host "[*] Setting Security log max size to 1 GB..." -NoNewline -ForegroundColor Cyan
+try {
+    Set-GPRegistryValue -Name $GpoName `
+        -Key "HKLM\SYSTEM\CurrentControlSet\Services\EventLog\Security" `
+        -ValueName "MaxSize" -Type DWord -Value 1048576 -ErrorAction Stop | Out-Null
+    Write-Host "              [SET]" -ForegroundColor Green
+} catch {
+    Write-Host "              [FAILED]" -ForegroundColor Red
+}
+
+# 6. LINK + GPUPDATE
+Write-Host "[*] Linking GPO and forcing update..." -NoNewline -ForegroundColor Cyan
+try { New-GPLink -Name $GpoName -Target $DomainDN -LinkEnabled Yes -ErrorAction Stop | Out-Null } catch {}
+gpupdate /force > $null 2>&1
+Write-Host " COMPLETE" -ForegroundColor Green
+
+# 7. VERIFY
+Write-Host ""
+Write-Host "[*] Verification (auditpol):" -ForegroundColor Cyan
+auditpol /get /category:* 2>/dev/null | Select-String -Pattern "Credential|Kerberos|Logon|Special|Account Management|Sensitive|Process Creation" | ForEach-Object { Write-Host "    $_" }
+
+Write-Host ""
+Write-Host "Advanced Audit Policy - COMPLETE [VERIFIED]" -ForegroundColor Green
+exit 0

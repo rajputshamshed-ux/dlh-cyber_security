@@ -19,6 +19,8 @@ set -euo pipefail
 #              audit evidence, Crimson Tide emergency hardening of 3 servers
 #              in 2 hours with a single command instead of 13 manual steps.
 # ATTACKS BLOCKED: All Crimson Tide phases (1-7) through layered hardening.
+# OUTPUT FILES: hardening_run.json - detailed step-by-step log with timing
+#               hardening_improvement.json - before/after Lynis delta
 # ==============================================================================
 # Analyst: shamshed rajput
 # Date: 30/07/2026
@@ -63,9 +65,9 @@ SCRIPTS=(
 STEPS_SCHEDULED=${#SCRIPTS[@]}
 
 # ------------------------------------------------------------------------------
-# PRE-CHECKS: Verify all required scripts exist
+# PRE-CHECKS: Verify all required scripts exist before we start
 # ------------------------------------------------------------------------------
-echo "[*] Running pre-checks..."
+echo "[*] Running pre-checks before we start..."
 
 MISSING=0
 for script in "${SCRIPTS[@]}"; do
@@ -99,8 +101,10 @@ fi
 echo "Before Lynis score: ${BEFORE_SCORE}"
 
 # ------------------------------------------------------------------------------
-# START JSON LOG
+# START JSON LOG - will be written to hardening_run.json
 # ------------------------------------------------------------------------------
+echo "[*] Starting JSON log: ${RUN_LOG}"
+
 cat > "${TEMP_DIR}/run_log.json" << EOF
 {
   "metadata": {
@@ -182,7 +186,7 @@ echo "After Lynis score: ${AFTER_SCORE}"
 echo "Delta: ${DELTA}"
 
 # ------------------------------------------------------------------------------
-# CLOSE JSON LOG
+# CLOSE JSON LOG AND WRITE hardening_run.json
 # ------------------------------------------------------------------------------
 cat >> "${TEMP_DIR}/run_log.json" << EOF
   ],
@@ -198,9 +202,10 @@ EOF
 
 mv "${TEMP_DIR}/run_log.json" "${SCRIPT_DIR}/${RUN_LOG}"
 chmod 644 "${SCRIPT_DIR}/${RUN_LOG}"
+echo "[*] Run log saved to: ${RUN_LOG}"
 
 # ------------------------------------------------------------------------------
-# BUILD IMPROVEMENT JSON
+# BUILD hardening_improvement.json
 # ------------------------------------------------------------------------------
 cat > "${SCRIPT_DIR}/${IMPROVEMENT_LOG}" << EOF
 {
@@ -219,6 +224,7 @@ cat > "${SCRIPT_DIR}/${IMPROVEMENT_LOG}" << EOF
 EOF
 
 chmod 644 "${SCRIPT_DIR}/${IMPROVEMENT_LOG}"
+echo "[*] Improvement saved to: ${IMPROVEMENT_LOG}"
 
 # ------------------------------------------------------------------------------
 # CLEANUP

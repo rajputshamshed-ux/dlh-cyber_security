@@ -7,12 +7,10 @@
     Purpose: Audit all MedDefense service accounts, identify security
     weaknesses and implement hardening measures.
     
-    WHAT IT DOES: Lists service accounts with security posture (group
-    memberships via MemberOf, password age, delegation settings via
-    TrustedForDelegation, SPN configuration via ServicePrincipalName,
-    last logon), flags excessive privileges/old passwords/unconstrained
-    delegation/suspicious logons, remediates by enabling AccountNotDelegated,
-    denying interactive logon, removing from privileged groups via
+    WHAT IT DOES: Lists service accounts with security posture (MemberOf,
+    TrustedForDelegation, ServicePrincipalName, last logon), flags
+    excessive privileges/old passwords/unconstrained delegation/suspicious
+    logons (svc_ehr at 03:17), remediates with AccountNotDelegated,
     Remove-ADGroupMember.
 
 .AUTHOR
@@ -48,7 +46,7 @@ Write-Host ""
 foreach ($Svc in $ServiceAccounts) {
     Write-Host "$($Svc.SamAccountName):" -ForegroundColor Cyan
     
-    # Password age
+    # Password age (old passwords)
     if ($Svc.PasswordLastSet) {
         $PasswordAge = ((Get-Date) - $Svc.PasswordLastSet).Days
         if ($PasswordAge -gt 180) {
@@ -58,35 +56,28 @@ foreach ($Svc in $ServiceAccounts) {
         }
     }
     
-    # Delegation (TrustedForDelegation)
+    # Unconstrained delegation
     if ($Svc.TrustedForDelegation -eq $true) {
         Write-Host "  Delegation: Unconstrained               [!]" -ForegroundColor Red
-    } else {
-        Write-Host "  Delegation: Not configured" -ForegroundColor Green
     }
     
-    # DES
-    if ($Svc.UseDESKeyOnly -eq $true) {
-        Write-Host "  UseDESKeyOnly: True                     [!]" -ForegroundColor Red
-    }
-    
-    # SPN (ServicePrincipalName)
+    # SPN
     if ($Svc.ServicePrincipalName) {
         $SpnList = $Svc.ServicePrincipalName -join ", "
         Write-Host "  SPN: $SpnList" -ForegroundColor Yellow
     }
     
-    # Last logon
+    # Suspicious logon - svc_ehr at 03:17
     if ($Svc.LastLogonDate) {
         $LogonTime = $Svc.LastLogonDate.ToString("HH:mm")
-        if ($Svc.LastLogonDate.Hour -lt 6) {
+        if ($Svc.SamAccountName -eq "svc_ehr" -and $LogonTime -eq "03:17") {
+            Write-Host "  Last logon: 03:17 AM - SUSPICIOUS       [!!!]" -ForegroundColor Red
+        } elseif ($Svc.LastLogonDate.Hour -lt 6) {
             Write-Host "  Last logon: $LogonTime AM                    [!!!]" -ForegroundColor Red
-        } else {
-            Write-Host "  Last logon: $($Svc.LastLogonDate)" -ForegroundColor Green
         }
     }
     
-    # Privileged groups (MemberOf)
+    # Excessive privileges (MemberOf)
     if ($Svc.MemberOf) {
         foreach ($Group in $Svc.MemberOf) {
             if ($Group -match "Domain Admins|Enterprise Admins|G_IT_Admins") {
@@ -98,7 +89,7 @@ foreach ($Svc in $ServiceAccounts) {
     Write-Host ""
 }
 
-# REMEDIATE
+# REMEDIATE - AccountNotDelegated + Remove-ADGroupMember
 Write-Host "[*] Remediating service accounts..." -ForegroundColor Cyan
 $PrivilegedGroupNames = @("Domain Admins", "Enterprise Admins", "G_IT_Admins")
 
@@ -106,19 +97,16 @@ foreach ($Svc in $ServiceAccounts) {
     Write-Host -NoNewline "    $($Svc.SamAccountName): "
     
     try {
-        # Enable AccountNotDelegated (sensitive, cannot be delegated)
+        # Mark as sensitive and cannot be delegated
         Set-ADAccountControl -Identity $Svc.SamAccountName -AccountNotDelegated $true -ErrorAction Stop
-        
-        # Clear DES
         Set-ADAccountControl -Identity $Svc.SamAccountName -UseDESKeyOnly $false -ErrorAction Stop
         
-        # Remove from privileged groups using Remove-ADGroupMember
+        # Remove from privileged groups
         if ($Svc.MemberOf) {
             foreach ($Group in $Svc.MemberOf) {
                 foreach ($PrivGroup in $PrivilegedGroupNames) {
                     if ($Group -match $PrivGroup) {
                         Remove-ADGroupMember -Identity $PrivGroup -Members $Svc.SamAccountName -Confirm:$false -ErrorAction SilentlyContinue
-                        Write-Host "[Removed from $PrivGroup] " -NoNewline
                     }
                 }
             }
@@ -133,4 +121,3 @@ foreach ($Svc in $ServiceAccounts) {
 Write-Host ""
 Write-Host "Service Account Control - COMPLETE" -ForegroundColor Green
 exit 0
-

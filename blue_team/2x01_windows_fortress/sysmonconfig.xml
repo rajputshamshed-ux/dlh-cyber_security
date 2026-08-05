@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Sysmon schemaversion="4.70">
+  <EventFiltering>
+    <!-- Process Creation (Event ID 1) -->
+    <ProcessCreate onmatch="exclude"/>
+    
+    <!-- File Creation (Event ID 11) - Monitor executables in temp dirs -->
+    <FileCreate onmatch="exclude">
+        <TargetFilename condition="contains">\Windows\Temp\</TargetFilename>
+        <TargetFilename condition="contains">\AppData\Local\Temp\</TargetFilename>
+        <TargetFilename condition="contains">\Downloads\</TargetFilename>
+    </FileCreate>
+    
+    <!-- Network Connections (Event ID 3) -->
+    <NetworkConnect onmatch="exclude"/>
+    
+    <!-- Process Termination (Event ID 5) -->
+    <ProcessTerminate onmatch="exclude"/>
+    
+    <!-- Driver Load (Event ID 6) -->
+    <DriverLoad onmatch="exclude"/>
+    
+    <!-- Image Load (Event ID 7) - DLL loading -->
+    <ImageLoad onmatch="exclude"/>
+    
+    <!-- Remote Thread Creation (Event ID 8) -->
+    <CreateRemoteThread onmatch="exclude"/>
+    
+    <!-- Raw Disk Access (Event ID 9) -->
+    <RawAccessRead onmatch="exclude"/>
+    
+    <!-- Process Access (Event ID 10) -->
+    <ProcessAccess onmatch="exclude"/>
+    
+    <!-- Registry Events (Event ID 13) -->
+    <RegistryEvent onmatch="exclude">
+        <!-- Persistence keys -->
+        <TargetObject condition="contains">\Run\</TargetObject>
+        <TargetObject condition="contains">\RunOnce\</TargetObject>
+        <TargetObject condition="contains">\Winlogon\Shell</TargetObject>
+        <TargetObject condition="contains">\Services\</TargetObject>
+    </RegistryEvent>
+    
+    <!-- WMI Events (Event ID 19) -->
+    <WmiEvent onmatch="exclude"/>
+    
+    <!-- DNS Queries (Event ID 22) -->
+    <DnsQuery onmatch="exclude"/>
+  </EventFiltering>
+</Sysmon>

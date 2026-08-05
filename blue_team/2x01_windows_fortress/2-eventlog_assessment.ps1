@@ -50,7 +50,7 @@ $CriticalEvents = @(
     [PSCustomObject]@{ EventID = 4624; Description = "Successful Logon"; Subcategory = "Logon" }
     [PSCustomObject]@{ EventID = 4625; Description = "Failed Logon"; Subcategory = "Logon" }
     [PSCustomObject]@{ EventID = 4648; Description = "Explicit Credentials"; Subcategory = "Logon" }
-    [PSCustomObject]@{ EventID = 4688; Description = "Process Creation"; Subcategory = "Process Creation" }
+    [PSCustomObject]@{ EventID = 4688; Description = "Process Creation"; Subcategory = "Process Tracking" }
     [PSCustomObject]@{ EventID = 4720; Description = "Account Created"; Subcategory = "Account Management" }
     [PSCustomObject]@{ EventID = 4726; Description = "Account Deleted"; Subcategory = "Account Management" }
     [PSCustomObject]@{ EventID = 4732; Description = "Member Added to Group"; Subcategory = "Account Management" }
@@ -61,7 +61,7 @@ $CriticalEvents = @(
 # ------------------------------------------------------------------------------
 # GET AUDIT POLICY CONFIGURATION
 # ------------------------------------------------------------------------------
-Write-Host "[*] Checking audit policy configuration..." -ForegroundColor Cyan
+Write-Host "[*] Checking audit policy configuration with auditpol..." -ForegroundColor Cyan
 $AuditPolOutput = auditpol /get /category:* 2>/dev/null | Out-String
 
 # ------------------------------------------------------------------------------
@@ -70,7 +70,6 @@ $AuditPolOutput = auditpol /get /category:* 2>/dev/null | Out-String
 Write-Host "[*] Querying Security log for last 24 hours..." -ForegroundColor Cyan
 $StartTime = (Get-Date).AddHours(-24)
 
-# Get all security events from last 24h
 try {
     $RecentEvents = Get-WinEvent -FilterHashtable @{
         LogName = 'Security'
@@ -80,7 +79,6 @@ try {
     $RecentEvents = $null
 }
 
-# Build set of Event IDs that actually appear
 $GeneratingIDs = @()
 if ($RecentEvents) {
     $GeneratingIDs = ($RecentEvents | Group-Object Id | Select-Object Name).Name
@@ -97,12 +95,9 @@ foreach ($Event in $CriticalEvents) {
     $Description = $Event.Description
     $Subcategory = $Event.Subcategory
     
-    # Determine status
     $Status = "[NOT CONFIGURED]"
     
-    # Check if audit subcategory is enabled
     if ($AuditPolOutput -match $Subcategory) {
-        # Check if events have been generated
         if ($GeneratingIDs -contains $EventID.ToString()) {
             $Status = "[GENERATING]"
         } else {

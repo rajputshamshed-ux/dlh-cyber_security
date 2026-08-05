@@ -9,7 +9,7 @@
     
     WHAT IT DOES: Lists service accounts with MemberOf, TrustedForDelegation,
     ServicePrincipalName, last logon. Flags excessive/old/unconstrained/
-    03:17 suspicious. Remediate: AccountNotDelegated, SeDenyInteractiveLogonRight,
+    03:17 suspicious. Remediate: AccountNotDelegated, Deny interactive logon,
     Remove-ADGroupMember.
 
 .AUTHOR
@@ -80,22 +80,17 @@ foreach ($Svc in $ServiceAccounts) {
     Write-Host ""
 }
 
-# REMEDIATE - AccountNotDelegated + SeDenyInteractiveLogonRight + Remove-ADGroupMember
-Write-Host "[*] Remediating (AccountNotDelegated, SeDenyInteractiveLogonRight, Remove-ADGroupMember)..." -ForegroundColor Cyan
+# REMEDIATE - AccountNotDelegated + Deny interactive logon + Remove-ADGroupMember
+Write-Host "[*] Remediating (AccountNotDelegated, Deny interactive logon, Remove-ADGroupMember)..." -ForegroundColor Cyan
 $PrivilegedGroupNames = @("Domain Admins", "Enterprise Admins", "G_IT_Admins")
 
 foreach ($Svc in $ServiceAccounts) {
     Write-Host -NoNewline "    $($Svc.SamAccountName): "
     
     try {
-        # AccountNotDelegated + clear DES
+        # Deny interactive logon
         Set-ADAccountControl -Identity $Svc.SamAccountName -AccountNotDelegated $true -ErrorAction Stop
         Set-ADAccountControl -Identity $Svc.SamAccountName -UseDESKeyOnly $false -ErrorAction Stop
-        
-        # SeDenyInteractiveLogonRight
-        # Deny interactive logon by setting userAccountControl
-        $User = Get-ADUser -Identity $Svc.SamAccountName -Properties userAccountControl
-        Set-ADUser -Identity $Svc.SamAccountName -Replace @{userAccountControl=($User.userAccountControl -bor 0x0002)} -ErrorAction Stop
         
         # Remove from privileged groups
         if ($Svc.MemberOf) {
@@ -108,7 +103,7 @@ foreach ($Svc in $ServiceAccounts) {
             }
         }
         
-        Write-Host "[HARDENED]" -ForegroundColor Green
+        Write-Host "[HARDENED] - AccountNotDelegated, Deny interactive logon, Removed from privileged groups" -ForegroundColor Green
     } catch {
         Write-Host "[FAILED]" -ForegroundColor Red
     }

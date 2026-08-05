@@ -16,6 +16,7 @@ fi
 OUTPUT_FILE="audit_validation.json"
 TMP_TEST_DIR="/tmp/meddefense-audit-test-$$"
 TEST_FILE="${TMP_TEST_DIR}/test_billing.cfg"
+TEST_USER="audittest_$$"
 TESTS_EXECUTED=0
 TESTS_CAPTURED=0
 TESTS_MISSED=0
@@ -25,7 +26,13 @@ TESTS_MISSED=0
 # ------------------------------------------------------------------------------
 cleanup() {
     echo "[*] Running cleanup..."
+    # Remove test artifacts
     rm -rf "${TMP_TEST_DIR}"
+    # Remove test user if exists
+    if id "${TEST_USER}" >/dev/null 2>&1; then
+        userdel -r "${TEST_USER}" 2>/dev/null || true
+        echo "    Test user ${TEST_USER} removed"
+    fi
 }
 trap cleanup EXIT
 
@@ -76,6 +83,8 @@ run_test "4" "sshd config read" "sshd_config" "cat /etc/ssh/sshd_config"
 echo "# MedDefense billing test" > "${TEST_FILE}"
 run_test "5" "monitored test file write" "meddefense_db" "echo 'test' >> ${TEST_FILE}"
 
+# Create a test user to trigger identity audit event, then cleanup
+useradd -m "${TEST_USER}" 2>/dev/null || true
 run_test "6" "cron configuration check" "cron_jobs" "cat /etc/crontab"
 
 sed -i '$ s/,$//' "${OUTPUT_FILE}.tmp"

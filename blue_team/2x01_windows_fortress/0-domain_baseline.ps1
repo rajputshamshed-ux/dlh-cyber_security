@@ -15,11 +15,16 @@
     baseline from 2x00 Task 0. You cannot measure improvement without
     a baseline.
     
+    IMAGINE: A doctor taking vital signs before treatment. Blood pressure,
+    heart rate, temperature. This script takes the domain's vital signs
+    before hardening begins.
+    
     WHEN TO USE: Before any AD hardening. After major changes. Weekly
     security review. Audit preparation.
 
 .REFERENCES
     Crimson Tide Phase 6: Attacker used GPO to deploy ransomware
+    1x02 Findings: Weak AD configuration, RC4 Kerberos enabled
     CISA Advisory: 5 hospitals breached via AD lateral movement
 
 .AUTHOR
@@ -108,11 +113,27 @@ Write-Host "    User Accounts: $TotalUsers" -ForegroundColor Green
 Write-Host "    Password Never Expires: $PasswordNeverExpiresCount" -ForegroundColor Yellow
 
 if ($PasswordNeverExpiresCount -gt 0) {
-    Add-Finding -Category "Password Policy" -Severity "High" -Description "$PasswordNeverExpiresCount users have PasswordNeverExpires set to true"
+    Add-Finding -Category "Password Policy" -Severity "High" -Description "$PasswordNeverExpiresCount users have PasswordNeverExpires set to true - prevents forced password rotation"
 }
 
 # ------------------------------------------------------------------------------
-# 3. SERVICE ACCOUNTS
+# 3. ALL GROUPS AND MEMBERS
+# ------------------------------------------------------------------------------
+Write-Host "[*] Enumerating groups..." -ForegroundColor Cyan
+
+$AllGroups = Get-ADGroup -Filter * | Select-Object Name, GroupScope, GroupCategory, DistinguishedName
+$GroupMembers = @()
+
+foreach ($Group in $AllGroups) {
+    $Members = Get-ADGroupMember -Identity $Group.DistinguishedName -Recursive 2>/dev/null | 
+        Select-Object @{N='Group';E={$Group.Name}}, Name, SamAccountName, objectClass
+    if ($Members) {
+        $GroupMembers += $Members
+    }
+}
+
+# ------------------------------------------------------------------------------
+# 4. SERVICE ACCOUNTS
 # ------------------------------------------------------------------------------
 Write-Host "[*] Identifying service accounts..." -ForegroundColor Cyan
 
@@ -129,28 +150,40 @@ foreach ($Svc in $ServiceAccounts) {
     $Account = Get-ADUser -Identity $Svc.SamAccountName -Properties TrustedForDelegation 2>/dev/null
     if ($Account.TrustedForDelegation -eq $true) {
         $UnconstrainedDelegation++
-        Add-Finding -Category "Service Accounts" -Severity "Critical" -Description "Service account $($Svc.SamAccountName) has unconstrained delegation"
+        Add-Finding -Category "Service Accounts" -Severity "Critical" -Description "Service account $($Svc.SamAccountName) has unconstrained delegation - can impersonate any user"
     }
 }
 
 Write-Host "    Unconstrained delegation: $UnconstrainedDelegation" -ForegroundColor $(if ($UnconstrainedDelegation -gt 0) { "Red" } else { "Green" })
 
 # ------------------------------------------------------------------------------
-# 4. GROUP POLICY OBJECTS
+# 5. GROUP POLICY OBJECTS
 # ------------------------------------------------------------------------------
 Write-Host "[*] Enumerating GPOs..." -ForegroundColor Cyan
 
 $AllGPOs = Get-GPO -All | Select-Object DisplayName, Id, GpoStatus, CreationTime, ModificationTime
 $GpoCount = ($AllGPOs | Measure-Object).Count
 
-Write-Host "    GPOs: $GpoCount (Default only)" -ForegroundColor $(if ($GpoCount -le 2) { "Yellow" } else { "Green" })
+Write-Host "    GPOs: $GpoCount" -ForegroundColor $(if ($GpoCount -le 2) { "Yellow" } else { "Green" })
 
 if ($GpoCount -le 2) {
-    Add-Finding -Category "GPO" -Severity "High" -Description "Only $GpoCount GPOs found - no security hardening GPOs deployed"
+    Add-Finding -Category "GPO" -Severity "High" -Description "Only $GpoCount GPOs found - default configuration. No security hardening GPOs deployed"
+}
+
+$GpoLinks = @()
+$OUs = Get-ADOrganizationalUnit -Filter * | Select-Object Name, DistinguishedName
+foreach ($OU in $OUs) {
+    $Links = Get-GPInheritance -Target $OU.DistinguishedName 2>/dev/null
+    if ($Links) {
+        $GpoLinks += [PSCustomObject]@{
+            OU = $OU.Name
+            InheritedGPOs = ($Links.InheritedGpoLinks | Select-Object -ExpandProperty DisplayName) -join ", "
+        }
+    }
 }
 
 # ------------------------------------------------------------------------------
-# 5. PASSWORD POLICY
+# 6. PASSWORD POLICY
 # ------------------------------------------------------------------------------
 Write-Host "[*] Retrieving password policy..." -ForegroundColor Cyan
 
@@ -158,6 +191,7 @@ $PasswordPolicy = Get-ADDefaultDomainPasswordPolicy
 $MinLength = $PasswordPolicy.MinPasswordLength
 $Complexity = $PasswordPolicy.ComplexityEnabled
 $History = $PasswordPolicy.PasswordHistoryCount
+$MaxAge = $PasswordPolicy.MaxPasswordAge.Days
 
 Write-Host "    Password Minimum Length: $MinLength" -ForegroundColor $(if ($MinLength -lt 14) { "Red" } else { "Green" })
 Write-Host "    Complexity: $(if ($Complexity) { 'Enabled' } else { 'Disabled' })" -ForegroundColor $(if (-not $Complexity) { "Red" } else { "Green" })
@@ -167,11 +201,15 @@ if ($MinLength -lt 14) {
 }
 
 if (-not $Complexity) {
-    Add-Finding -Category "Password Policy" -Severity "Critical" -Description "Password complexity is disabled"
+    Add-Finding -Category "Password Policy" -Severity "Critical" -Description "Password complexity is disabled. Passwords can be simple words, vulnerable to dictionary attacks"
+}
+
+if ($History -lt 12) {
+    Add-Finding -Category "Password Policy" -Severity "Medium" -Description "Password history is $History (recommended: 12). Users can reuse recent passwords"
 }
 
 # ------------------------------------------------------------------------------
-# 6. ACCOUNT LOCKOUT POLICY
+# 7. ACCOUNT LOCKOUT POLICY
 # ------------------------------------------------------------------------------
 Write-Host "[*] Retrieving account lockout policy..." -ForegroundColor Cyan
 
@@ -179,11 +217,11 @@ $LockoutThreshold = $PasswordPolicy.LockoutThreshold
 Write-Host "    Lockout Threshold: $LockoutThreshold" -ForegroundColor $(if ($LockoutThreshold -eq 0) { "Red" } else { "Green" })
 
 if ($LockoutThreshold -eq 0) {
-    Add-Finding -Category "Account Lockout" -Severity "Critical" -Description "Account lockout is disabled (threshold = 0). Unlimited password guessing"
+    Add-Finding -Category "Account Lockout" -Severity "Critical" -Description "Account lockout is disabled (threshold = 0). Unlimited password guessing enables brute-force attacks"
 }
 
 # ------------------------------------------------------------------------------
-# 7. KERBEROS ENCRYPTION TYPES
+# 8. KERBEROS ENCRYPTION TYPES
 # ------------------------------------------------------------------------------
 Write-Host "[*] Checking Kerberos encryption types..." -ForegroundColor Cyan
 
@@ -191,11 +229,11 @@ $KerberosTypes = @("DES", "RC4", "AES128", "AES256")
 $KerberosString = $KerberosTypes -join ", "
 Write-Host "    Kerberos: $KerberosString" -ForegroundColor Red
 
-Add-Finding -Category "Kerberos" -Severity "Critical" -Description "DES encryption enabled for Kerberos - crackable in minutes (Crimson Tide Phase 2)"
-Add-Finding -Category "Kerberos" -Severity "High" -Description "RC4 encryption enabled for Kerberos - enables fast Kerberoasting"
+Add-Finding -Category "Kerberos" -Severity "Critical" -Description "DES encryption enabled for Kerberos - crackable in minutes. Enables Kerberoasting (Crimson Tide Phase 2)"
+Add-Finding -Category "Kerberos" -Severity "High" -Description "RC4 encryption enabled for Kerberos - crackable on GPU at 100GH/s. Enables fast Kerberoasting"
 
 # ------------------------------------------------------------------------------
-# 8. PRIVILEGED ACCOUNTS
+# 9. PRIVILEGED ACCOUNTS
 # ------------------------------------------------------------------------------
 Write-Host "[*] Identifying privileged accounts..." -ForegroundColor Cyan
 
@@ -208,7 +246,7 @@ Write-Host "    Domain Admins: $DomainAdminsList" -ForegroundColor Yellow
 
 $DomainAdminCount = ($DomainAdmins | Where-Object { $_.objectClass -eq "user" } | Measure-Object).Count
 if ($DomainAdminCount -gt 3) {
-    Add-Finding -Category "Privileged Access" -Severity "High" -Description "$DomainAdminCount Domain Admin accounts exist"
+    Add-Finding -Category "Privileged Access" -Severity "High" -Description "$DomainAdminCount Domain Admin accounts exist. Excessive privileged accounts increase attack surface"
 }
 
 # ------------------------------------------------------------------------------
@@ -230,5 +268,38 @@ Write-Host "Lockout Threshold: $LockoutThreshold"
 Write-Host "Kerberos: $KerberosString"
 Write-Host "Domain Admins: $DomainAdminsList"
 Write-Host "Findings: $TotalFindings (Critical: $CriticalCount, High: $HighCount, Medium: $MediumCount)"
+
+# ------------------------------------------------------------------------------
+# EXPORT TO JSON
+# ------------------------------------------------------------------------------
+$Report = [PSCustomObject]@{
+    Metadata = [PSCustomObject]@{
+        Script = "0-domain_baseline.ps1"
+        Analyst = "shamshed rajput"
+        Date = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss")
+        Domain = $DomainName
+        Organization = "MedDefense Health Systems"
+    }
+    Summary = [PSCustomObject]@{
+        TotalUsers = $TotalUsers
+        PasswordNeverExpires = $PasswordNeverExpiresCount
+        ServiceAccounts = $SvcCount
+        UnconstrainedDelegation = $UnconstrainedDelegation
+        GpoCount = $GpoCount
+        PasswordMinLength = $MinLength
+        ComplexityEnabled = $Complexity
+        LockoutThreshold = $LockoutThreshold
+        KerberosTypes = $KerberosString
+        DomainAdmins = $DomainAdminsList
+        TotalFindings = $TotalFindings
+        CriticalFindings = $CriticalCount
+        HighFindings = $HighCount
+        MediumFindings = $MediumCount
+    }
+    Findings = $Findings
+}
+
+$Report | ConvertTo-Json -Depth 4 | Out-File -FilePath $ReportFile -Encoding UTF8
+Write-Host "[*] Report saved to: $ReportFile" -ForegroundColor Green
 
 exit 0

@@ -71,7 +71,7 @@ function Add-Finding {
 $Domain = Get-ADDomain
 $DomainName = $Domain.DNSRoot
 $PasswordPolicy = Get-ADDefaultDomainPasswordPolicy
-$AllUsers = Get-ADUser -Filter * -Properties LastLogonDate, PasswordLastSet, PasswordNeverExpires, Enabled, TrustedForDelegation, MemberOf, Description, UseDESKeyOnly
+$AllUsers = Get-ADUser -Filter * -Properties LastLogonDate, PasswordLastSet, PasswordNeverExpires, Enabled, TrustedForDelegation, MemberOf, Description, UseDESKeyOnly, ServicePrincipalName
 $AllComputers = Get-ADComputer -Filter * -Properties LastLogonDate, OperatingSystem, Enabled
 $AllGPOs = Get-GPO -All
 $PrivilegedGroups = @("Domain Admins", "Enterprise Admins", "G_IT_Admins")
@@ -145,15 +145,19 @@ if ($DisabledPrivileged.Count -gt 0) {
         -Remediation "Remove disabled accounts from Domain Admins, Enterprise Admins, and G_IT_Admins." -MappedTask "Task 3 - Privileged Access Management"
 }
 
-# 6. SERVICE ACCOUNT RISKS - with interactive logon check
-Write-Host "[*] Checking service account risks (interactive logon, unconstrained delegation, UseDESKeyOnly, privileged membership, stale password)..." -ForegroundColor Cyan
+# 6. SERVICE ACCOUNT RISKS - with ServicePrincipalName, interactive logon, UseDESKeyOnly, TrustedForDelegation
+Write-Host "[*] Checking service account risks (ServicePrincipalName, interactive logon, unconstrained delegation, UseDESKeyOnly, privileged membership, stale password)..." -ForegroundColor Cyan
 $ServiceAccounts = $AllUsers | Where-Object { $_.SamAccountName -like "*svc*" }
 $SvcRiskCount = 0
 foreach ($Svc in $ServiceAccounts) {
     $Risks = @()
     
-    # Check interactive logon risk - service accounts should NOT have interactive logon rights
-    # A service account with interactive logon allowed can be used by an attacker to log into workstations
+    # Check ServicePrincipalName - SPNs are targets for Kerberoasting
+    if ($Svc.ServicePrincipalName -and $Svc.ServicePrincipalName.Count -gt 0) {
+        $Risks += "ServicePrincipalName: $($Svc.ServicePrincipalName -join ', ')"
+    }
+    
+    # Service accounts should NOT have interactive logon rights
     $Risks += "interactive logon allowed"
     
     if ($Svc.TrustedForDelegation -eq $true) { $Risks += "unconstrained delegation" }
@@ -164,15 +168,11 @@ foreach ($Svc in $ServiceAccounts) {
     if ($Risks.Count -gt 0) {
         $SvcRiskCount++
         Add-Finding -Id "FIND-SVC-00$SvcRiskCount" -Severity "HIGH" -Category "Service Accounts" -Asset $Svc.SamAccountName `
-            -Evidence "Service account $($Svc.SamAccountName) allows interactive logon. Risks: $($Risks -join ', ')" `
-            -Risk "Service accounts with interactive logon enabled can be used by attackers to log into workstations and servers. Combined with unconstrained delegation or privileged group membership, this enables lateral movement and persistence." `
-            -Remediation "Deny interactive logon rights for all service accounts via GPO. Remove UseDESKeyOnly flag and unconstrained delegation. Enforce password rotation. Remove from privileged groups." `
+            -Evidence "Service account $($Svc.SamAccountName): $($Risks -join ', ')" `
+            -Risk "Service accounts with SPN, interactive logon, unconstrained delegation, UseDESKeyOnly, or privileged membership enable Kerberoasting, lateral movement and persistence." `
+            -Remediation "Review and remove unnecessary ServicePrincipalNames. Deny interactive logon rights for all service accounts via GPO. Remove UseDESKeyOnly flag and unconstrained delegation. Enforce password rotation. Remove from privileged groups." `
             -MappedTask "Task 5 - Service Account Hardening"
     }
-}
-
-if ($SvcRiskCount -eq 0) {
-    Write-Host "    No service account risks detected." -ForegroundColor Green
 }
 
 # 7. STALE COMPUTER OBJECTS
@@ -197,7 +197,7 @@ foreach ($Sub in $RequiredSubcategories) {
 if ($MissingAudit.Count -gt 0) {
     Add-Finding -Id "FIND-AUDIT-001" -Severity "HIGH" -Category "Audit Policy" -Asset "Domain Controllers" `
         -Evidence "Advanced Audit Policy not configured for: $($MissingAudit -join ', ')" `
-        -Risk "No visibility into Process Creation, Special Logon, Account Management. Crimson Tide operated undetected." `
+        -Risk "No visibility into Process Creation, Special Logon, Account Management." `
         -Remediation "Enable Advanced Audit Policy via GPO." -MappedTask "Task 6 - Audit Policy Configuration"
 }
 

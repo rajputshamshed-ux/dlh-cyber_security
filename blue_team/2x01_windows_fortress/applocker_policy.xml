@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AppLockerPolicy Version="1">
+  <RuleCollection Type="Exe" EnforcementMode="AuditOnly">
+    <FilePathRule Id="00000000-0000-0000-0000-000000000001" Name="Allow Windows" UserOrGroupSid="S-1-1-0" Action="Allow">
+      <Conditions><FilePathCondition Path="%WINDIR%\*"/></Conditions>
+    </FilePathRule>
+    <FilePathRule Id="00000000-0000-0000-0000-000000000002" Name="Allow Program Files" UserOrGroupSid="S-1-1-0" Action="Allow">
+      <Conditions><FilePathCondition Path="%PROGRAMFILES%\*"/></Conditions>
+    </FilePathRule>
+    <FilePathRule Id="00000000-0000-0000-0000-000000000003" Name="Allow Program Files x86" UserOrGroupSid="S-1-1-0" Action="Allow">
+      <Conditions><FilePathCondition Path="%PROGRAMFILES(X86)%\*"/></Conditions>
+    </FilePathRule>
+    <FilePathRule Id="00000000-0000-0000-0000-000000000004" Name="Allow DicomViewer" UserOrGroupSid="S-1-1-0" Action="Allow">
+      <Conditions><FilePathCondition Path="C:\Program Files\MedImage\DicomViewer.exe"/></Conditions>
+    </FilePathRule>
+    <FilePathRule Id="00000000-0000-0000-0000-000000000005" Name="Deny All Exe" UserOrGroupSid="S-1-1-0" Action="Deny">
+      <Conditions><FilePathCondition Path="*"/></Conditions>
+    </FilePathRule>
+  </RuleCollection>
+  <RuleCollection Type="Script" EnforcementMode="AuditOnly">
+    <FilePathRule Id="10000000-0000-0000-0000-000000000001" Name="Allow Windows Scripts .ps1 .bat .cmd .vbs" UserOrGroupSid="S-1-1-0" Action="Allow">
+      <Conditions><FilePathCondition Path="%WINDIR%\*"/></Conditions>
+    </FilePathRule>
+    <FilePathRule Id="10000000-0000-0000-0000-000000000002" Name="Allow MedDefense Scripts .ps1 .bat .cmd .vbs" UserOrGroupSid="S-1-1-0" Action="Allow">
+      <Conditions><FilePathCondition Path="C:\MedDefense_Lab\Scripts\*"/></Conditions>
+    </FilePathRule>
+    <FilePathRule Id="10000000-0000-0000-0000-000000000003" Name="Deny All Scripts .ps1 .bat .cmd .vbs" UserOrGroupSid="S-1-1-0" Action="Deny">
+      <Conditions><FilePathCondition Path="*"/></Conditions>
+    </FilePathRule>
+  </RuleCollection>
+</AppLockerPolicy>

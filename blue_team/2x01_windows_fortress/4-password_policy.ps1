@@ -413,3 +413,118 @@ Write-Host "    LockoutThreshold: $($Pol.LockoutThreshold) | LockoutDuration: $(
 Write-Host ""
 Write-Host "Password and Lockout Policy - COMPLETE" -ForegroundColor Green
 exit 0
+<#
+.SYNOPSIS
+    Password and Lockout Policy - MedDefense Health Systems
+    Task 4: Password and Lockout Policy
+
+.DESCRIPTION
+    Purpose: Deploy a CIS-compliant password and account lockout policy
+    via Group Policy.
+
+.AUTHOR
+    shamshed rajput
+
+.DATE
+    30/07/2026
+
+.TARGET
+    DC01.meddefense.local
+#>
+
+# Author: shamshed rajput
+# Date: 30/07/2026
+# Script Purpose: Deploy CIS-compliant password and lockout policy for MedDefense
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
+$GpoName = "MedDefense - Password and Lockout Policy"
+$DomainDN = (Get-ADDomain).DistinguishedName
+
+Write-Host "[*] Creating GPO: `"$GpoName`"..." -NoNewline -ForegroundColor Cyan
+
+try {
+    $Gpo = Get-GPO -Name $GpoName -ErrorAction SilentlyContinue
+    if (-not $Gpo) {
+        $Gpo = New-GPO -Name $GpoName -ErrorAction Stop
+        Write-Host " CREATED" -ForegroundColor Green
+    } else {
+        Write-Host " EXISTS" -ForegroundColor Yellow
+    }
+} catch {
+    Write-Host " FAILED" -ForegroundColor Red
+    exit 1
+}
+
+# Password Policy
+Write-Host "[*] Configuring Password Policy..." -ForegroundColor Cyan
+$PasswordSettings = @(
+    @{Key="MinimumPasswordLength"; Value=14; Display="Minimum Length: 14"}
+    @{Key="ComplexityEnabled"; Value=$true; Display="Complexity: Enabled"}
+    @{Key="PasswordHistoryCount"; Value=24; Display="History: 24"}
+    @{Key="MaxPasswordAge"; Value="0"; Display="Maximum Age: 0"}
+    @{Key="MinPasswordAge"; Value="1"; Display="Minimum Age: 1 day"}
+)
+foreach ($Setting in $PasswordSettings) {
+    try {
+        Set-GPRegistryValue -Name $GpoName -Key "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" `
+            -ValueName $Setting.Key -Type DWord -Value $Setting.Value -ErrorAction Stop | Out-Null
+        Write-Host "    $($Setting.Display.PadRight(30)) [SET]" -ForegroundColor Green
+    } catch {
+        Write-Host "    $($Setting.Display.PadRight(30)) [FAILED]" -ForegroundColor Red
+    }
+}
+
+# Account Lockout
+Write-Host "[*] Configuring Account Lockout..." -ForegroundColor Cyan
+$LockoutSettings = @(
+    @{Key="LockoutBadCount"; Value=5; Display="Threshold: 5 attempts"}
+    @{Key="LockoutDuration"; Value=-15; Display="Duration: 15 minutes"}
+    @{Key="ResetLockoutCount"; Value=-15; Display="Reset Counter: 15 minutes"}
+    @{Key="LockoutObservationWindow"; Value=-15; Display="Observation Window: 15 minutes"}
+)
+foreach ($Setting in $LockoutSettings) {
+    try {
+        Set-GPRegistryValue -Name $GpoName -Key "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" `
+            -ValueName $Setting.Key -Type DWord -Value $Setting.Value -ErrorAction Stop | Out-Null
+        Write-Host "    $($Setting.Display.PadRight(30)) [SET]" -ForegroundColor Green
+    } catch {
+        Write-Host "    $($Setting.Display.PadRight(30)) [FAILED]" -ForegroundColor Red
+    }
+}
+
+# Link GPO
+Write-Host "[*] Linking GPO to domain root..." -NoNewline -ForegroundColor Cyan
+try {
+    New-GPLink -Name $GpoName -Target $DomainDN -LinkEnabled Yes -ErrorAction Stop | Out-Null
+    Write-Host " LINKED" -ForegroundColor Green
+} catch {
+    Write-Host " ALREADY LINKED" -ForegroundColor Yellow
+}
+
+# Force GPUpdate
+Write-Host "[*] Forcing Group Policy update..." -NoNewline -ForegroundColor Cyan
+gpupdate /force > $null 2>&1
+Write-Host " COMPLETE" -ForegroundColor Green
+
+# VERIFY EFFECTIVE POLICY
+Write-Host ""
+Write-Host "[*] VERIFY effective password and lockout policy..." -ForegroundColor Cyan
+$Pol = Get-ADDefaultDomainPasswordPolicy
+
+$MinLenOK = $Pol.MinPasswordLength -ge 14
+$ComplexOK = $Pol.ComplexityEnabled -eq $true
+$HistOK = $Pol.PasswordHistoryCount -ge 24
+$ThreshOK = $Pol.LockoutThreshold -ge 5
+$DurOK = $Pol.LockoutDuration.TotalMinutes -ge 15
+
+Write-Host "    Minimum Length: $($Pol.MinPasswordLength) $(if ($MinLenOK) { '[VERIFIED]' } else { '[FAIL]' })" -ForegroundColor $(if ($MinLenOK) { "Green" } else { "Red" })
+Write-Host "    Complexity: $(if ($Pol.ComplexityEnabled) { 'Enabled' } else { 'Disabled' }) $(if ($ComplexOK) { '[VERIFIED]' } else { '[FAIL]' })" -ForegroundColor $(if ($ComplexOK) { "Green" } else { "Red" })
+Write-Host "    History: $($Pol.PasswordHistoryCount) $(if ($HistOK) { '[VERIFIED]' } else { '[FAIL]' })" -ForegroundColor $(if ($HistOK) { "Green" } else { "Red" })
+Write-Host "    Lockout Threshold: $($Pol.LockoutThreshold) $(if ($ThreshOK) { '[VERIFIED]' } else { '[FAIL]' })" -ForegroundColor $(if ($ThreshOK) { "Green" } else { "Red" })
+Write-Host "    Lockout Duration: $($Pol.LockoutDuration.TotalMinutes) min $(if ($DurOK) { '[VERIFIED]' } else { '[FAIL]' })" -ForegroundColor $(if ($DurOK) { "Green" } else { "Red" })
+
+Write-Host ""
+Write-Host "Password and Lockout Policy - COMPLETE" -ForegroundColor Green
+exit 0

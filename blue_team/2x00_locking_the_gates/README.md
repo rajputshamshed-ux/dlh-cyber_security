@@ -472,3 +472,111 @@ Comments
 
 Please register or sign in to add a comment.
 
+## SYSTEM HARDENING
+
+### 1. CIS Benchmark
+**FR :** Un CIS Benchmark est un document de référence qui liste les configurations de sécurité recommandées pour un système spécifique (Ubuntu, Windows Server, etc.), organisé par sections numérotées. L'appliquer avec jugement professionnel signifie choisir les règles qui bloquent les menaces réelles (Crimson Tide) et documenter celles qu'on ignore, plutôt que d'appliquer aveuglément les 800 pages.
+
+**EN :** A CIS Benchmark is a reference document listing recommended security configurations for a specific system (Ubuntu, Windows Server, etc.), organized by numbered sections. Applying it with professional judgment means selecting rules that block real threats (Crimson Tide) and documenting skipped ones, rather than blindly applying all 800 pages.
+
+---
+
+### 2. SSH Hardening
+**FR :** Durcir SSH consiste à désactiver l'authentification par mot de passe (clé SSH obligatoire), interdire la connexion directe en root, limiter les utilisateurs autorisés, couper les sessions inactives après 10 minutes, et forcer le protocole SSH version 2. Cela bloque le mouvement latéral Crimson Tide Phase 3 qui utilise des identifiants volés.
+
+**EN :** Hardening SSH means disabling password authentication (key-only), prohibiting direct root login, restricting allowed users, cutting idle sessions after 10 minutes, and enforcing SSH protocol version 2. This blocks Crimson Tide Phase 3 lateral movement using stolen credentials.
+
+---
+
+### 3. Kernel Hardening (sysctl)
+**FR :** Durcir le noyau via sysctl active les SYN cookies contre les attaques DoS, désactive les redirections ICMP pour empêcher le détournement de trafic, coupe le routage IP pour bloquer l'utilisation du serveur comme pivot, active l'ASLR pour rendre les exploits mémoire imprévisibles, et restreint les core dumps pour éviter les fuites d'informations.
+
+**EN :** Kernel hardening via sysctl enables SYN cookies against DoS attacks, disables ICMP redirects to prevent traffic hijacking, turns off IP forwarding to block server pivoting, enables ASLR to make memory exploits unpredictable, and restricts core dumps to prevent information leaks.
+
+---
+
+### 4. Filesystem Permissions
+**FR :** Auditer les permissions du système de fichiers consiste à repérer les binaires SUID/SGID inutiles (qui s'exécutent en root), corriger les fichiers modifiables par tous, et appliquer les options de montage `noexec` (interdit l'exécution), `nosuid` (ignore les bits SUID), `nodev` (bloque les fichiers périphériques) sur `/tmp`, `/var/tmp` et `/dev/shm`.
+
+**EN :** Auditing filesystem permissions means finding unnecessary SUID/SGID binaries (which run as root), fixing world-writable files, and applying mount options `noexec` (blocks execution), `nosuid` (ignores SUID bits), `nodev` (blocks device files) on `/tmp`, `/var/tmp`, and `/dev/shm`.
+
+---
+
+### 5. AppArmor Profiles
+**FR :** Configurer AppArmor en mode enforce confine chaque service exposé (Apache, MySQL) à ses répertoires autorisés uniquement. Même si un attaquant compromet le serveur web, il ne peut pas lire `/etc/shadow` ni exécuter un shell inversé. C'est le confinement obligatoire au niveau du noyau, intégré par défaut dans Ubuntu.
+
+**EN :** Configuring AppArmor in enforce mode confines each exposed service (Apache, MySQL) to its allowed directories only. Even if an attacker compromises the web server, they cannot read `/etc/shadow` or execute a reverse shell. This is mandatory kernel-level confinement, integrated by default in Ubuntu.
+
+---
+
+### 6. PAM Configuration
+**FR :** Configurer PAM (Pluggable Authentication Modules) impose des mots de passe de 14 caractères minimum avec complexité (chiffres, majuscules, minuscules, caractères spéciaux), verrouille le compte après 5 échecs pendant 15 minutes, et garde un historique des 12 derniers mots de passe pour empêcher leur réutilisation.
+
+**EN :** Configuring PAM (Pluggable Authentication Modules) enforces 14-character minimum passwords with complexity (digits, uppercase, lowercase, special characters), locks accounts after 5 failures for 15 minutes, and keeps a history of the last 12 passwords to prevent reuse.
+
+---
+
+### 7. auditd Deployment
+**FR :** Déployer auditd enregistre au niveau du noyau tous les événements de sécurité : qui lit `/etc/shadow`, qui exécute `sudo`, qui modifie les fichiers de configuration SSH, qui télécharge avec `wget` ou `curl`. Ces logs envoyés à `log-srv-01` survivent à un effacement local par un attaquant (Crimson Tide Phase 5).
+
+**EN :** Deploying auditd records all security events at kernel level: who reads `/etc/shadow`, who runs `sudo`, who modifies SSH configuration files, who downloads with `wget` or `curl`. These logs forwarded to `log-srv-01` survive local clearing by an attacker (Crimson Tide Phase 5).
+
+---
+
+### 8. rsyslog and Log Rotation
+**FR :** Configurer rsyslog structure les logs d'authentification, système, cron et noyau dans des fichiers séparés. La rotation conserve 90 jours pour `auth.log` et 60 jours pour `syslog`, avec compression après 7 jours. Les permissions `640 root:adm` empêchent les utilisateurs non autorisés de lire les logs.
+
+**EN :** Configuring rsyslog structures authentication, system, cron, and kernel logs into separate files. Rotation keeps 90 days for `auth.log` and 60 days for `syslog`, with compression after 7 days. Permissions `640 root:adm` prevent unauthorized users from reading logs.
+
+---
+
+### 9. Host Firewall (UFW)
+**FR :** Implémenter un pare-feu avec politique "deny par défaut" en entrée bloque tout le trafic entrant sauf les services approuvés : SSH depuis le réseau management uniquement, HTTP/HTTPS pour le portail patient, MySQL depuis le réseau applicatif uniquement. Même si un service est activé par erreur, le firewall le bloque.
+
+**EN :** Implementing a firewall with default-deny inbound policy blocks all incoming traffic except approved services: SSH from management network only, HTTP/HTTPS for patient portal, MySQL from application network only. Even if a service is accidentally enabled, the firewall blocks it.
+
+---
+
+## OPERATIONAL SKILLS
+
+### 10. Lynis Audit and Delta Measurement
+**FR :** Exécuter un audit Lynis donne un score de hardening sur 100. Le parser avec `2-lynis_parse.sh` extrait les warnings, suggestions et checks manuels en JSON. Mesurer le delta avant/après (ex: 52 → 84) prouve l'amélioration. C'est la preuve pour les auditeurs HIPAA.
+
+**EN :** Running a Lynis audit gives a hardening score out of 100. Parsing it with `2-lynis_parse.sh` extracts warnings, suggestions, and manual checks into JSON. Measuring the before/after delta (e.g., 52 → 84) proves improvement. This is evidence for HIPAA auditors.
+
+---
+
+### 11. Gap Analysis Against CIS Controls
+**FR :** Croiser les résultats Lynis avec les contrôles CIS signifie mapper chaque warning à la section CIS correspondante (ex: SSH-7408 → CIS 5.2.7). Cela produit une liste priorisée de ce qui doit être corrigé, triée par sévérité, avec la tâche de remédiation associée.
+
+**EN :** Cross-referencing Lynis findings with CIS controls means mapping each warning to the corresponding CIS section (e.g., SSH-7408 → CIS 5.2.7). This produces a prioritized list of what needs fixing, sorted by severity, with the associated remediation task.
+
+---
+
+### 12. Idempotent Bash Scripts with JSON Output
+**FR :** Écrire des scripts bash idempotents signifie qu'on peut les exécuter 2 fois sans effet de bord : ils vérifient l'état avant de modifier (`grep -q` avant `sed`). La sortie JSON structurée permet aux outils d'analyse de lire les résultats automatiquement plutôt que de parser du texte libre.
+
+**EN :** Writing idempotent bash scripts means they can run twice without side effects: they check state before modifying (`grep -q` before `sed`). Structured JSON output allows analysis tools to read results automatically instead of parsing free text.
+
+---
+
+### 13. Master Hardening Pipeline
+**FR :** Construire un orchestrateur (`14-hardening_orchestrator.sh`) exécute les 13 scripts de durcissement dans l'ordre de dépendance, s'arrête si un script échoue, et produit un rapport JSON avec le delta Lynis avant/après. Un serveur passe de zéro à production-ready en 20 minutes.
+
+**EN :** Building a master orchestrator (`14-hardening_orchestrator.sh`) runs all 13 hardening scripts in dependency order, stops if any script fails, and produces a JSON report with before/after Lynis delta. A server goes from zero to production-ready in 20 minutes.
+
+---
+
+## PROFESSIONAL JUDGMENT
+
+### 14. When to Skip a CIS Recommendation
+**FR :** Ignorer une recommandation CIS est acceptable quand elle casse une application clinique critique (ex: laisser TLS 1.0 pour un appareil médical legacy). On documente la déviation avec un contrôle compensatoire (isolation VLAN) et une date de revue. La conformité aveugle peut tuer des patients ; le jugement professionnel les protège.
+
+**EN :** Skipping a CIS recommendation is acceptable when it breaks a critical clinical application (e.g., keeping TLS 1.0 for legacy medical device). Document the deviation with a compensating control (VLAN isolation) and a review date. Blind compliance can kill patients; professional judgment protects them.
+
+---
+
+### 15. Balancing Security and Clinical Operations
+**FR :** Équilibrer la sécurité et les opérations cliniques signifie qu'on ne peut pas couper l'EHR pour appliquer un patch pendant les heures de soins. On planifie les changements pendant les fenêtres de maintenance (dimanche 02:00-04:00), on prépare un rollback, et on s'assure que les procédures papier sont prêtes en cas de panne.
+
+**EN :** Balancing security and clinical operations means you cannot take down the EHR to apply a patch during patient care hours. Schedule changes during maintenance windows (Sunday 02:00-04:00), prepare a rollback, and ensure paper procedures are ready in case of downtime.

@@ -474,3 +474,197 @@ jq -n --arg start "${START_TIME}" --arg end "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
 
 echo "[*] Export written to ${OUTPUT_FILE}" >&2
 exit 0
+#!/bin/bash
+set -euo pipefail
+
+# ==============================================================================
+# LINUX EVENT EXPORT - MEDDEFENSE HEALTH SYSTEMS
+# Task 7: Linux Event Export
+# ==============================================================================
+#
+# WHAT THIS SCRIPT DOES:
+#   Parses auth.log, auditd logs, and syslog from the last 24 hours,
+#   extracts security‑relevant events, normalises them into JSON with
+#   consistent fields (timestamp, hostname, source_type, event_category,
+#   key fields like user, source_ip, command, path), and writes a structured
+#   JSON file for the SOC.
+#
+# WHY:
+#   The Module 3 analyst needs Linux telemetry in the same structured
+#   format as Windows telemetry.  auth.log shows SSH & sudo, auditd shows
+#   syscall‑level activity, syslog captures service/error activity.
+#   Without this export, the analyst must manually parse raw logs.
+#
+# WHEN TO USE:
+#   After auditd rule refinement (Task 5).  Before the final telemetry
+#   handoff (Module 3).  Can be run daily as a cron job.
+#
+# AUTHOR: shamshed rajput
+# DATE:   30/07/2026
+# TARGET: billing-srv-01 (Ubuntu 22.04 LTS)
+# ==============================================================================
+
+HOSTNAME=$(hostname -s)
+DEFAULT_HOURS=24
+START_EPOCH=$(date -d "-${DEFAULT_HOURS} hours" +%s 2>/dev/null || true)
+if [ -z "${START_EPOCH}" ]; then
+    START_EPOCH=$(date -j -v-${DEFAULT_HOURS}H +%s)
+fi
+START_TIME=$(date -d "@${START_EPOCH}" -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date -u -r "${START_EPOCH}" +"%Y-%m-%dT%H:%M:%SZ")
+OUTPUT_FILE="linux_events_export.json"
+
+# ------------------------------------------------------------------------------
+# Helper functions
+# ------------------------------------------------------------------------------
+syslog_to_iso() {
+    date -d "${1}" -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || echo ""
+}
+
+audit_epoch_to_iso() {
+    local epoch_ms="$1"
+    local epoch_sec="${epoch_ms%.*}"
+    date -d "@${epoch_sec}" -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || echo ""
+}
+
+# ------------------------------------------------------------------------------
+# Parse auth.log
+# ------------------------------------------------------------------------------
+echo "[*] Parsing auth.log..."
+AUTH_LOG="/var/log/auth.log"
+SSH_LOGINS=0; SUDO_EVENTS=0; SU_EVENTS=0; PAM_EVENTS=0
+JSON_EVENTS=""
+
+if [ -f "${AUTH_LOG}" ] && [ -r "${AUTH_LOG}" ]; then
+    while IFS= read -r line; do
+        ts=$(echo "${line}" | awk '{print $1, $2, $3}')
+        iso_ts=$(syslog_to_iso "${ts}")
+
+        if echo "${line}" | grep -q "Accepted "; then
+            SSH_LOGINS=$((SSH_LOGINS + 1))
+            user=$(echo "${line}" | grep -oP 'for \K\S+')
+            ip=$(echo "${line}" | grep -oP 'from \K\S+')
+            json=$(jq -nc --arg ts "${iso_ts}" --arg host "${HOSTNAME}" --arg user "${user}" --arg ip "${ip}" \
+                '{timestamp: $ts, hostname: $host, source_type: "auth.log", event_category: "ssh_login_success", user: $user, source_ip: $ip}')
+            JSON_EVENTS+="${json}"$'\n'
+        elif echo "${line}" | grep -q "Failed password\|authentication failure"; then
+            SSH_LOGINS=$((SSH_LOGINS + 1))
+            user=$(echo "${line}" | grep -oP 'for \K\S+')
+            ip=$(echo "${line}" | grep -oP 'from \K\S+')
+            json=$(jq -nc --arg ts "${iso_ts}" --arg host "${HOSTNAME}" --arg user "${user}" --arg ip "${ip}" \
+                '{timestamp: $ts, hostname: $host, source_type: "auth.log", event_category: "ssh_login_failed", user: $user, source_ip: $ip}')
+            JSON_EVENTS+="${json}"$'\n'
+        elif echo "${line}" | grep -q "sudo:.*COMMAND="; then
+            SUDO_EVENTS=$((SUDO_EVENTS + 1))
+            user=$(echo "${line}" | grep -oP 'USER=\K\S+')
+            command=$(echo "${line}" | sed -n 's/.*COMMAND=//p')
+            json=$(jq -nc --arg ts "${iso_ts}" --arg host "${HOSTNAME}" --arg user "${user}" --arg cmd "${command}" \
+                '{timestamp: $ts, hostname: $host, source_type: "auth.log", event_category: "sudo", user: $user, command: $cmd}')
+            JSON_EVENTS+="${json}"$'\n'
+        elif echo "${line}" | grep -q "su:"; then
+            SU_EVENTS=$((SU_EVENTS + 1))
+            user=$(echo "${line}" | grep -oP 'for user \K\S+' || echo "")
+            json=$(jq -nc --arg ts "${iso_ts}" --arg host "${HOSTNAME}" --arg user "${user}" \
+                '{timestamp: $ts, hostname: $host, source_type: "auth.log", event_category: "su", user: $user}')
+            JSON_EVENTS+="${json}"$'\n'
+        elif echo "${line}" | grep -q "pam_unix\|PAM"; then
+            PAM_EVENTS=$((PAM_EVENTS + 1))
+            # PAM events have no user field by default
+        fi
+    done < "${AUTH_LOG}"
+fi
+
+AUTH_TOTAL=$((SSH_LOGINS + SUDO_EVENTS + SU_EVENTS + PAM_EVENTS))
+
+# ------------------------------------------------------------------------------
+# Parse auditd logs using ausearch
+# ------------------------------------------------------------------------------
+echo "[*] Parsing audit.log with ausearch..."
+EXECVE=0; FILE_ACCESS=0; NETWORK=0; OTHER_AUDIT=0
+
+if command -v ausearch >/dev/null 2>&1; then
+    while IFS= read -r line; do
+        ts=$(echo "${line}" | awk '{print $1, $2, $3}')
+        iso_ts=$(audit_epoch_to_iso "$(echo "${line}" | grep -oP 'msg=audit\(\K[0-9.]+')")
+
+        if echo "${line}" | grep -q "key=\"process_exec\""; then
+            EXECVE=$((EXECVE + 1))
+            comm=$(echo "${line}" | grep -oP 'comm="\K[^"]+')
+            exe=$(echo "${line}" | grep -oP 'exe="\K[^"]+')
+            user=$(echo "${line}" | grep -oP 'auid=\K\S+' | tr -d '"')
+            json=$(jq -nc --arg ts "${iso_ts}" --arg host "${HOSTNAME}" --arg comm "${comm}" --arg exe "${exe}" --arg user "${user}" \
+                '{timestamp: $ts, hostname: $host, source_type: "auditd", event_category: "execve", user: $user, command: $comm, exe: $exe}')
+            JSON_EVENTS+="${json}"$'\n'
+        elif echo "${line}" | grep -q "key=\"network_connect\""; then
+            NETWORK=$((NETWORK + 1))
+            saddr=$(echo "${line}" | grep -oP 'saddr=\K\S+')
+            daddr=$(echo "${line}" | grep -oP 'daddr=\K\S+')
+            comm=$(echo "${line}" | grep -oP 'comm="\K[^"]+')
+            json=$(jq -nc --arg ts "${iso_ts}" --arg host "${HOSTNAME}" --arg src "${saddr}" --arg dst "${daddr}" --arg comm "${comm}" \
+                '{timestamp: $ts, hostname: $host, source_type: "auditd", event_category: "network", source_ip: $src, dest_ip: $dst, command: $comm}')
+            JSON_EVENTS+="${json}"$'\n'
+        elif echo "${line}" | grep -q "key=\"identity\|sshd_config\|sudoers\|cron_persist\|ssh_keys\""; then
+            FILE_ACCESS=$((FILE_ACCESS + 1))
+            path=$(echo "${line}" | grep -oP 'name="\K[^"]+')
+            comm=$(echo "${line}" | grep -oP 'comm="\K[^"]+')
+            json=$(jq -nc --arg ts "${iso_ts}" --arg host "${HOSTNAME}" --arg path "${path}" --arg comm "${comm}" \
+                '{timestamp: $ts, hostname: $host, source_type: "auditd", event_category: "file_access", path: $path, command: $comm}')
+            JSON_EVENTS+="${json}"$'\n'
+        else
+            OTHER_AUDIT=$((OTHER_AUDIT + 1))
+        fi
+    done < <(ausearch -ts "${START_TIME}" --format text 2>/dev/null)
+fi
+
+AUDIT_TOTAL=$((EXECVE + FILE_ACCESS + NETWORK + OTHER_AUDIT))
+
+# ------------------------------------------------------------------------------
+# Parse syslog
+# ------------------------------------------------------------------------------
+echo "[*] Parsing syslog..."
+SYSLOG="/var/log/syslog"
+SERVICE=0; ERROR=0; OTHER_SYSLOG=0
+
+if [ -f "${SYSLOG}" ] && [ -r "${SYSLOG}" ]; then
+    while IFS= read -r line; do
+        ts=$(echo "${line}" | awk '{print $1, $2, $3}')
+        iso_ts=$(syslog_to_iso "${ts}")
+        if echo "${line}" | grep -qE "Started |Stopped "; then
+            SERVICE=$((SERVICE + 1))
+            svc=$(echo "${line}" | grep -oP '(Started|Stopped) \K\S+')
+            action=$(echo "${line}" | grep -oP 'Started|Stopped')
+            json=$(jq -nc --arg ts "${iso_ts}" --arg host "${HOSTNAME}" --arg svc "${svc}" --arg action "${action}" \
+                '{timestamp: $ts, hostname: $host, source_type: "syslog", event_category: "service", service: $svc, action: $action}')
+            JSON_EVENTS+="${json}"$'\n'
+        elif echo "${line}" | grep -qE "error|failed|ERROR|FAILED"; then
+            ERROR=$((ERROR + 1))
+            msg=$(echo "${line}" | sed 's/.*: //')
+            json=$(jq -nc --arg ts "${iso_ts}" --arg host "${HOSTNAME}" --arg msg "${msg}" \
+                '{timestamp: $ts, hostname: $host, source_type: "syslog", event_category: "error", message: $msg}')
+            JSON_EVENTS+="${json}"$'\n'
+        else
+            OTHER_SYSLOG=$((OTHER_SYSLOG + 1))
+        fi
+    done < "${SYSLOG}"
+fi
+
+SYSLOG_TOTAL=$((SERVICE + ERROR + OTHER_SYSLOG))
+
+# ------------------------------------------------------------------------------
+# Summary and export
+# ------------------------------------------------------------------------------
+TOTAL_EVENTS=$((AUTH_TOTAL + AUDIT_TOTAL + SYSLOG_TOTAL))
+
+echo "[*] Parsing auth.log... ${AUTH_TOTAL} events"
+echo "    SSH logins: ${SSH_LOGINS} | sudo: ${SUDO_EVENTS} | su: ${SU_EVENTS} | PAM: ${PAM_EVENTS}"
+echo "[*] Parsing audit.log... ${AUDIT_TOTAL} events"
+echo "    execve: ${EXECVE} | file_access: ${FILE_ACCESS} | network: ${NETWORK} | other: ${OTHER_AUDIT}"
+echo "[*] Parsing syslog... ${SYSLOG_TOTAL} events"
+echo "    service: ${SERVICE} | error: ${ERROR} | other: ${OTHER_SYSLOG}"
+echo "Total events: ${TOTAL_EVENTS}"
+echo "Time range: ${START_TIME} to $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+
+# Build JSON array
+jq -s '.' <<< "${JSON_EVENTS}" > "${OUTPUT_FILE}"
+
+echo "[*] Export written to ${OUTPUT_FILE}" >&2
+exit 0

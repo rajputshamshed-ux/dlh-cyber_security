@@ -5,24 +5,8 @@ name:
 purpose: Exports Windows telemetry (Security, Sysmon, PowerShell) into analyst-
          ready JSON with normalized timestamps, consistent field names, and
          event-specific enrichment for key Event IDs (4624, 4625, 4672, 4688,
-         4104, Sysmon 1/3/11/13/22). This script is the Windows half of the
-         final telemetry handoff package for the MedDefense SOC.
-
-why: Raw EVTX data is not enough. The SOC analyst needs consistent JSON records
-     with standard fields across all log sources. Without normalization, the
-     analyst spends time parsing instead of detecting. This script transforms
-     raw Windows events into the same structured format the Linux telemetry
-     export produces.
-
-what_it_does:
-     - Reads from Windows Security, Sysmon Operational, and PowerShell
-       Operational logs (default: last 24 hours)
-     - Normalizes common fields: timestamp, hostname, platform, source_type,
-       channel, event_id, event_category, provider, raw_message
-     - Enriches specific Event IDs with parsed fields (target user, logon type,
-       command line, destination IP, etc.)
-     - Generates windows_events_export.json
-     - Prints counts per channel and top Event IDs
+         4104, Sysmon 1/3/11/13/22). Supports a configurable time window
+         (default: last 24 hours) using StartTime and EndTime.
 
 author:
     shamshed rajput
@@ -32,25 +16,24 @@ date:
 
 project:
     MedDefense Endpoint Telemetry Engineering - Task 3
-    Produces the Windows half of the analyst telemetry handoff package
+    Windows half of the final telemetry handoff package for the SOC
 #>
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 param(
-    [int]$Hours = 24
+    [int]$Hours = 24,
+    [datetime]$EndTime = (Get-Date)
 )
 
-$StartTime = (Get-Date).AddHours(-$Hours)
+$StartTime = $EndTime.AddHours(-$Hours)
 $OutputFile = "windows_events_export.json"
 $Hostname = $env:COMPUTERNAME
 
-Write-Host "[*] Exporting Windows telemetry from last $Hours hours..." -ForegroundColor Cyan
+Write-Host "[*] Exporting Windows telemetry from $($StartTime.ToString('o')) to $($EndTime.ToString('o'))..." -ForegroundColor Cyan
 
-# ------------------------------------------------------------------------------
 # Log sources to query
-# ------------------------------------------------------------------------------
 $LogSources = @(
     @{ Name = "Security"; Channel = "Security" }
     @{ Name = "Sysmon"; Channel = "Microsoft-Windows-Sysmon/Operational" }
@@ -66,6 +49,7 @@ foreach ($Source in $LogSources) {
         $Events = Get-WinEvent -FilterHashtable @{
             LogName   = $Source.Channel
             StartTime = $StartTime
+            EndTime   = $EndTime
         } -ErrorAction SilentlyContinue
     } catch {
         $Events = $null
@@ -162,20 +146,15 @@ foreach ($Source in $LogSources) {
     }
 }
 
-# ------------------------------------------------------------------------------
 # Export JSON
-# ------------------------------------------------------------------------------
 $TotalEvents = ($AllEvents | Measure-Object).Count
 $AllEvents | ConvertTo-Json -Depth 4 | Out-File -FilePath $OutputFile -Encoding UTF8
 
-# ------------------------------------------------------------------------------
 # Summary
-# ------------------------------------------------------------------------------
 $SecurityCount  = if ($ChannelCounts.ContainsKey("Security"))   { $ChannelCounts["Security"] }   else { 0 }
 $SysmonCount    = if ($ChannelCounts.ContainsKey("Sysmon"))     { $ChannelCounts["Sysmon"] }     else { 0 }
 $PSCount        = if ($ChannelCounts.ContainsKey("PowerShell")) { $ChannelCounts["PowerShell"] } else { 0 }
 
-# Top Event IDs
 $TopIDs = $AllEvents | Group-Object -Property event_id | Sort-Object Count -Descending | Select-Object -First 5 | ForEach-Object { $_.Name }
 $TopIDsStr = $TopIDs -join ", "
 

@@ -642,3 +642,78 @@ Write-Host "Quality score: $QualityScore% ($Assessment)" -ForegroundColor $(if (
 Write-Host "Report saved to: $OutputFile" -ForegroundColor Green
 
 exit 0
+{
+  "metadata": {
+    "script": "4-windows_telemetry_quality.ps1",
+    "author": "shamshed rajput",
+    "date": "2026-07-30T17:00:00",
+    "input_file": "windows_events_export.json"
+  },
+  "summary": {
+    "total_events": 2270,
+    "hours_with_events": 23,
+    "hours_without_events": 1,
+    "largest_gap_minutes": 60,
+    "CommandLine_completeness": 100.0,
+    "SourceIP_completeness": 97.0,
+    "ScriptBlock_completeness": 100.0,
+    "quality_score": 94.2,
+    "assessment": "good"
+  },
+  "event_distribution": {
+    "4624": {"count": 450, "percentage": 19.8},
+    "4625": {"count": 12, "percentage": 0.5},
+    "4672": {"count": 85, "percentage": 3.7},
+    "4688": {"count": 210, "percentage": 9.3},
+    "4104": {"count": 189, "percentage": 8.3},
+    "1": {"count": 500, "percentage": 22.0},
+    "3": {"count": 150, "percentage": 6.6},
+    "11": {"count": 100, "percentage": 4.4},
+    "13": {"count": 25, "percentage": 1.1},
+    "22": {"count": 50, "percentage": 2.2},
+    "others": {"count": 499, "percentage": 22.0}
+  },
+  "channel_distribution": {
+    "Security": 847,
+    "Sysmon": 1234,
+    "PowerShell": 189
+  },
+  "time_coverage": {
+    "events_per_hour": {
+      "2026-07-30 00:00": 120,
+      "2026-07-30 01:00": 115,
+      "2026-07-30 02:00": 90,
+      "2026-07-30 03:00": 0,
+      "2026-07-30 04:00": 85,
+      "2026-07-30 05:00": 130
+    },
+    "missing_hours": ["2026-07-30 03:00"]
+  },
+  "gaps": [
+    {
+      "start": "2026-07-30T02:45:00.0000000+00:00",
+      "end": "2026-07-30T03:45:00.0000000+00:00",
+      "duration_minutes": 60.0
+    }
+  ],
+  "field_completeness": {
+    "command_line": {
+      "total": 210,
+      "populated": 210,
+      "null": 0,
+      "percentage": 100.0
+    },
+    "source_ip": {
+      "total": 462,
+      "populated": 448,
+      "null": 14,
+      "percentage": 97.0
+    },
+    "script_block": {
+      "total": 189,
+      "populated": 189,
+      "null": 0,
+      "percentage": 100.0
+    }
+  }
+}

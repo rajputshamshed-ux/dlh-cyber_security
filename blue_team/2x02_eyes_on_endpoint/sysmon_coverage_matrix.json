@@ -1,0 +1,95 @@
+{
+  "metadata": {
+    "script": "1-sysmon_coverage_matrix.ps1",
+    "author": "shamshed rajput",
+    "purpose": "Sysmon ATT&CK coverage matrix for MedDefense",
+    "date": "2026-07-30T12:00:00",
+    "config_file": "sysmonconfig.xml"
+  },
+  "summary": {
+    "techniques_assessed": 7,
+    "covered": 5,
+    "partial": 2,
+    "blind": 0,
+    "enabled_event_ids": "1,3,7,11,12,13,22"
+  },
+  "techniques": [
+    {
+      "technique_id": "T1059",
+      "technique_name": "Command and Scripting Interpreter",
+      "required_event_ids": "1",
+      "enabled_event_ids": "1",
+      "missing_event_ids": "",
+      "filter_conflicts": "None",
+      "coverage_status": "covered",
+      "evidence_fields_expected": "Image, CommandLine, ParentImage, User",
+      "recommendation": "No action required - full visibility"
+    },
+    {
+      "technique_id": "T1053",
+      "technique_name": "Scheduled Task/Job",
+      "required_event_ids": "1",
+      "enabled_event_ids": "1",
+      "missing_event_ids": "",
+      "filter_conflicts": "None",
+      "coverage_status": "covered",
+      "evidence_fields_expected": "Image, CommandLine (schtasks.exe, at.exe), ParentImage",
+      "recommendation": "No action required - full visibility"
+    },
+    {
+      "technique_id": "T1547",
+      "technique_name": "Boot or Logon Autostart Execution",
+      "required_event_ids": "13",
+      "enabled_event_ids": "13",
+      "missing_event_ids": "",
+      "filter_conflicts": "None",
+      "coverage_status": "covered",
+      "evidence_fields_expected": "TargetObject (Run/RunOnce keys), Details, Image",
+      "recommendation": "No action required - full visibility"
+    },
+    {
+      "technique_id": "T1055",
+      "technique_name": "Process Injection",
+      "required_event_ids": "8,10",
+      "enabled_event_ids": "",
+      "missing_event_ids": "8,10",
+      "filter_conflicts": "None",
+      "coverage_status": "partial",
+      "evidence_fields_expected": "SourceImage, TargetImage, GrantedAccess, CallTrace",
+      "recommendation": "Tune config: Missing EIDs: 8,10. Enable Event ID 8 and 10 for full injection detection."
+    },
+    {
+      "technique_id": "T1071",
+      "technique_name": "Application Layer Protocol",
+      "required_event_ids": "3,22",
+      "enabled_event_ids": "3,22",
+      "missing_event_ids": "",
+      "filter_conflicts": "None",
+      "coverage_status": "covered",
+      "evidence_fields_expected": "DestinationIp, DestinationPort, Image, QueryName",
+      "recommendation": "No action required - full visibility"
+    },
+    {
+      "technique_id": "T1574.002",
+      "technique_name": "DLL Side-Loading",
+      "required_event_ids": "7",
+      "enabled_event_ids": "7",
+      "missing_event_ids": "",
+      "filter_conflicts": "None",
+      "coverage_status": "covered",
+      "evidence_fields_expected": "ImageLoaded, Signature, Signed, Image",
+      "recommendation": "No action required - full visibility"
+    },
+    {
+      "technique_id": "T1027",
+      "technique_name": "Obfuscated or Compressed Files",
+      "required_event_ids": "11,15",
+      "enabled_event_ids": "11",
+      "missing_event_ids": "15",
+      "filter_conflicts": "None",
+      "coverage_status": "partial",
+      "evidence_fields_expected": "TargetFilename, CreationUtcTime, Image",
+      "recommendation": "Tune config: Missing EIDs: 15. Enable Event ID 15 to capture alternate data streams."
+    }
+  ]
+}

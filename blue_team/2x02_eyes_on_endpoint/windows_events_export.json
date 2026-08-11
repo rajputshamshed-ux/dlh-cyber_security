@@ -1,0 +1,157 @@
+[
+  {
+    "timestamp": "2026-07-30T14:30:00.0000000+00:00",
+    "hostname": "DC01",
+    "platform": "windows",
+    "source_type": "Security",
+    "channel": "Security",
+    "event_id": 4624,
+    "event_category": "Logon",
+    "provider": "Microsoft-Windows-Security-Auditing",
+    "raw_message": "An account was successfully logged on.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-18\n\tAccount Name:\t\tDC01$\n\tAccount Domain:\t\tMEDDEFENSE\n\tLogon ID:\t\t0x3E7\n\nLogon Information:\n\tLogon Type:\t\t3\n\tRestricted Admin Mode:\t-\n\tVirtual Account:\t\tNo\n\tElevated Token:\t\tYes\n\nImpersonation Level:\t\tImpersonation\n\nNew Logon:\n\tSecurity ID:\t\tS-1-5-21-1234567890-1234567890-1234567890-1000\n\tAccount Name:\t\tanalyst\n\tAccount Domain:\t\tMEDDEFENSE\n\tLogon ID:\t\t0x1A2B3C\n\tLinked Logon ID:\t\t0x0\n\tNetwork Account Name:\t-\n\tNetwork Account Domain:\t-\n\tLogon GUID:\t\t{00000000-0000-0000-0000-000000000000}\n\nProcess Information:\n\tProcess ID:\t\t0x4\n\tProcess Name:\t\t\n\nNetwork Information:\n\tWorkstation Name:\tWS-MED-045\n\tSource Network Address:\t10.10.1.25\n\tSource Port:\t\t49322\n\nDetailed Authentication Information:\n\tLogon Process:\t\tKerberos\n\tAuthentication Package:\tKerberos\n\tTransited Services:\t-\n\tPackage Name (NTLM only):\t-\n\tKey Length:\t\t0",
+    "enrichment": {
+      "TargetUserName": "analyst",
+      "LogonType": "3",
+      "IpAddress": "10.10.1.25",
+      "Workstation": "WS-MED-045"
+    }
+  },
+  {
+    "timestamp": "2026-07-30T14:35:00.0000000+00:00",
+    "hostname": "DC01",
+    "platform": "windows",
+    "source_type": "Security",
+    "channel": "Security",
+    "event_id": 4625,
+    "event_category": "Failed Logon",
+    "provider": "Microsoft-Windows-Security-Auditing",
+    "raw_message": "An account failed to log on.\n\nSubject:\n\tSecurity ID:\t\tS-1-0-0\n\tAccount Name:\t\t-\n\tAccount Domain:\t\t-\n\tLogon ID:\t\t0x0\n\nLogon Type:\t\t3\n\nAccount For Which Logon Failed:\n\tSecurity ID:\t\tS-1-0-0\n\tAccount Name:\t\tsvc_ehr\n\tAccount Domain:\t\tMEDDEFENSE\n\nFailure Information:\n\tFailure Reason:\t\tUnknown user name or bad password.\n\tStatus:\t\t\t0xC000006D\n\tSub Status:\t\t0xC000006A\n\nProcess Information:\n\tCaller Process ID:\t0x0\n\tCaller Process Name:\t-\n\nNetwork Information:\n\tWorkstation Name:\tWS-MED-102\n\tSource Network Address:\t10.10.3.50\n\tSource Port:\t\t50123\n\nDetailed Authentication Information:\n\tLogon Process:\t\tNtLmSsp\n\tAuthentication Package:\tNTLM\n\tTransited Services:\t-\n\tPackage Name (NTLM only):\t-\n\tKey Length:\t\t0",
+    "enrichment": {
+      "TargetUserName": "svc_ehr",
+      "FailureReason": "Unknown user name or bad password.",
+      "IpAddress": "10.10.3.50"
+    }
+  },
+  {
+    "timestamp": "2026-07-30T14:40:00.0000000+00:00",
+    "hostname": "DC01",
+    "platform": "windows",
+    "source_type": "Security",
+    "channel": "Security",
+    "event_id": 4672,
+    "event_category": "Special Logon",
+    "provider": "Microsoft-Windows-Security-Auditing",
+    "raw_message": "Special privileges assigned to new logon.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-21-1234567890-1234567890-1234567890-1000\n\tAccount Name:\t\tanalyst\n\tAccount Domain:\t\tMEDDEFENSE\n\tLogon ID:\t\t0x1A2B3C\n\nPrivileges:\t\tSeSecurityPrivilege\n\t\t\tSeTakeOwnershipPrivilege\n\t\t\tSeLoadDriverPrivilege\n\t\t\tSeBackupPrivilege\n\t\t\tSeRestorePrivilege\n\t\t\tSeDebugPrivilege\n\t\t\tSeSystemEnvironmentPrivilege\n\t\t\tSeImpersonatePrivilege\n\t\t\tSeDelegateSessionUserImpersonatePrivilege",
+    "enrichment": {
+      "PrivilegedAccount": "analyst"
+    }
+  },
+  {
+    "timestamp": "2026-07-30T14:45:00.0000000+00:00",
+    "hostname": "DC01",
+    "platform": "windows",
+    "source_type": "Security",
+    "channel": "Security",
+    "event_id": 4688,
+    "event_category": "Process Creation",
+    "provider": "Microsoft-Windows-Security-Auditing",
+    "raw_message": "A new process has been created.\n\nCreator Subject:\n\tSecurity ID:\t\tS-1-5-21-1234567890-1234567890-1234567890-1000\n\tAccount Name:\t\tanalyst\n\tAccount Domain:\t\tMEDDEFENSE\n\tLogon ID:\t\t0x1A2B3C\n\nTarget Subject:\n\tSecurity ID:\t\tS-1-0-0\n\tAccount Name:\t\t-\n\tAccount Domain:\t\t-\n\tLogon ID:\t\t0x0\n\nProcess Information:\n\tNew Process ID:\t\t0x1234\n\tNew Process Name:\tC:\\Windows\\System32\\cmd.exe\n\tToken Elevation Type:\tTokenElevationTypeDefault (1)\n\tMandatory Label:\t\tS-1-16-8192\n\tCreator Process ID:\t0x5678\n\tCreator Process Name:\tC:\\Windows\\explorer.exe\n\tProcess Command Line:\tcmd.exe /c whoami",
+    "enrichment": {
+      "NewProcessName": "C:\\Windows\\System32\\cmd.exe",
+      "CommandLine": "cmd.exe /c whoami",
+      "ParentProcessId": "0x5678"
+    }
+  },
+  {
+    "timestamp": "2026-07-30T14:50:00.0000000+00:00",
+    "hostname": "DC01",
+    "platform": "windows",
+    "source_type": "PowerShell",
+    "channel": "Microsoft-Windows-PowerShell/Operational",
+    "event_id": 4104,
+    "event_category": "PowerShell Script Block",
+    "provider": "Microsoft-Windows-PowerShell",
+    "raw_message": "Creating Scriptblock text (1 of 1):\nWrite-Host 'MedDefense Test'\n\nScriptBlock ID: 00000000-0000-0000-0000-000000000000\nPath: ",
+    "enrichment": {
+      "ScriptBlockText": "Write-Host 'MedDefense Test'"
+    }
+  },
+  {
+    "timestamp": "2026-07-30T15:00:00.0000000+00:00",
+    "hostname": "DC01",
+    "platform": "windows",
+    "source_type": "Sysmon",
+    "channel": "Microsoft-Windows-Sysmon/Operational",
+    "event_id": 1,
+    "event_category": "Process Creation",
+    "provider": "Microsoft-Windows-Sysmon",
+    "raw_message": "Process Create:\nRuleName: \nUtcTime: 2026-07-30 15:00:00.000\nProcessGuid: {00000000-0000-0000-0000-000000000000}\nProcessId: 4660\nImage: C:\\Windows\\System32\\cmd.exe\nFileVersion: 10.0.20348.1\nDescription: Windows Command Processor\nProduct: Microsoft Windows Operating System\nCompany: Microsoft Corporation\nOriginalFileName: Cmd.Exe\nCommandLine: cmd.exe /c whoami\nCurrentDirectory: C:\\Users\\analyst\\\nUser: MEDDEFENSE\\analyst\nLogonGuid: {00000000-0000-0000-0000-000000000000}\nLogonId: 0x1A2B3C\nTerminalSessionId: 1\nIntegrityLevel: Medium\nHashes: SHA1=ABCDEF1234567890,MD5=FEDCBA0987654321\nParentProcessGuid: {00000000-0000-0000-0000-000000000000}\nParentProcessId: 1234\nParentImage: C:\\Windows\\explorer.exe\nParentCommandLine: C:\\Windows\\explorer.exe",
+    "enrichment": {
+      "Image": "C:\\Windows\\System32\\cmd.exe",
+      "CommandLine": "cmd.exe /c whoami",
+      "ParentImage": "C:\\Windows\\explorer.exe",
+      "Hashes": "SHA1=ABCDEF1234567890,MD5=FEDCBA0987654321"
+    }
+  },
+  {
+    "timestamp": "2026-07-30T15:05:00.0000000+00:00",
+    "hostname": "DC01",
+    "platform": "windows",
+    "source_type": "Sysmon",
+    "channel": "Microsoft-Windows-Sysmon/Operational",
+    "event_id": 3,
+    "event_category": "Network Connection",
+    "provider": "Microsoft-Windows-Sysmon",
+    "raw_message": "Network connection detected:\nRuleName: \nUtcTime: 2026-07-30 15:05:00.000\nProcessGuid: {00000000-0000-0000-0000-000000000000}\nProcessId: 4660\nImage: C:\\Windows\\System32\\cmd.exe\nUser: MEDDEFENSE\\analyst\nProtocol: tcp\nInitiated: true\nSourceIsIpv6: false\nSourceIp: 10.10.3.10\nSourceHostname: DC01.meddefense.local\nSourcePort: 50123\nSourcePortName: -\nDestinationIsIpv6: false\nDestinationIp: 8.8.8.8\nDestinationHostname: dns.google\nDestinationPort: 53\nDestinationPortName: domain",
+    "enrichment": {
+      "DestinationIp": "8.8.8.8",
+      "DestinationPort": "53",
+      "Image": "C:\\Windows\\System32\\cmd.exe"
+    }
+  },
+  {
+    "timestamp": "2026-07-30T15:10:00.0000000+00:00",
+    "hostname": "DC01",
+    "platform": "windows",
+    "source_type": "Sysmon",
+    "channel": "Microsoft-Windows-Sysmon/Operational",
+    "event_id": 11,
+    "event_category": "File Creation",
+    "provider": "Microsoft-Windows-Sysmon",
+    "raw_message": "File created:\nRuleName: \nUtcTime: 2026-07-30 15:10:00.000\nProcessGuid: {00000000-0000-0000-0000-000000000000}\nProcessId: 4660\nImage: C:\\Windows\\System32\\cmd.exe\nTargetFilename: C:\\Windows\\Temp\\sysmon_test.txt\nCreationUtcTime: 2026-07-30 15:10:00.000",
+    "enrichment": {
+      "TargetFilename": "C:\\Windows\\Temp\\sysmon_test.txt",
+      "Image": "C:\\Windows\\System32\\cmd.exe"
+    }
+  },
+  {
+    "timestamp": "2026-07-30T15:15:00.0000000+00:00",
+    "hostname": "DC01",
+    "platform": "windows",
+    "source_type": "Sysmon",
+    "channel": "Microsoft-Windows-Sysmon/Operational",
+    "event_id": 13,
+    "event_category": "Registry Modification",
+    "provider": "Microsoft-Windows-Sysmon",
+    "raw_message": "Registry value set:\nRuleName: \nEventType: SetValue\nUtcTime: 2026-07-30 15:15:00.000\nProcessGuid: {00000000-0000-0000-0000-000000000000}\nProcessId: 4660\nImage: C:\\Windows\\regedit.exe\nTargetObject: HKU\\S-1-5-21-1234567890-1234567890-1234567890-1000\\Software\\MedDefense\\SysmonTest\nDetails: TelemetryValidation",
+    "enrichment": {
+      "TargetObject": "HKU\\S-1-5-21-1234567890-1234567890-1234567890-1000\\Software\\MedDefense\\SysmonTest",
+      "Details": "TelemetryValidation"
+    }
+  },
+  {
+    "timestamp": "2026-07-30T15:20:00.0000000+00:00",
+    "hostname": "DC01",
+    "platform": "windows",
+    "source_type": "Sysmon",
+    "channel": "Microsoft-Windows-Sysmon/Operational",
+    "event_id": 22,
+    "event_category": "DNS Query",
+    "provider": "Microsoft-Windows-Sysmon",
+    "raw_message": "Dns query:\nRuleName: \nUtcTime: 2026-07-30 15:20:00.000\nProcessGuid: {00000000-0000-0000-0000-000000000000}\nProcessId: 4660\nQueryName: example.com\nQueryStatus: 0\nQueryResults: type: A 93.184.216.34;",
+    "enrichment": {
+      "QueryName": "example.com",
+      "QueryResults": "type: A 93.184.216.34;"
+    }
+  }
+]

@@ -1,11 +1,11 @@
 # Name: 0-sysmon_validation.ps1
 # Author: shamshed rajput
 # Date: 30/07/2026
-# Script Purpose: Validate Sysmon telemetry coverage for MedDefense
+# Purpose: Validate Sysmon telemetry coverage for MedDefense Health Systems
 
 <#
 .SYNOPSIS
-    name: 0-sysmon_validation.ps1
+    Sysmon Telemetry Validation - MedDefense Health Systems
     Task 0: Sysmon Telemetry Validation
 
 .DESCRIPTION

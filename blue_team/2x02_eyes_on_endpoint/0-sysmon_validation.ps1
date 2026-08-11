@@ -1,12 +1,10 @@
 <#
-.NAME
-    0-sysmon_validation.ps1
-
 .SYNOPSIS
     Sysmon Telemetry Validation - MedDefense Health Systems
     Task 0: Sysmon Telemetry Validation
 
 .DESCRIPTION
+    Name: 0-sysmon_validation.ps1
     Purpose: Validate Sysmon captures security events by triggering actions
     and verifying Event IDs 1,3,11,13,22.
     

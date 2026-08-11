@@ -59,12 +59,12 @@ function Report-Result {
 }
 
 # ------------------------------------------------------------------------------
-# 1. Simple command (Get-Process) → Event ID 4104
+# 1. Simple command (Get-Process) → Event ID 4104 (ScriptBlock logging)
 # ------------------------------------------------------------------------------
-Write-Host "    [1/5] Simple command (Get-Process)..." -ForegroundColor Cyan
+Write-Host "    [1/5] Simple command (Get-Process) - ScriptBlock..." -ForegroundColor Cyan
 Start-Process powershell "-NoProfile -Command Get-Process" -Wait -NoNewWindow
 $Event = Wait-PSEvent -EventID 4104 -Pattern "Get-Process"
-Report-Result "Simple command" ($Event -ne $null) "EID 4104: `"Get-Process`" captured"
+Report-Result "ScriptBlock logging" ($Event -ne $null) "EID 4104: `"Get-Process`" captured"
 
 # ------------------------------------------------------------------------------
 # 2. Encoded command → decoded in 4104

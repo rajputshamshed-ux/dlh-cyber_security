@@ -5,8 +5,7 @@ name:
 purpose: Validates that PowerShell Script Block Logging (4104), Module Logging
          (4103), and Transcription are correctly capturing commands, encoded
          payloads, module imports, multi-line scripts, and session transcripts.
-         Proves each logging layer works against the PowerShell abuse techniques
-         used by Crimson Tide (Phase 3).
+         Reports detail level (full, partial, missed) for each test.
 
 author:
     shamshed rajput
@@ -24,6 +23,8 @@ $ErrorActionPreference = "Stop"
 
 $CAPTURED = 0
 $MISSED = 0
+$FULL = 0
+$PARTIAL = 0
 $TranscriptDir = "C:\PSTranscripts"
 $PSLogName = "Microsoft-Windows-PowerShell/Operational"
 
@@ -53,10 +54,23 @@ function Wait-PSEvent {
 }
 
 function Report-Result {
-    param([string]$Test, [bool]$Success, [string]$Detail)
+    param(
+        [string]$Test,
+        [bool]$Success,
+        [string]$Detail,
+        [string]$DetailLevel = "full"   # "full" or "partial"
+    )
+
     if ($Success) {
-        Write-Host "          $Detail   [CAPTURED]" -ForegroundColor Green
-        $script:CAPTURED++
+        if ($DetailLevel -eq "partial") {
+            Write-Host "          $Detail   [PARTIAL]" -ForegroundColor Yellow
+            $script:CAPTURED++
+            $script:PARTIAL++
+        } else {
+            Write-Host "          $Detail   [CAPTURED]" -ForegroundColor Green
+            $script:CAPTURED++
+            $script:FULL++
+        }
     } else {
         Write-Host "          $Detail   [MISSED]" -ForegroundColor Red
         $script:MISSED++
@@ -69,9 +83,11 @@ function Report-Result {
 Write-Host "    [1/5] Simple command (Get-Process) - ScriptBlock..." -ForegroundColor Cyan
 Start-Process powershell "-NoProfile -Command Get-Process" -Wait -NoNewWindow
 $Event = Wait-PSEvent -EventID 4104 -Pattern "Get-Process"
-# Verify the event actually contains the ScriptBlock with the command text
 $HasContent = $Event -and ($Event.Message -match "Get-Process")
-Report-Result "ScriptBlock logging" $HasContent "EID 4104 captured with full ScriptBlock content: Get-Process"
+# Determine if full command line details are present (not just the executable name)
+$IsFull = $HasContent -and ($Event.Message -match "CommandLine")
+$DetailLevel = if ($HasContent -and -not $IsFull) { "partial" } else { "full" }
+Report-Result "ScriptBlock logging" $HasContent "EID 4104: `"Get-Process`" - detail: $DetailLevel" -DetailLevel $DetailLevel
 
 # ------------------------------------------------------------------------------
 # 2. Encoded command - verify DECODED content in 4104
@@ -82,15 +98,14 @@ $Enc = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($Plain
 Write-Host "          Input: -enc $Enc"
 Start-Process powershell "-NoProfile -EncodedCommand $Enc" -Wait -NoNewWindow
 $Event = Wait-PSEvent -EventID 4104 -Pattern "Write-Host"
-# This is the key check: the decoded content must appear in the event
 $Decoded = $Event -and ($Event.Message -match "Write-Host") -and ($Event.Message -match "MedDefense Test")
-Report-Result "Encoded command" $Decoded "EID 4104 decoded full content: `"Write-Host 'MedDefense Test'`""
+$DetailLevel = if ($Decoded) { "full" } else { "partial" }
+Report-Result "Encoded command" $Decoded "EID 4104 decoded: `"Write-Host 'MedDefense Test'`" - detail: $DetailLevel" -DetailLevel $DetailLevel
 
 # ------------------------------------------------------------------------------
 # 3. Module import - Event ID 4103 (use built-in module as fallback)
 # ------------------------------------------------------------------------------
 Write-Host "    [3/5] Module import..." -ForegroundColor Cyan
-# Try ActiveDirectory first, fall back to built-in module
 $ModuleName = "ActiveDirectory"
 $ModuleAvailable = Get-Module -ListAvailable -Name $ModuleName -ErrorAction SilentlyContinue
 if (-not $ModuleAvailable) {
@@ -98,12 +113,14 @@ if (-not $ModuleAvailable) {
 }
 Start-Process powershell "-NoProfile -Command Import-Module $ModuleName" -Wait -NoNewWindow
 $Event = Wait-PSEvent -EventID 4103 -Pattern $ModuleName
-Report-Result "Module import" ($Event -ne $null) "EID 4103 captured with full module details: Import-Module $ModuleName"
+$HasEvent = $Event -ne $null
+$DetailLevel = if ($HasEvent -and $Event.Message -match "ModuleName") { "full" } else { "partial" }
+Report-Result "Module import" $HasEvent "EID 4103: Import-Module $ModuleName - detail: $DetailLevel" -DetailLevel $DetailLevel
 
 # ------------------------------------------------------------------------------
 # 4. Multi-line script block - full capture
 # ------------------------------------------------------------------------------
-Write-Host "    [4/5] Multi-line script block (full capture)..." -ForegroundColor Cyan
+Write-Host "    [4/5] Multi-line script block..." -ForegroundColor Cyan
 $Multiline = @'
 $i = 0
 while ($i -lt 3) {
@@ -116,7 +133,8 @@ $Multiline | Out-File -FilePath "C:\Windows\Temp\multiline_test.ps1" -Encoding U
 Start-Process powershell "-NoProfile -File C:\Windows\Temp\multiline_test.ps1" -Wait -NoNewWindow
 $Event = Wait-PSEvent -EventID 4104 -Pattern "Line 0"
 $FullBlock = $Event -and ($Event.Message -match "Get-Service") -and ($Event.Message -match "Line 0")
-Report-Result "Multi-line script block" $FullBlock "EID 4104: full block captured (all lines present)"
+$DetailLevel = if ($FullBlock) { "full" } else { "partial" }
+Report-Result "Multi-line script block" $FullBlock "EID 4104: block capture - detail: $DetailLevel" -DetailLevel $DetailLevel
 
 # ------------------------------------------------------------------------------
 # 5. Transcription file - verify RECENT file created during this session
@@ -132,7 +150,8 @@ if (Test-Path $TranscriptDir) {
         Write-Host "          Recent transcript: $($RecentFiles[0].Name)" -ForegroundColor Gray
     }
 }
-Report-Result "Transcription file" $TranscriptFound "$TranscriptDir\*.txt exists with recent full session recording"
+$DetailLevel = if ($TranscriptFound) { "full" } else { "partial" }
+Report-Result "Transcription file" $TranscriptFound "$TranscriptDir\*.txt exists - detail: $DetailLevel" -DetailLevel $DetailLevel
 
 # Cleanup
 Remove-Item -Path "C:\Windows\Temp\multiline_test.ps1" -Force -ErrorAction SilentlyContinue
@@ -140,5 +159,5 @@ Remove-Item -Path "C:\Windows\Temp\multiline_test.ps1" -Force -ErrorAction Silen
 # Summary
 $Total = $CAPTURED + $MISSED
 Write-Host ""
-Write-Host "Tests: $Total | Captured: $CAPTURED | Missed: $MISSED" -ForegroundColor $(if ($MISSED -eq 0) { "Green" } else { "Red" })
+Write-Host "Tests: $Total | Captured: $CAPTURED (full: $FULL, partial: $PARTIAL) | Missed: $MISSED" -ForegroundColor $(if ($MISSED -eq 0) { "Green" } else { "Red" })
 exit 0

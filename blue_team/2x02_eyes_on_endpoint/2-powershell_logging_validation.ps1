@@ -22,8 +22,8 @@ project:
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$PASS = 0
-$FAIL = 0
+$CAPTURED = 0
+$MISSED = 0
 $TranscriptDir = "C:\PSTranscripts"
 $PSLogName = "Microsoft-Windows-PowerShell/Operational"
 
@@ -54,8 +54,13 @@ function Wait-PSEvent {
 
 function Report-Result {
     param([string]$Test, [bool]$Success, [string]$Detail)
-    if ($Success) { Write-Host "          $Detail   [PASS]" -ForegroundColor Green; $script:PASS++ }
-    else { Write-Host "          $Detail   [FAIL]" -ForegroundColor Red; $script:FAIL++ }
+    if ($Success) { 
+        Write-Host "          $Detail   [CAPTURED]" -ForegroundColor Green
+        $script:CAPTURED++
+    } else { 
+        Write-Host "          $Detail   [MISSED]" -ForegroundColor Red
+        $script:MISSED++
+    }
 }
 
 # ------------------------------------------------------------------------------
@@ -121,7 +126,7 @@ Report-Result "Transcription file" $TranscriptExists "$TranscriptDir\*.txt exist
 Remove-Item -Path "C:\Windows\Temp\multiline_test.ps1" -Force -ErrorAction SilentlyContinue
 
 # Summary
-$Total = $PASS + $FAIL
+$Total = $CAPTURED + $MISSED
 Write-Host ""
-Write-Host "Tests: $Total | Captured: $PASS | Missed: $FAIL" -ForegroundColor $(if ($FAIL -eq 0) { "Green" } else { "Red" })
+Write-Host "Tests: $Total | Captured: $CAPTURED | Missed: $MISSED" -ForegroundColor $(if ($MISSED -eq 0) { "Green" } else { "Red" })
 exit 0

@@ -1,26 +1,20 @@
-# Name: 0-sysmon_validation.ps1
-# Author: shamshed rajput
-# Date: 30/07/2026
-# Purpose: Validate Sysmon telemetry coverage for MedDefense Health Systems
-
 <#
 .SYNOPSIS
     Sysmon Telemetry Validation - MedDefense Health Systems
     Task 0: Sysmon Telemetry Validation
-
-.DESCRIPTION
+    Name: 0-sysmon_validation.ps1
+    Author: shamshed rajput
+    Date: 30/07/2026
     Purpose: Validate Sysmon captures security events by triggering actions
     and verifying Event IDs 1,3,11,13,22.
-    
-    WHAT IT DOES: Triggers 5 controlled attacker-like actions and checks
-    Sysmon logs with Get-WinEvent. Reports PASS/MISSED for each.
-    
-    WHY: Deployment does not equal coverage. Silent blind spots must be found.
 
-.AUTHOR
-    shamshed rajput
-.DATE
-    30/07/2026
+.DESCRIPTION
+    Triggers 5 controlled attacker-like actions and checks Sysmon logs
+    with Get-WinEvent. Reports PASS/MISSED for each.
+    
+    WHY: Deployment does not equal coverage. Silent blind spots from
+    misconfiguration or overly aggressive exclusions must be found.
+
 .TARGET
     DC01.meddefense.local
 #>

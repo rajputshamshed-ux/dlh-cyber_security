@@ -1,0 +1,22 @@
+{
+  "initial_diagnosis": {
+    "live_processes": false,
+    "stale_locks": [
+      "/var/lib/dpkg/lock-frontend",
+      "/var/lib/dpkg/lock",
+      "/var/cache/apt/archives/lock"
+    ],
+    "dpkg_audit": "clean",
+    "broken_package_count": 801,
+    "disk_space_root_avail_kb": 18697664,
+    "disk_space_var_avail_kb": 18697664
+  },
+  "actions_taken": [
+    "remove stale locks",
+    "dpkg --configure -a",
+    "apt-get --fix-broken install"
+  ],
+  "final_state": "clean",
+  "recovered": true,
+  "duration_seconds": 3
+}

@@ -1,0 +1,31 @@
+{
+  "generated_at": "2026-08-27T11:49:36Z",
+  "hostname": "kali",
+  "sockets": [
+    {
+      "proto": "tcp",
+      "port": "unknown",
+      "bind_addr": "0.0.0.0",
+      "process": "{\n  \"raw\": \"users:((\\\"apache2\\\",pid=821,fd=4),(\\\"apache2\\\",pid=820,fd=4),(\\\"apache2\\\",pid=819,fd=4),(\\\"apache2\\\",pid=818,fd=4),(\\\"apache2\\\",pid=817,fd=4),(\\\"apache2\\\",pid=755,fd=4))\",\n  \"process\": \"apache2\",\n  \"pid\": 755\n}",
+      "pid": null,
+      "binary": null,
+      "package": "unknown",
+      "service_unit": null,
+      "service_details": null,
+      "function": "unknown",
+      "criticality": "low",
+      "exposure_flags": []
+    }
+  ],
+  "summary": {
+    "total_sockets": 1,
+    "flagged_sockets": 0,
+    "unknown_functions": 1,
+    "flagged_by_severity": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    }
+  }
+}

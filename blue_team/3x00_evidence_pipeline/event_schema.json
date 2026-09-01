@@ -1,0 +1,127 @@
+{
+  "version": "1.1.0",
+  "author": "Student Analyst",
+  "description": "Unified forensic event schema designed for multi-source log normalization across Windows, Linux, and Network vectors.",
+  "fields": [
+    {
+      "name": "timestamp",
+      "type": "timestamp",
+      "required": true,
+      "description": "Standardized UTC ISO 8601 timestamp representing when the event occurred.",
+      "justification": "Provides chronological ordering across disparate host and network telemetry sources for timeline reconstruction.",
+      "source_mapping": {
+        "windows_json": "Normalized from timestamp_raw (ISO/Epoch parsing)",
+        "linux_text": "Normalized from syslog/audit timestamp_raw combined with pack_year",
+        "network_csv": "Normalized from timestamp field"
+      }
+    },
+    {
+      "name": "hostname",
+      "type": "string",
+      "required": true,
+      "description": "The distinct network or system identifier of the host generating the event.",
+      "justification": "Allows analysts to scope incidents to specific assets during containment and triage.",
+      "source_mapping": {
+        "windows_json": "hostname (default to 'unknown-win-host' if missing)",
+        "linux_text": "hostname (default to 'localhost' if missing)",
+        "network_csv": "Derived from packet metadata or set to 'network-sensor'"
+      }
+    },
+    {
+      "name": "source_type",
+      "type": "string",
+      "required": true,
+      "description": "Internal pipeline category descriptor indicating the ingestion parser vector.",
+      "justification": "Enables downstream processors to apply parser-specific extraction rules safely.",
+      "source_mapping": {
+        "windows_json": "constant: windows_json",
+        "linux_text": "constant: linux_text",
+        "network_csv": "constant: network_csv"
+      }
+    },
+    {
+      "name": "event_category",
+      "type": "string",
+      "required": true,
+      "description": "Normalized functional grouping such as authentication, process, network, file, or system_audit.",
+      "justification": "Required by detection rules and triage filters to query actions independently of OS vendor terminology.",
+      "source_mapping": {
+        "windows_json": "Mapped via Channel/EventID lookup table (e.g., Security/4624 -> authentication)",
+        "linux_text": "Mapped via program/audit_type lookup table (e.g., sshd -> authentication)",
+        "network_csv": "constant: network"
+      }
+    },
+    {
+      "name": "severity",
+      "type": "string",
+      "required": true,
+      "description": "Standardized risk severity rating (info, low, medium, high, critical).",
+      "justification": "Enables automated alert triage and prioritizing high-risk indicators during investigations.",
+      "source_mapping": {
+        "windows_json": "Mapped from EventID risk profiles (e.g., 4625 -> medium, Sysmon 1 -> info)",
+        "linux_text": "Mapped from syslog level or audit failure codes",
+        "network_csv": "constant: info"
+      }
+    },
+    {
+      "name": "user",
+      "type": "string",
+      "required": false,
+      "description": "Primary user account associated with the execution context or event action.",
+      "justification": "Answers who performed the action to track compromised credentials or unauthorized access.",
+      "source_mapping": {
+        "windows_json": "event_data.TargetUserName or event_data.SubjectUserName",
+        "linux_text": "Extracted user field or parsed via regex from auth log context",
+        "network_csv": null
+      }
+    },
+    {
+      "name": "process_name",
+      "type": "string",
+      "required": false,
+      "description": "File name or full executable path of the process responsible for the event.",
+      "justification": "Critical for detecting living-off-the-land binaries and unauthorized execution chains.",
+      "source_mapping": {
+        "windows_json": "event_data.Image or event_data.ParentImage",
+        "linux_text": "program field",
+        "network_csv": null
+      }
+    },
+    {
+      "name": "src_ip",
+      "type": "string",
+      "required": false,
+      "description": "Originating IPv4 or IPv6 address for network connections or remote sessions.",
+      "justification": "Allows identification of external command and control nodes or internal lateral movement sources.",
+      "source_mapping": {
+        "windows_json": "event_data.IpAddress or event_data.SourceIp",
+        "linux_text": "Extracted via regex matching IP patterns in raw message",
+        "network_csv": "src_ip field"
+      }
+    },
+    {
+      "name": "dst_ip",
+      "type": "string",
+      "required": false,
+      "description": "Target IPv4 or IPv6 destination address for network connections or traffic.",
+      "justification": "Required to detect data exfiltration paths or connections to known malicious infrastructure.",
+      "source_mapping": {
+        "windows_json": "event_data.DestinationIp",
+        "linux_text": null,
+        "network_csv": "dst_ip field"
+      }
+    },
+    {
+      "name": "raw_message",
+      "type": "string",
+      "required": true,
+      "description": "The immutable raw string content or serialized log text of the original event.",
+      "justification": "Preserves absolute forensic fidelity and supports audit validation requirements.",
+      "source_mapping": {
+        "windows_json": "raw_message",
+        "linux_text": "raw_message",
+        "network_csv": "raw_message"
+      }
+    }
+  ]
+}
